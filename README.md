@@ -77,13 +77,44 @@ SAP/
 │       ├── test_cli.py          # CLI seed command exit codes and argument tests
 │       └── test_api.py          # Complete API endpoint, pagination, filter, and 404 tests
 └── frontend/
-    ├── package.json             # React 19, Vite, Tailwind CSS v4, Vitest dependencies
+    ├── package.json             # React 19, react-router-dom v7, Tailwind CSS v4, Vitest
     ├── vite.config.ts           # Vite server config (port 5173, /api proxy to 8000, Vitest)
     ├── tsconfig.json            # TypeScript configuration
     └── src/
-        ├── App.tsx              # "Data Sources & Integration Status" dashboard page
-        ├── App.test.tsx         # Comprehensive Vitest tests (loading, counts, badges, retry)
+        ├── App.tsx              # Declarative React Router routing shell with MetaProvider
+        ├── App.test.tsx         # Routing, navigation shell, and layout tests
         ├── index.css            # Tailwind CSS v4 styling
+        ├── app/
+        │   └── AppLayout.tsx    # Responsive navigation shell (desktop sidebar / mobile bar) and banner
+        ├── pages/
+        │   ├── OverviewPage.tsx         # Master entity counts, open/overdue POs, upcoming deliveries
+        │   ├── OverviewPage.test.tsx    # Tests for overview calculations, overdue logic, upcoming list
+        │   ├── InventoryPage.tsx        # Stock levels, filters (comp/wh), usable derivation, text flags
+        │   ├── InventoryPage.test.tsx   # Tests for usable stock, zero/deficit flags, pagination
+        │   ├── SuppliersPage.tsx        # Supplier directory, expandable agreements, capacity/expedite
+        │   ├── SuppliersPage.test.tsx   # Tests for expandable agreements, capacity/expedite terms
+        │   ├── PurchaseOrdersPage.tsx   # Inbound POs, status/supplier filters, timing cell, lines
+        │   ├── PurchaseOrdersPage.test.tsx # Tests for status filter, timing, line remaining qty
+        │   ├── DataSourcesPage.tsx      # System health, integration status, and record counts
+        │   ├── DataSourcesPage.test.tsx # Tests for data sources, retry, and integration wording
+        │   └── NotFoundPage.tsx         # 404 handler for unknown URL paths
+        ├── components/
+        │   ├── Badge.tsx        # Status, criticality, and flag text badges
+        │   ├── DataTable.tsx    # Semantic, accessible table wrapper with overflow control
+        │   ├── DemoBanner.tsx   # Persistent DEMO DATA and as-of date notification banner
+        │   ├── PageHeader.tsx   # Standardized page title and description header
+        │   ├── Pagination.tsx   # Accessible limit selector, range announcement, and page buttons
+        │   └── StateViews.tsx   # LoadingView, ErrorView (with Retry), EmptyView, UnseededView
+        ├── context/
+        │   ├── metaContextDef.ts # Context definition for Fast Refresh compliance
+        │   └── MetaContext.tsx   # MetaProvider loading /api/meta once centrally
+        ├── hooks/
+        │   └── useMeta.ts       # Hook for consuming active dataset metadata
+        ├── lib/
+        │   ├── format.ts        # Pure formatters: formatUsd (no float math), percent, dates, ints
+        │   ├── format.test.ts   # Tests for formatUsd, percentages, dates, and timestamps
+        │   ├── dates.ts         # UTC-safe date math, daysBetween, isOverdue, expectedDate, timingLabel
+        │   └── dates.test.ts    # Tests for UTC calendar math, DST safety, and timing labels
         ├── api/
         │   ├── http.ts          # Type-safe fetch wrapper, error normalization, AbortSignal
         │   ├── http.test.ts     # Unit tests for HTTP fetcher and error normalization
@@ -113,7 +144,9 @@ cd "C:\Users\SK MD Rijooan Hasan\Desktop\SAP\backend"
 ```
 *Note: To protect stored data, the CLI refuses to overwrite an existing database without the explicit `--reset` flag.*
 
-> **Deterministic Synthetic Timestamps:** All timestamps generated for synthetic datasets (such as `DatasetMeta.generated_at` and inventory `as_of_ts`) are deterministic synthetic UTC timestamps derived directly from the reference `as_of` date (`as_of 00:00:00 UTC`), rather than wall-clock times. This ensures 100% reproducible dataset verification hashes across distinct seeding runs with identical parameters.
+> **Deterministic Synthetic Timestamps & Date Logic:**
+> - All timestamps generated for synthetic datasets (such as `DatasetMeta.generated_at` and inventory `as_of_ts`) are deterministic synthetic UTC timestamps derived directly from the reference `as_of` date (`as_of 00:00:00 UTC`), rather than wall-clock times.
+> - **Dataset Snapshot Anchor:** All frontend business date comparisons (evaluating whether a purchase order is "Overdue" or "Due in N days") use the active dataset `meta.as_of` returned by `/api/meta` as "today" rather than the browser wall-clock. Because the demo database is a fixed synthetic snapshot in time, using `meta.as_of` guarantees deterministic schedule calculations across all user sessions and test suites.
 
 ---
 
@@ -134,7 +167,12 @@ From `frontend/`:
 npm run dev
 ```
 - Web Application: `http://localhost:5173` (proxies `/api/*` to `http://localhost:8000`)
-- Features the **Data Sources & Integration Status** page with live health indicators, active dataset metadata, unverified integration badges, and full database entity record counts.
+- **Core Application Views:**
+  1. `/` (**Overview**): Master entity totals, open purchase order counts, overdue order tracking with explicit definition, and upcoming delivery schedule.
+  2. `/inventory` (**Inventory Levels**): On-hand, reserved, and usable stock (`on_hand - reserved`) per warehouse, filterable by component and warehouse, with text badges for deficit or zero-stock states.
+  3. `/suppliers` (**Supplier Directory**): Global supplier directory with expandable commercial agreement panels showing component unit costs (USD), lead times, minimum order quantities, weekly capacities, and expedite terms.
+  4. `/purchase-orders` (**Purchase Orders**): Inbound replenishment orders filterable by status and supplier, displaying derived timing cells and expandable fulfillment line items.
+  5. `/data-sources` (**Data Sources & Integration Status**): Backend health metrics, active dataset metadata, unverified connector indicators, and record counts.
 
 ---
 
@@ -170,7 +208,7 @@ From `backend/`:
 & ".\.venv\Scripts\python.exe" -m pytest tests -v
 ```
 
-### Frontend Test Suite (20 tests)
+### Frontend Test Suite (54 tests)
 From `frontend/`:
 ```powershell
 npm test

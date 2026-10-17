@@ -70,11 +70,26 @@ export interface Component {
   is_active: boolean;
 }
 
-export interface SupplierOffer {
+export interface SupplierComponent {
   id: number;
   supplier_id: number;
   supplier_code: string;
   supplier_name: string;
+  unit_cost: string; // Exact decimal representation (e.g. "250.00")
+  lead_time_days: number;
+  min_order_qty: number;
+  max_weekly_capacity: number | null;
+  is_preferred: boolean;
+  expedite_available: boolean;
+  expedite_lead_time_days: number | null;
+  expedite_cost_premium_pct: string | null; // Exact decimal percentage (e.g. "0.2500")
+}
+
+export interface SupplierOffer {
+  id: number;
+  component_id: number;
+  component_sku: string;
+  component_name: string;
   unit_cost: string; // Exact decimal representation (e.g. "250.00")
   lead_time_days: number;
   min_order_qty: number;
@@ -96,7 +111,7 @@ export interface ComponentInventory {
 }
 
 export interface ComponentDetail extends Component {
-  supplier_offers: SupplierOffer[];
+  supplier_offers: SupplierComponent[];
   inventory: ComponentInventory[];
 }
 

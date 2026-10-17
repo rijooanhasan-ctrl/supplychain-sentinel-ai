@@ -107,25 +107,46 @@ The relational schema represents the operational facts of the laptop manufacturi
 
 ## 5. Frontend Architecture & Layering
 
-The frontend application is structured with strict separation of concerns, zero ad-hoc fetches, and no third-party state managers:
+The frontend application is structured with strict separation of concerns, zero ad-hoc fetches, declarative client routing, and no third-party state managers:
 
 ```
-[ UI Pages / Components ]   (e.g., App.tsx)
+[ App.tsx (BrowserRouter + MetaProvider) ]
+                    │
+                    ▼
+[ AppLayout.tsx (Responsive Nav Sidebar + DemoBanner) ]
+                    │
+                    ▼  Route Outlet
+[ Page Views (src/pages/) ]
+  ├── OverviewPage        (Master counts, open/overdue POs, upcoming deliveries)
+  ├── InventoryPage       (Stock levels, warehouse/component filters, usable stock)
+  ├── SuppliersPage       (Supplier directory, expandable procurement terms)
+  ├── PurchaseOrdersPage  (Inbound PO book, status/supplier filters, timing labels, lines)
+  ├── DataSourcesPage     (Backend health, connector metadata, record counts)
+  └── NotFoundPage        (404 unknown path handler)
           │
-          ▼  hooks
-     [ useApi ]             (cancellation, lifecycle safety, reload state)
+          ▼  shared primitives
+[ Components (src/components/) ]   &   [ Utility Libraries (src/lib/) ]
+  ├── DataTable (semantic accessible table) ├── format.ts (USD formatting without float math)
+  ├── Pagination (accessible range & limit)  └── dates.ts  (UTC calendar math, as_of comparisons)
+  ├── StateViews (Loading, Error, Empty, Unseeded)
+  ├── Badge (accessible text badges)
+  └── PageHeader (accessible titles)
           │
-          ▼  typed calls
-    [ endpoints ]           (thin typed functions per API route)
+          ▼  data hooks
+[ useApi (src/api/useApi.ts) ]  &  [ useMeta (src/hooks/useMeta.ts) ]
+          │
+          ▼  typed endpoints
+[ endpoints.ts (src/api/endpoints.ts) ]
           │
           ▼  fetch wrapper
-      [ http ]              (getJson, query serialization, ApiError/NetworkError normalization)
+[ http.ts (src/api/http.ts) ]
           │
-          ▼  HTTP GET
-     [ Backend ]
+          ▼  HTTP GET (/api/*)
+[ Backend FastAPI ]
 ```
 
-### Layer Responsibilities
+### Layer Responsibilities & Strict Governance Rules
+
 1. **HTTP Layer (`src/api/http.ts`):**
    - Core `getJson<T>(path, { params, signal })` wrapper.
    - Clean query parameter stringification omitting `null` and `undefined`.
@@ -141,18 +162,24 @@ The frontend application is structured with strict separation of concerns, zero 
    - **Monetary & Decimal Precision:** Money fields (`unit_cost`, `selling_price`, `unit_price`) and percentages are strictly typed as `string` (e.g. `"250.00"`), maintaining exact decimal precision without floating-point degradation.
 
 3. **Endpoints Layer (`src/api/endpoints.ts`):**
-   - Thin typed functions for every GET API route (`getHealth`, `getMeta`, `listComponents`, etc.).
+   - Thin typed functions for every GET API route (`getHealth`, `getMeta`, `listComponents`, `listInventory`, `listPurchaseOrders`, etc.).
    - Standardizes URL paths and query parameters.
 
-4. **Hooks Layer (`src/api/useApi.ts`):**
-   - Lightweight generic hook `useApi<T>(fetcher, deps)` returning `{ data, error, loading, reload }`.
-   - Manages `AbortController` internally to cancel in-flight requests on dependency changes or component unmount.
-   - Guarantees zero state updates after unmount.
-   - `reload()` function allows user-triggered retries.
+4. **Hooks Layer (`src/api/useApi.ts` & `src/hooks/useMeta.ts`):**
+   - `useApi<T>(fetcher, deps)`: Lightweight generic hook returning `{ data, error, loading, reload }`. Manages `AbortController` internally to cancel in-flight requests on dependency changes or component unmount. Guarantees zero state updates after unmount.
+   - `useMeta()`: Consumes `MetaContext`, loading `/api/meta` once centrally. Distributes active dataset information (dataset label, snapshot `as_of` date, and seed status) across the navigation banner and all pages without duplicate network requests.
 
-5. **Presentation Layer (`src/App.tsx`):**
-   - Renders the enterprise "Data Sources & Integration Status" dashboard.
-   - Independently loads Health and Dataset Metadata so that failures in one do not hide the other.
-   - Renders clear loading (`aria-live="polite"`), error (`role="alert"` with Retry), unseeded (`python -m app.cli seed` code block), and success states.
-   - Displays a prominent `DEMO DATA` badge and explicit unverified integration statuses, ensuring zero false claims of live SAP connectivity.
+5. **Utility Libraries (`src/lib/`):**
+   - **`format.ts`**: Pure formatters. `formatUsd` parses string decimal amounts and formats them with thousands commas and two decimal places (e.g. `"$1,499.50"`) without performing any binary floating-point calculations. `formatPercentFromFraction` formats decimal fraction strings into percentages.
+   - **`dates.ts`**: Implements UTC-safe calendar math anchored to `meta.as_of`. `daysBetween(asOf, targetDate)` eliminates local browser timezone offsets and Daylight Saving Time (DST) discrepancies. `isOverdue` and `timingLabel` calculate schedule deltas strictly relative to the synthetic dataset snapshot date.
+
+6. **Presentation & Page Layer (`src/pages/`):**
+   - **Strict Read-Only & Display Derivation Rule:** Pages display raw stored facts directly from the backend API. No business logic (risk scores, coverage calculations, forecast extrapolations, or recovery recommendations) is computed or displayed in this phase.
+   - The only arithmetic permitted in the presentation layer is simple display derivation:
+     - Usable stock: `on_hand - reserved` per warehouse/component row.
+     - Quantity remaining: `qty_ordered - qty_received` per purchase order line.
+     - Aggregated counts and calendar date deltas against `meta.as_of`.
+   - **Accessible State Handling:** Every data view handles loading (`aria-live="polite"`), error with actionable retry (`role="alert"`), empty states, and unseeded database guidance (`python -m app.cli seed`).
+   - **Responsive Shell:** Layout remains fully usable across mobile (360px) and wide desktop (1280px+) screens, with tables scrolling inside isolated horizontal wrappers rather than overflowing the page body.
+
 
