@@ -1,1 +1,43 @@
-"""Database layer (empty in Phase 1)."""
+from app.db.models import (
+    Base,
+    BomLine,
+    Component,
+    CustomerOrder,
+    DatasetMeta,
+    DeliveryRecord,
+    DemandRecord,
+    InventoryLevel,
+    Product,
+    PurchaseOrder,
+    PurchaseOrderLine,
+    Supplier,
+    SupplierComponent,
+    Warehouse,
+)
+from app.db.session import (
+    create_engine_and_sessionmaker,
+    get_db,
+    get_engine,
+    get_session_factory,
+)
+
+__all__ = [
+    "Base",
+    "DatasetMeta",
+    "Warehouse",
+    "Product",
+    "Component",
+    "BomLine",
+    "Supplier",
+    "SupplierComponent",
+    "InventoryLevel",
+    "PurchaseOrder",
+    "PurchaseOrderLine",
+    "CustomerOrder",
+    "DemandRecord",
+    "DeliveryRecord",
+    "get_db",
+    "get_engine",
+    "get_session_factory",
+    "create_engine_and_sessionmaker",
+]

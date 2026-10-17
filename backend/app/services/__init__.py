@@ -1,1 +1,3 @@
-"""Application services layer (empty in Phase 1)."""
+from app.services.ingest import load_dataset
+
+__all__ = ["load_dataset"]
