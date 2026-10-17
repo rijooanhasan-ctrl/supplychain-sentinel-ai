@@ -8,6 +8,7 @@ from app.api.routes.customer_orders import router as customer_orders_router
 from app.api.routes.delivery_records import router as delivery_records_router
 from app.api.routes.health import router as health_router
 from app.api.routes.inventory import router as inventory_router
+from app.api.routes.inventory_risk import router as inventory_risk_router
 from app.api.routes.meta import router as meta_router
 from app.api.routes.products import router as products_router
 from app.api.routes.purchase_orders import router as purchase_orders_router
@@ -73,6 +74,7 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
     app.include_router(suppliers_router, prefix="/api")
     app.include_router(warehouses_router, prefix="/api")
     app.include_router(inventory_router, prefix="/api")
+    app.include_router(inventory_risk_router, prefix="/api")
     app.include_router(purchase_orders_router, prefix="/api")
     app.include_router(customer_orders_router, prefix="/api")
     app.include_router(delivery_records_router, prefix="/api")

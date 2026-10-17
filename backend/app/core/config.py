@@ -1,7 +1,7 @@
 import json
 from functools import lru_cache
 from typing import List, Union
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -12,6 +12,13 @@ class Settings(BaseSettings):
     CORS_ORIGINS: Union[List[str], str] = ["http://localhost:5173"]
     DATABASE_URL: str = "sqlite:///./sentinel.db"
     DATA_SOURCE: str = "demo"
+
+    # Inventory Intelligence thresholds
+    INVENTORY_LOOKBACK_DAYS: int = 28
+    INVENTORY_HORIZON_DAYS: int = 60
+    INVENTORY_CRITICAL_DAYS: int = 7
+    INVENTORY_HIGH_DAYS: int = 14
+    INVENTORY_MEDIUM_DAYS: int = 30
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -35,6 +42,30 @@ class Settings(BaseSettings):
         elif isinstance(v, list):
             return [str(item).strip() for item in v]
         return v
+
+    @model_validator(mode="after")
+    def validate_inventory_thresholds(self) -> "Settings":
+        if self.INVENTORY_LOOKBACK_DAYS < 7:
+            raise ValueError(
+                f"INVENTORY_LOOKBACK_DAYS must be at least 7, got {self.INVENTORY_LOOKBACK_DAYS}"
+            )
+        if not (7 <= self.INVENTORY_HORIZON_DAYS <= 180):
+            raise ValueError(
+                f"INVENTORY_HORIZON_DAYS must be between 7 and 180, got {self.INVENTORY_HORIZON_DAYS}"
+            )
+        if not (
+            0
+            < self.INVENTORY_CRITICAL_DAYS
+            < self.INVENTORY_HIGH_DAYS
+            < self.INVENTORY_MEDIUM_DAYS
+            <= self.INVENTORY_HORIZON_DAYS
+        ):
+            raise ValueError(
+                f"Invalid inventory threshold ordering: must satisfy "
+                f"0 < CRITICAL ({self.INVENTORY_CRITICAL_DAYS}) < HIGH ({self.INVENTORY_HIGH_DAYS}) "
+                f"< MEDIUM ({self.INVENTORY_MEDIUM_DAYS}) <= HORIZON ({self.INVENTORY_HORIZON_DAYS})"
+            )
+        return self
 
 
 @lru_cache

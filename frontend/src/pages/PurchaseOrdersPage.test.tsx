@@ -119,8 +119,71 @@ describe('PurchaseOrdersPage', () => {
     expect(screen.getByTestId('timing-PO-FUTURE')).toHaveTextContent('Due in 10 days'); // Uses latest_estimate_date (27th)
     expect(screen.getByTestId('timing-PO-DONE')).toHaveTextContent('—');
 
+    // Slipped vs promise secondary text check
+    expect(screen.getByTestId('slipped-PO-FUTURE')).toHaveTextContent('Slipped 2 days vs promise (promised 2026-10-25)');
+
     // "None provided" for null estimate
     expect(screen.getAllByText('None provided').length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('renders PO-OVERDUE-01-like data with Due in 3 days and Slipped 7 days vs promise', async () => {
+    const poOverdue01: PurchaseOrder = {
+      id: 99,
+      po_number: 'PO-OVERDUE-01',
+      supplier_id: 1,
+      supplier_code: 'SUP-01',
+      supplier_name: 'Apex Silicon',
+      status: 'in_transit',
+      order_date: '2026-09-25',
+      promised_date: '2026-10-13',
+      latest_estimate_date: '2026-10-20',
+    };
+
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+      const urlStr = url.toString();
+      if (urlStr.includes('/api/meta')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => mockMeta,
+        } as Response;
+      }
+      if (urlStr.includes('/api/suppliers')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({ items: [], total: 0 }),
+        } as Response;
+      }
+      if (urlStr.includes('/api/purchase-orders')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({ items: [poOverdue01], total: 1, limit: 50, offset: 0 }),
+        } as Response;
+      }
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ items: [], total: 0 }),
+      } as Response;
+    });
+
+    render(
+      <MetaProvider>
+        <PurchaseOrdersPage />
+      </MetaProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('pos-table')).toBeInTheDocument();
+    });
+
+    const timingCell = screen.getByTestId('timing-PO-OVERDUE-01');
+    expect(timingCell).toHaveTextContent('Due in 3 days');
+    expect(screen.getByTestId('slipped-PO-OVERDUE-01')).toHaveTextContent(
+      'Slipped 7 days vs promise (promised 2026-10-13)'
+    );
   });
 
   it('status filter sends the right param and resets offset to 0', async () => {

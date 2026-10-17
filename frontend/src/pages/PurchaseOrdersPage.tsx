@@ -8,7 +8,7 @@ import { LoadingView, ErrorView, EmptyView, UnseededView } from '../components/S
 import { Pagination } from '../components/Pagination';
 import { PoStatusBadge } from '../components/Badge';
 import { formatDate, formatInteger, formatUsd } from '../lib/format';
-import { timingLabel } from '../lib/dates';
+import { timingLabel, slippedInfo } from '../lib/dates';
 
 const PO_STATUS_OPTIONS: { label: string; value: PurchaseOrderStatus | '' }[] = [
   { label: 'All Statuses', value: '' },
@@ -285,6 +285,7 @@ export function PurchaseOrdersPage() {
                         const isExpanded = expandedPoIds.has(po.id);
                         const timing = timingLabel(po, asOf);
                         const isTimingOverdue = timing.startsWith('Overdue');
+                        const slipped = slippedInfo(po);
 
                         return (
                           <tr key={po.id} className="hover:bg-slate-50/80 transition-colors">
@@ -314,12 +315,19 @@ export function PurchaseOrdersPage() {
                               )}
                             </td>
                             <td className="px-4 py-3 text-xs font-medium" data-testid={`timing-${po.po_number}`}>
-                              {isTimingOverdue ? (
-                                <span className="text-red-700 font-bold">{timing}</span>
-                              ) : timing === 'Due today' ? (
-                                <span className="text-amber-800 font-bold">{timing}</span>
-                              ) : (
-                                <span className="text-slate-700">{timing}</span>
+                              <div>
+                                {isTimingOverdue ? (
+                                  <span className="text-red-700 font-bold">{timing}</span>
+                                ) : timing === 'Due today' ? (
+                                  <span className="text-amber-800 font-bold">{timing}</span>
+                                ) : (
+                                  <span className="text-slate-700">{timing}</span>
+                                )}
+                              </div>
+                              {slipped && (
+                                <div className="text-[11px] text-amber-900 font-medium mt-0.5" data-testid={`slipped-${po.po_number}`}>
+                                  {slipped.label}
+                                </div>
                               )}
                             </td>
                             <td className="px-4 py-3 text-right">

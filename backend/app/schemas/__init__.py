@@ -244,3 +244,21 @@ class DeliveryRecordResponse(BaseModel):
     qty_ordered: int
     qty_received: int
     qty_rejected: int
+
+
+from app.schemas.inventory_risk import (
+    DailyProjectionItemSchema,
+    InboundLineDetailSchema,
+    InventoryRiskConfigSchema,
+    InventoryRiskDetailResponse,
+    InventoryRiskItem,
+    InventoryRiskListResponse,
+    InventoryRiskSummary,
+    ModelMetadata,
+    RegionalStockSchema,
+    ReplenishmentInfoSchema,
+    RiskFlagSchema,
+    RiskLevelEnum,
+    UsableStockBreakdownSchema,
+    WeekdayForecastItem,
+)

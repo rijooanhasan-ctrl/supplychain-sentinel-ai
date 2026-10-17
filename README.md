@@ -24,7 +24,8 @@ SAP/
 ├── .gitignore
 ├── README.md
 ├── docs/
-│   └── ARCHITECTURE.md          # Architectural layers, adapter boundaries, and data model decisions
+│   ├── ARCHITECTURE.md          # Architectural layers, adapter boundaries, and data model decisions
+│   └── INVENTORY_INTELLIGENCE.md # Inventory risk rules, daily projection math, and CPU-X7 benchmark
 ├── backend/
 │   ├── .env.example             # Backend environment template
 │   ├── requirements.txt         # Production runtime dependencies (FastAPI, Uvicorn, Pydantic, SQLAlchemy)
@@ -37,19 +38,21 @@ SAP/
 │   │   ├── cli.py               # Seed CLI command (python -m app.cli seed)
 │   │   ├── core/
 │   │   │   ├── __init__.py
-│   │   │   └── config.py        # Pydantic Settings (env configuration and defaults)
+│   │   │   └── config.py        # Pydantic Settings (env configuration, inventory thresholds validation)
 │   │   ├── db/
 │   │   │   ├── __init__.py
 │   │   │   ├── models.py        # 13 SQLAlchemy 2.x declarative models with DB constraints
 │   │   │   └── session.py       # Engine creation, lazy sessionmaker, SQLite foreign key pragmas
 │   │   ├── schemas/
-│   │   │   └── __init__.py      # Pydantic response models, UtcDatetime serializer, and envelopes
+│   │   │   ├── __init__.py      # Pydantic response models, UtcDatetime serializer, and envelopes
+│   │   │   └── inventory_risk.py# Inventory risk & shortage projection schemas
 │   │   ├── api/
 │   │   │   ├── __init__.py
 │   │   │   └── routes/
 │   │   │       ├── __init__.py
 │   │   │       ├── health.py    # GET /api/health
 │   │   │       ├── meta.py      # GET /api/meta
+│   │   │       ├── inventory_risk.py # GET /api/inventory-risk, /api/inventory-risk/{component_id}
 │   │   │       ├── products.py  # GET /api/products, /api/products/{id}
 │   │   │       ├── components.py# GET /api/components, /api/components/{id}, demand-history
 │   │   │       ├── suppliers.py # GET /api/suppliers, /api/suppliers/{id}
@@ -58,10 +61,13 @@ SAP/
 │   │   │       ├── purchase_orders.py # GET /api/purchase-orders, /api/purchase-orders/{id}
 │   │   │       ├── customer_orders.py # GET /api/customer-orders
 │   │   │       └── delivery_records.py# GET /api/delivery-records
-│   │   ├── domain/              # Pure business logic layer (future phases)
+│   │   ├── domain/              # Pure business logic layer
+│   │   │   ├── __init__.py
+│   │   │   └── inventory.py     # Pure frozen dataclasses, weekday baseline, daily stock projection
 │   │   ├── services/
 │   │   │   ├── __init__.py
-│   │   │   └── ingest.py        # Transactional dataset loader (load_dataset)
+│   │   │   ├── ingest.py        # Transactional dataset loader (load_dataset)
+│   │   │   └── inventory_risk.py# Inventory risk service orchestrating DB queries and domain evaluation
 │   │   └── integrations/
 │   │       ├── __init__.py
 │   │       ├── base.py          # SourceAdapter interface and SourceDataset DTOs
@@ -75,7 +81,9 @@ SAP/
 │       ├── test_adapter.py      # DemoAdapter determinism and CPU-X7 scenario tests
 │       ├── test_loader.py       # All-or-nothing loader and overwrite guard tests
 │       ├── test_cli.py          # CLI seed command exit codes and argument tests
-│       └── test_api.py          # Complete API endpoint, pagination, filter, and 404 tests
+│       ├── test_api.py          # Complete API endpoint, pagination, filter, and 404 tests
+│       ├── test_domain_inventory.py # Pure domain tests (projections, weekday baseline, risk thresholds)
+│       └── test_inventory_risk_api.py # Service/API integration tests, edge cases, multi-seed determinism
 └── frontend/
     ├── package.json             # React 19, react-router-dom v7, Tailwind CSS v4, Vitest
     ├── vite.config.ts           # Vite server config (port 5173, /api proxy to 8000, Vitest)
@@ -87,8 +95,10 @@ SAP/
         ├── app/
         │   └── AppLayout.tsx    # Responsive navigation shell (desktop sidebar / mobile bar) and banner
         ├── pages/
-        │   ├── OverviewPage.tsx         # Master entity counts, open/overdue POs, upcoming deliveries
-        │   ├── OverviewPage.test.tsx    # Tests for overview calculations, overdue logic, upcoming list
+        │   ├── OverviewPage.tsx         # Master entity counts, open/overdue POs, inventory risk summary
+        │   ├── OverviewPage.test.tsx    # Tests for overview calculations, overdue logic, risk summary
+        │   ├── InventoryRiskPage.tsx    # Stockout risk table, filters, and expandable 14-day projection
+        │   ├── InventoryRiskPage.test.tsx # Tests for risk table, null handling, expand panel, filters
         │   ├── InventoryPage.tsx        # Stock levels, filters (comp/wh), usable derivation, text flags
         │   ├── InventoryPage.test.tsx   # Tests for usable stock, zero/deficit flags, pagination
         │   ├── SuppliersPage.tsx        # Supplier directory, expandable agreements, capacity/expedite
@@ -99,7 +109,7 @@ SAP/
         │   ├── DataSourcesPage.test.tsx # Tests for data sources, retry, and integration wording
         │   └── NotFoundPage.tsx         # 404 handler for unknown URL paths
         ├── components/
-        │   ├── Badge.tsx        # Status, criticality, and flag text badges
+        │   ├── Badge.tsx        # Status, criticality, risk level, and flag text badges
         │   ├── DataTable.tsx    # Semantic, accessible table wrapper with overflow control
         │   ├── DemoBanner.tsx   # Persistent DEMO DATA and as-of date notification banner
         │   ├── PageHeader.tsx   # Standardized page title and description header
@@ -168,11 +178,12 @@ npm run dev
 ```
 - Web Application: `http://localhost:5173` (proxies `/api/*` to `http://localhost:8000`)
 - **Core Application Views:**
-  1. `/` (**Overview**): Master entity totals, open purchase order counts, overdue order tracking with explicit definition, and upcoming delivery schedule.
-  2. `/inventory` (**Inventory Levels**): On-hand, reserved, and usable stock (`on_hand - reserved`) per warehouse, filterable by component and warehouse, with text badges for deficit or zero-stock states.
-  3. `/suppliers` (**Supplier Directory**): Global supplier directory with expandable commercial agreement panels showing component unit costs (USD), lead times, minimum order quantities, weekly capacities, and expedite terms.
-  4. `/purchase-orders` (**Purchase Orders**): Inbound replenishment orders filterable by status and supplier, displaying derived timing cells and expandable fulfillment line items.
-  5. `/data-sources` (**Data Sources & Integration Status**): Backend health metrics, active dataset metadata, unverified connector indicators, and record counts.
+  1. `/` (**Overview**): Master entity totals, open purchase order counts, overdue order tracking with explicit definition, upcoming delivery schedule with slipped-vs-promise indicators, and an inventory stockout risk summary section.
+  2. `/inventory-risk` (**Inventory Risk & Shortage Projections**): Forward-looking stockout risk and daily shortage projection model across manufacturing plant components with filters, pagination, and expandable 14-day projection tables.
+  3. `/inventory` (**Inventory Levels**): On-hand, reserved, and usable stock (`on_hand - reserved`) per warehouse, filterable by component and warehouse, with text badges for deficit or zero-stock states.
+  4. `/suppliers` (**Supplier Directory**): Global supplier directory with expandable commercial agreement panels showing component unit costs (USD), lead times, minimum order quantities, weekly capacities, and expedite terms.
+  5. `/purchase-orders` (**Purchase Orders**): Inbound replenishment orders filterable by status and supplier, displaying derived timing cells with slipped-vs-promise alerts and expandable fulfillment line items.
+  6. `/data-sources` (**Data Sources & Integration Status**): Backend health metrics, active dataset metadata, unverified connector indicators, and record counts.
 
 ---
 
@@ -184,6 +195,8 @@ All data endpoints return standard JSON envelopes with pagination (`items`, `tot
 | :--- | :--- | :--- |
 | `GET` | `/api/health` | Health status and data source verification |
 | `GET` | `/api/meta` | Active dataset metadata, seed, as-of date, and entity counts |
+| `GET` | `/api/inventory-risk` | Inventory stockout risk and shortage projection summary (filters: `risk_level`, `category`, `criticality`, `include_inactive`) |
+| `GET` | `/api/inventory-risk/{component_id}` | Comprehensive component risk detail, explanation, weekday forecast, inbound breakdown, and full daily projection |
 | `GET` | `/api/products` | Finished laptop models (`limit`, `offset`) |
 | `GET` | `/api/products/{id}` | Product detail with BOM lines and component information |
 | `GET` | `/api/components` | Component catalog (filters: `category`, `q`, `is_active`) |
@@ -200,15 +213,34 @@ All data endpoints return standard JSON envelopes with pagination (`items`, `tot
 
 ---
 
-## 6. Running Tests
+## 6. Environment Configuration Variables
 
-### Backend Test Suite (33 tests)
+The backend supports configuration via environment variables or a `.env` file:
+
+| Variable | Default | Description & Validation |
+| :--- | :--- | :--- |
+| `DATABASE_URL` | `sqlite:///./sentinel.db` | SQLAlchemy SQLite database connection string |
+| `APP_ENV` | `development` | Application runtime environment |
+| `INVENTORY_LOOKBACK_DAYS` | `28` | History lookback window in days (valid: 14..365) |
+| `INVENTORY_HORIZON_DAYS` | `60` | Forward projection horizon in days (valid: 7..180) |
+| `INVENTORY_CRITICAL_DAYS` | `7` | Threshold for Critical risk ($\le 7$ days until shortage) |
+| `INVENTORY_HIGH_DAYS` | `14` | Threshold for High risk ($\le 14$ days until shortage) |
+| `INVENTORY_MEDIUM_DAYS` | `30` | Threshold for Medium risk ($\le 30$ days until shortage) |
+| `INVENTORY_OVERDUE_INBOUND_POLICY` | `"exclude"` | Policy for overdue inbound POs (only `"exclude"` supported) |
+
+*Validation rule:* $0 < \text{CRITICAL\_DAYS} < \text{HIGH\_DAYS} < \text{MEDIUM\_DAYS} \le \text{HORIZON\_DAYS}$.
+
+---
+
+## 7. Running Tests
+
+### Backend Test Suite (75 tests)
 From `backend/`:
 ```powershell
 & ".\.venv\Scripts\python.exe" -m pytest tests -v
 ```
 
-### Frontend Test Suite (54 tests)
+### Frontend Test Suite (69 tests)
 From `frontend/`:
 ```powershell
 npm test

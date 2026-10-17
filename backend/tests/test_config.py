@@ -10,6 +10,11 @@ def test_config_defaults_load_correctly():
     assert settings.CORS_ORIGINS == ["http://localhost:5173"]
     assert settings.DATABASE_URL == "sqlite:///./sentinel.db"
     assert settings.DATA_SOURCE == "demo"
+    assert settings.INVENTORY_LOOKBACK_DAYS == 28
+    assert settings.INVENTORY_HORIZON_DAYS == 60
+    assert settings.INVENTORY_CRITICAL_DAYS == 7
+    assert settings.INVENTORY_HIGH_DAYS == 14
+    assert settings.INVENTORY_MEDIUM_DAYS == 30
 
 
 def test_config_overrides_via_env_vars(monkeypatch):
@@ -19,6 +24,11 @@ def test_config_overrides_via_env_vars(monkeypatch):
     monkeypatch.setenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:8080")
     monkeypatch.setenv("DATABASE_URL", "sqlite:///./prod.db")
     monkeypatch.setenv("DATA_SOURCE", "sap_mock")
+    monkeypatch.setenv("INVENTORY_LOOKBACK_DAYS", "35")
+    monkeypatch.setenv("INVENTORY_HORIZON_DAYS", "90")
+    monkeypatch.setenv("INVENTORY_CRITICAL_DAYS", "10")
+    monkeypatch.setenv("INVENTORY_HIGH_DAYS", "20")
+    monkeypatch.setenv("INVENTORY_MEDIUM_DAYS", "45")
 
     get_settings.cache_clear()
     try:
@@ -29,5 +39,23 @@ def test_config_overrides_via_env_vars(monkeypatch):
         assert settings.CORS_ORIGINS == ["http://localhost:3000", "http://localhost:8080"]
         assert settings.DATABASE_URL == "sqlite:///./prod.db"
         assert settings.DATA_SOURCE == "sap_mock"
+        assert settings.INVENTORY_LOOKBACK_DAYS == 35
+        assert settings.INVENTORY_HORIZON_DAYS == 90
+        assert settings.INVENTORY_CRITICAL_DAYS == 10
+        assert settings.INVENTORY_HIGH_DAYS == 20
+        assert settings.INVENTORY_MEDIUM_DAYS == 45
     finally:
         get_settings.cache_clear()
+
+
+def test_config_inventory_validation_rejects_invalid_values(monkeypatch):
+    monkeypatch.setenv("INVENTORY_HORIZON_DAYS", "5")
+    with pytest.raises(ValueError, match="INVENTORY_HORIZON_DAYS must be between 7 and 180"):
+        Settings()
+
+    monkeypatch.setenv("INVENTORY_HORIZON_DAYS", "60")
+    monkeypatch.setenv("INVENTORY_CRITICAL_DAYS", "15")
+    monkeypatch.setenv("INVENTORY_HIGH_DAYS", "10")
+    with pytest.raises(ValueError, match="Invalid inventory threshold ordering"):
+        Settings()
+

@@ -49,12 +49,14 @@
    - **Read-Only:** The API exposes raw stored facts via GET requests only. Non-GET methods (POST, PUT, DELETE) are unrouted and return HTTP 405 Method Not Allowed.
 
 2. **Domain Layer (`backend/app/domain/`):**
-   - Will contain pure business logic, mathematical computations, and risk scoring functions in future phases.
-   - Pure functions take inputs and return outputs with zero side effects.
-   - Completely decoupled from web frameworks (FastAPI/Starlette) and database ORMs. Fully unit-testable without fixtures or mocks.
+   - Implemented in `backend/app/domain/inventory.py`.
+   - **Pure Functions Only:** Contains deterministic mathematical algorithms, weekday-aware consumption baselines, intra-day stockout projections, and transparent threshold-based risk classification.
+   - **Zero Side Effects:** Zero imports from FastAPI, Starlette, SQLAlchemy, or system time. Operates strictly over plain, frozen dataclasses (`InventoryRiskConfig`, `ComponentInventoryInput`, `DemandWindowInput`, `InboundSupplyInput`, etc.).
+   - **Scenario Simulator Reusability:** Exposes `evaluate_component(inputs, config) -> ComponentRiskResult`. Future scenario simulator and digital twin phases will reuse this exact domain function without modification by simply passing synthetic perturbations (e.g., supplier shipment delays, unexpected demand spikes, expedited delivery dates) and comparing the resulting projection timelines and risk classifications.
 
 3. **Services Layer (`backend/app/services/`):**
    - `ingest.py`: Orchestrates loading `SourceDataset` into the relational database. Resolves business keys to internal IDs, validates all entity references, enforces all-or-nothing transactional guarantees, and guards against accidental data overwrites without explicit `--reset`.
+   - `inventory_risk.py`: Bridges the database and domain layer. Efficiently batches relational queries (active components, plant and regional warehouse inventory, historical demand windows, and open inbound purchase order lines), builds domain input DTOs, executes `evaluate_component`, sorts by risk severity and shortage proximity, and transforms outputs into Pydantic API response models. Handles unseeded database states gracefully (`seeded=false`).
 
 4. **Integrations Layer (`backend/app/integrations/`):**
    - External systems are accessed **only** through a formal adapter interface (`SourceAdapter`).

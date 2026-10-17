@@ -7,9 +7,7 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     port: 5173,
-    headers: {
-      'Cache-Control': 'no-store, no-cache, must-revalidate',
-    },
+    strictPort: true,
     proxy: {
       '/api': {
         target: 'http://localhost:8000',
@@ -21,8 +19,7 @@ export default defineConfig({
     dedupe: ['react', 'react-dom'],
   },
   optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom'],
-    exclude: ['@tailwindcss/oxide', '@tailwindcss/oxide-win32-x64-msvc'],
+    exclude: ['react-router-dom', 'react-router', '@tailwindcss/oxide', '@tailwindcss/oxide-win32-x64-msvc'],
   },
   test: {
     globals: true,

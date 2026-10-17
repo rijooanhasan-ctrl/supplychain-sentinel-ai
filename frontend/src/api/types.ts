@@ -219,3 +219,135 @@ export interface DeliveryRecord {
   qty_received: number;
   qty_rejected: number;
 }
+
+export type RiskLevel = 'critical' | 'high' | 'medium' | 'low' | 'none' | 'unknown';
+
+export interface ModelMetadata {
+  name: string;
+  type: string;
+  description: string;
+}
+
+export interface InventoryRiskConfig {
+  lookback_days: number;
+  min_history_days: number;
+  min_coverage_ratio: number;
+  horizon_days: number;
+  critical_days: number;
+  high_days: number;
+  medium_days: number;
+  overdue_inbound_policy: string;
+}
+
+export interface RiskFlag {
+  code: string;
+  message: string;
+}
+
+export interface ReplenishmentInfo {
+  date: string;
+  qty: number;
+  po_number: string;
+  date_basis: 'estimated' | 'promised';
+}
+
+export interface InventoryRiskSummary {
+  counts_by_risk_level: Record<RiskLevel, number>;
+  components_evaluated: number;
+}
+
+export interface InventoryRiskItem {
+  component_id: number;
+  sku: string;
+  name: string;
+  category: string;
+  criticality: ComponentCriticality;
+  plant_usable_stock: number | null;
+  plant_on_hand: number | null;
+  plant_reserved: number | null;
+  mean_daily_demand: number | null;
+  coverage_days: number | null;
+  next_replenishment: ReplenishmentInfo | null;
+  shortage_date: string | null;
+  days_until_shortage: number | null;
+  unmet_demand_units: number;
+  runout_date_without_inbound: string | null;
+  risk_level: RiskLevel;
+  risk_reason: string;
+  forecast_status: string;
+  flags: RiskFlag[];
+}
+
+export interface InventoryRiskListResponse {
+  seeded: boolean;
+  as_of: string | null;
+  model: ModelMetadata;
+  config: InventoryRiskConfig;
+  summary: InventoryRiskSummary;
+  items: InventoryRiskItem[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export interface UsableStockBreakdown {
+  on_hand: number;
+  reserved: number;
+  usable: number;
+  reserved_exceeds_on_hand: boolean;
+}
+
+export interface WeekdayForecast {
+  weekday: number;
+  weekday_name: string;
+  mean_demand: number;
+}
+
+export interface InboundLineDetail {
+  po_id: number;
+  po_number: string;
+  status: string;
+  warehouse_code: string;
+  qty_ordered: number;
+  qty_received: number;
+  remaining_qty: number;
+  promised_date: string;
+  latest_estimate_date: string | null;
+  expected_date: string;
+  date_basis: 'estimated' | 'promised';
+}
+
+export interface RegionalStock {
+  warehouse_id: number;
+  warehouse_code: string;
+  warehouse_name: string;
+  on_hand: number;
+  reserved: number;
+  usable: number;
+}
+
+export interface DailyProjectionItem {
+  day_index: number;
+  date: string;
+  forecast_demand: number;
+  receipts: number;
+  ending_balance: number;
+  unmet: number;
+}
+
+export interface InventoryRiskDetailResponse extends InventoryRiskItem {
+  as_of: string;
+  model: ModelMetadata;
+  config: InventoryRiskConfig;
+  explanation: string;
+  usable_stock_breakdown: UsableStockBreakdown | null;
+  forecast_by_weekday: WeekdayForecast[] | null;
+  counted_inbound: InboundLineDetail[];
+  unconfirmed_inbound: InboundLineDetail[];
+  out_of_horizon_inbound: InboundLineDetail[];
+  regional_usable_stock: RegionalStock[];
+  regional_total_usable: number;
+  daily_projection: DailyProjectionItem[];
+  assumptions: string[];
+}
+

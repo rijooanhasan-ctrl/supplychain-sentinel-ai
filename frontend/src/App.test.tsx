@@ -9,6 +9,7 @@ import { SuppliersPage } from './pages/SuppliersPage';
 import { PurchaseOrdersPage } from './pages/PurchaseOrdersPage';
 import { DataSourcesPage } from './pages/DataSourcesPage';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { InventoryRiskPage } from './pages/InventoryRiskPage';
 import { Route, Routes } from 'react-router-dom';
 
 const mockMeta = {
@@ -44,6 +45,7 @@ function renderWithRouter(initialEntry: string) {
           <Route path="/" element={<AppLayout />}>
             <Route index element={<OverviewPage />} />
             <Route path="inventory" element={<InventoryPage />} />
+            <Route path="inventory-risk" element={<InventoryRiskPage />} />
             <Route path="suppliers" element={<SuppliersPage />} />
             <Route path="purchase-orders" element={<PurchaseOrdersPage />} />
             <Route path="data-sources" element={<DataSourcesPage />} />
@@ -136,6 +138,49 @@ describe('App Layout & Routing Shell', () => {
 
     const inventoryLink = screen.getByRole('link', { name: 'Inventory' });
     expect(inventoryLink).toHaveAttribute('aria-current', 'page');
+  });
+
+  it('navigates to /inventory-risk and marks inventory-risk link as active', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+      const urlStr = url.toString();
+      if (urlStr.includes('/api/meta')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => mockMeta,
+        } as Response;
+      }
+      if (urlStr.includes('/api/inventory-risk')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            as_of: '2026-10-17',
+            model: { name: 'weekday_average', type: 'heuristic_baseline', description: 'test' },
+            config: { lookback_days: 28, horizon_days: 60, critical_days: 7, high_days: 14, medium_days: 30 },
+            summary: { counts_by_risk_level: { critical: 0, high: 0, medium: 0, low: 0, none: 0, unknown: 0 }, components_evaluated: 0 },
+            items: [],
+            total: 0,
+            limit: 50,
+            offset: 0,
+          }),
+        } as Response;
+      }
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ items: [], total: 0, limit: 50, offset: 0 }),
+      } as Response;
+    });
+
+    renderWithRouter('/inventory-risk');
+
+    await waitFor(() => {
+      expect(screen.getByTestId('inventory-risk-page')).toBeInTheDocument();
+    });
+
+    const riskLink = screen.getByRole('link', { name: 'Inventory Risk' });
+    expect(riskLink).toHaveAttribute('aria-current', 'page');
   });
 
   it('navigates to /suppliers and renders SuppliersPage', async () => {

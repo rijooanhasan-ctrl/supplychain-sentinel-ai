@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { ComponentCriticality, PurchaseOrderStatus } from '../api/types';
+import type { ComponentCriticality, PurchaseOrderStatus, RiskLevel } from '../api/types';
 
 interface BadgeProps {
   children: ReactNode;
@@ -64,3 +64,26 @@ export function CriticalityBadge({ criticality }: { criticality: ComponentCritic
 
   return <Badge variant={current.variant}>{current.label}</Badge>;
 }
+
+export function RiskBadge({ level }: { level: RiskLevel }) {
+  const config: Record<
+    RiskLevel,
+    { label: string; variant: 'danger' | 'warning' | 'info' | 'success' | 'neutral' | 'default' }
+  > = {
+    critical: { label: 'Critical', variant: 'danger' },
+    high: { label: 'High', variant: 'warning' },
+    medium: { label: 'Medium', variant: 'info' },
+    low: { label: 'Low', variant: 'success' },
+    unknown: { label: 'Unknown', variant: 'neutral' },
+    none: { label: 'Not applicable', variant: 'default' },
+  };
+
+  const current = config[level] || { label: level, variant: 'default' };
+
+  return (
+    <Badge variant={current.variant} testId={`risk-badge-${level}`}>
+      {current.label}
+    </Badge>
+  );
+}
+

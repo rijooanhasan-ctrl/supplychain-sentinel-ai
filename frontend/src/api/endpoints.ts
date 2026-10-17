@@ -16,6 +16,9 @@ import type {
   Supplier,
   SupplierDetail,
   Warehouse,
+  InventoryRiskListResponse,
+  InventoryRiskDetailResponse,
+  RiskLevel,
 } from './types';
 
 export function getHealth(signal?: AbortSignal): Promise<HealthResponse> {
@@ -139,3 +142,33 @@ export function listDeliveryRecords(
 ): Promise<Paginated<DeliveryRecord>> {
   return getJson<Paginated<DeliveryRecord>>('/api/delivery-records', { params, signal });
 }
+
+export function getInventoryRisk(
+  params?: {
+    risk_level?: RiskLevel | '';
+    category?: string;
+    criticality?: string;
+    include_inactive?: boolean;
+    limit?: number;
+    offset?: number;
+  },
+  signal?: AbortSignal
+): Promise<InventoryRiskListResponse> {
+  return getJson<InventoryRiskListResponse>('/api/inventory-risk', {
+    params: {
+      ...params,
+      risk_level: params?.risk_level || undefined,
+      category: params?.category || undefined,
+      criticality: params?.criticality || undefined,
+    },
+    signal,
+  });
+}
+
+export function getInventoryRiskDetail(
+  id: number,
+  signal?: AbortSignal
+): Promise<InventoryRiskDetailResponse> {
+  return getJson<InventoryRiskDetailResponse>(`/api/inventory-risk/${id}`, { signal });
+}
+
