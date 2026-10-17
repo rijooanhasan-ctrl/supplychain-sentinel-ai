@@ -259,3 +259,26 @@ def test_nullable_fields_appear_as_null(client_seeded):
     res_po = client_seeded.get("/api/purchase-orders?status=in_transit")
     pos = res_po.json()["items"]
     assert any(po["latest_estimate_date"] is None for po in pos)
+
+
+def test_utc_timestamps_format(client_seeded):
+    """Verify that all API datetime fields end in +00:00 or Z (unambiguous UTC ISO-8601)."""
+    # 1. /api/meta -> generated_at
+    res_meta = client_seeded.get("/api/meta")
+    assert res_meta.status_code == 200
+    gen_at = res_meta.json()["generated_at"]
+    assert gen_at is not None
+    assert gen_at.endswith("+00:00") or gen_at.endswith("Z")
+
+    # 2. /api/inventory -> as_of_ts
+    res_inv = client_seeded.get("/api/inventory?limit=5")
+    assert res_inv.status_code == 200
+    for item in res_inv.json()["items"]:
+        assert item["as_of_ts"].endswith("+00:00") or item["as_of_ts"].endswith("Z")
+
+    # 3. /api/health -> timestamp
+    res_health = client_seeded.get("/api/health")
+    assert res_health.status_code == 200
+    ts = res_health.json()["timestamp"]
+    assert ts.endswith("+00:00") or ts.endswith("Z")
+

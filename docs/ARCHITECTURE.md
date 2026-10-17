@@ -102,3 +102,57 @@ The relational schema represents the operational facts of the laptop manufacturi
 ### C. Adapter Boundary & Business Keys
 - **Decision:** `SourceDataset` DTOs reference entities using business keys (`sku`, `code`, `po_number`) rather than database primary key IDs.
 - **Rationale:** External systems like SAP ERP or synthetic demo generators do not know internal auto-increment database integer keys. Translating business keys in `app/services/ingest.py` keeps adapters completely decoupled from internal database storage concerns.
+
+---
+
+## 5. Frontend Architecture & Layering
+
+The frontend application is structured with strict separation of concerns, zero ad-hoc fetches, and no third-party state managers:
+
+```
+[ UI Pages / Components ]   (e.g., App.tsx)
+          │
+          ▼  hooks
+     [ useApi ]             (cancellation, lifecycle safety, reload state)
+          │
+          ▼  typed calls
+    [ endpoints ]           (thin typed functions per API route)
+          │
+          ▼  fetch wrapper
+      [ http ]              (getJson, query serialization, ApiError/NetworkError normalization)
+          │
+          ▼  HTTP GET
+     [ Backend ]
+```
+
+### Layer Responsibilities
+1. **HTTP Layer (`src/api/http.ts`):**
+   - Core `getJson<T>(path, { params, signal })` wrapper.
+   - Clean query parameter stringification omitting `null` and `undefined`.
+   - Normalizes errors:
+     - Throws `ApiError` with status and parsed message (normalizing FastAPI string details and 422 validation array details).
+     - Throws `NetworkError` when fetch fails to connect.
+     - Supports `AbortSignal` for in-flight cancellation; aborted requests throw standard `AbortError` without masquerading as user-facing network errors.
+
+2. **Types Layer (`src/api/types.ts`):**
+   - Strict TypeScript interfaces directly mirroring backend Pydantic models.
+   - Exact pagination envelopes (`Paginated<T>`) and custom envelopes (`DemandHistoryResponse`).
+   - Nullable fields typed with `| null`.
+   - **Monetary & Decimal Precision:** Money fields (`unit_cost`, `selling_price`, `unit_price`) and percentages are strictly typed as `string` (e.g. `"250.00"`), maintaining exact decimal precision without floating-point degradation.
+
+3. **Endpoints Layer (`src/api/endpoints.ts`):**
+   - Thin typed functions for every GET API route (`getHealth`, `getMeta`, `listComponents`, etc.).
+   - Standardizes URL paths and query parameters.
+
+4. **Hooks Layer (`src/api/useApi.ts`):**
+   - Lightweight generic hook `useApi<T>(fetcher, deps)` returning `{ data, error, loading, reload }`.
+   - Manages `AbortController` internally to cancel in-flight requests on dependency changes or component unmount.
+   - Guarantees zero state updates after unmount.
+   - `reload()` function allows user-triggered retries.
+
+5. **Presentation Layer (`src/App.tsx`):**
+   - Renders the enterprise "Data Sources & Integration Status" dashboard.
+   - Independently loads Health and Dataset Metadata so that failures in one do not hide the other.
+   - Renders clear loading (`aria-live="polite"`), error (`role="alert"` with Retry), unseeded (`python -m app.cli seed` code block), and success states.
+   - Displays a prominent `DEMO DATA` badge and explicit unverified integration statuses, ensuring zero false claims of live SAP connectivity.
+

@@ -29,6 +29,8 @@ SAP/
 │   ├── .env.example             # Backend environment template
 │   ├── requirements.txt         # Production runtime dependencies (FastAPI, Uvicorn, Pydantic, SQLAlchemy)
 │   ├── requirements-dev.txt     # Development and testing dependencies (pytest, httpx)
+│   ├── scripts/
+│   │   └── verify_dataset_hash.py # Deterministic multi-table SHA-256 verification script
 │   ├── app/
 │   │   ├── __init__.py
 │   │   ├── main.py              # FastAPI app factory, lifespan table creation, router registration
@@ -41,7 +43,7 @@ SAP/
 │   │   │   ├── models.py        # 13 SQLAlchemy 2.x declarative models with DB constraints
 │   │   │   └── session.py       # Engine creation, lazy sessionmaker, SQLite foreign key pragmas
 │   │   ├── schemas/
-│   │   │   └── __init__.py      # Pydantic response models and PaginatedEnvelope
+│   │   │   └── __init__.py      # Pydantic response models, UtcDatetime serializer, and envelopes
 │   │   ├── api/
 │   │   │   ├── __init__.py
 │   │   │   └── routes/
@@ -75,15 +77,21 @@ SAP/
 │       ├── test_cli.py          # CLI seed command exit codes and argument tests
 │       └── test_api.py          # Complete API endpoint, pagination, filter, and 404 tests
 └── frontend/
-    ├── package.json             # React, Vite, Tailwind CSS, Vitest dependencies
+    ├── package.json             # React 19, Vite, Tailwind CSS v4, Vitest dependencies
     ├── vite.config.ts           # Vite server config (port 5173, /api proxy to 8000, Vitest)
     ├── tsconfig.json            # TypeScript configuration
     └── src/
-        ├── App.tsx              # Health status, loading/error states, DEMO DATA badge
-        ├── App.test.tsx         # Vitest unit tests (loading, success, error states)
+        ├── App.tsx              # "Data Sources & Integration Status" dashboard page
+        ├── App.test.tsx         # Comprehensive Vitest tests (loading, counts, badges, retry)
         ├── index.css            # Tailwind CSS v4 styling
         ├── api/
-        │   └── client.ts        # Typed API client for /api/health
+        │   ├── http.ts          # Type-safe fetch wrapper, error normalization, AbortSignal
+        │   ├── http.test.ts     # Unit tests for HTTP fetcher and error normalization
+        │   ├── types.ts         # TypeScript interfaces mirroring backend schemas (exact string Decimals)
+        │   ├── endpoints.ts     # Typed endpoint functions for all read-only GET APIs
+        │   ├── useApi.ts        # Custom hook for cancellation-safe, reloadable data requests
+        │   ├── useApi.test.ts   # Unit tests for useApi hook
+        │   └── client.ts        # Health check client adapter (backward compatible)
         └── test/
             └── setup.ts         # Testing Library / jest-dom setup
 ```
@@ -105,6 +113,8 @@ cd "C:\Users\SK MD Rijooan Hasan\Desktop\SAP\backend"
 ```
 *Note: To protect stored data, the CLI refuses to overwrite an existing database without the explicit `--reset` flag.*
 
+> **Deterministic Synthetic Timestamps:** All timestamps generated for synthetic datasets (such as `DatasetMeta.generated_at` and inventory `as_of_ts`) are deterministic synthetic UTC timestamps derived directly from the reference `as_of` date (`as_of 00:00:00 UTC`), rather than wall-clock times. This ensures 100% reproducible dataset verification hashes across distinct seeding runs with identical parameters.
+
 ---
 
 ## 4. Running the Application
@@ -124,6 +134,7 @@ From `frontend/`:
 npm run dev
 ```
 - Web Application: `http://localhost:5173` (proxies `/api/*` to `http://localhost:8000`)
+- Features the **Data Sources & Integration Status** page with live health indicators, active dataset metadata, unverified integration badges, and full database entity record counts.
 
 ---
 
@@ -153,20 +164,21 @@ All data endpoints return standard JSON envelopes with pagination (`items`, `tot
 
 ## 6. Running Tests
 
-### Backend Test Suite (32 tests)
+### Backend Test Suite (33 tests)
 From `backend/`:
 ```powershell
 & ".\.venv\Scripts\python.exe" -m pytest tests -v
 ```
 
-### Frontend Test Suite (3 tests)
+### Frontend Test Suite (20 tests)
 From `frontend/`:
 ```powershell
 npm test
 ```
 
-### Frontend Production Build
+### Frontend Linting & Production Build
 From `frontend/`:
 ```powershell
+npm run lint
 npm run build
 ```

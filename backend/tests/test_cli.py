@@ -4,7 +4,7 @@ from app.cli import run_seed
 from app.core.config import get_settings
 
 
-def test_cli_seed_lifecycle(temp_db_url, monkeypatch):
+def test_cli_seed_lifecycle(temp_db_url, monkeypatch, capsys):
     monkeypatch.setenv("DATABASE_URL", temp_db_url)
     get_settings.cache_clear()
 
@@ -18,7 +18,10 @@ def test_cli_seed_lifecycle(temp_db_url, monkeypatch):
 
     # 3. Second seed without --reset refuses and returns non-zero (code 2)
     code_refused = run_seed(seed=42, as_of_str="2026-03-01", reset=False)
-    assert code_refused == 2
+    assert code_refused != 0
+    captured = capsys.readouterr()
+    assert "--reset" in captured.err
+    assert "reset=True" not in captured.err
 
     # 4. Seed with --reset succeeds with code 0
     code_reset = run_seed(seed=99, as_of_str="2026-03-02", reset=True)

@@ -30,8 +30,10 @@ def run_seed(seed: int, as_of_str: Optional[str], reset: bool) -> int:
     with session_factory() as session:
         try:
             counts = load_dataset(session, dataset, reset=reset)
-        except RuntimeError as e:
-            sys.stderr.write(f"Seed Error: {e}\n")
+        except RuntimeError:
+            sys.stderr.write(
+                "Error: Database already contains data. Pass the --reset flag to overwrite existing data.\n"
+            )
             return 2
         except Exception as e:
             sys.stderr.write(f"Unexpected Seed Failure: {e}\n")

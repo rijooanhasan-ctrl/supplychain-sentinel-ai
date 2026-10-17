@@ -1,9 +1,24 @@
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from decimal import Decimal
-from typing import Dict, Generic, List, Optional, TypeVar
-from pydantic import BaseModel, ConfigDict, Field
+from typing import Annotated, Dict, Generic, List, Optional, TypeVar
+from pydantic import BaseModel, ConfigDict, Field, PlainSerializer
 
 T = TypeVar("T")
+
+
+def serialize_utc_datetime(dt: Optional[datetime]) -> Optional[str]:
+    """Serialize datetime to unambiguous UTC ISO-8601 (ending in +00:00)."""
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        # Treat naive datetimes from SQLite as UTC
+        dt = dt.replace(tzinfo=timezone.utc)
+    else:
+        dt = dt.astimezone(timezone.utc)
+    return dt.isoformat()
+
+
+UtcDatetime = Annotated[datetime, PlainSerializer(serialize_utc_datetime, return_type=str)]
 
 
 class PaginatedEnvelope(BaseModel, Generic[T]):
@@ -22,7 +37,7 @@ class DatasetMetaResponse(BaseModel):
     seed: Optional[int] = None
     as_of: Optional[date] = None
     generator_version: Optional[str] = None
-    generated_at: Optional[datetime] = None
+    generated_at: Optional[UtcDatetime] = None
     counts: Dict[str, int] = Field(default_factory=dict)
     message: Optional[str] = None
 
@@ -85,7 +100,7 @@ class ComponentInventoryResponse(BaseModel):
     warehouse_name: str
     on_hand: int
     reserved: int
-    as_of_ts: datetime
+    as_of_ts: UtcDatetime
 
 
 class ComponentResponse(BaseModel):
@@ -162,7 +177,7 @@ class InventoryItemResponse(BaseModel):
     warehouse_name: str
     on_hand: int
     reserved: int
-    as_of_ts: datetime
+    as_of_ts: UtcDatetime
 
 
 class PurchaseOrderLineResponse(BaseModel):

@@ -1,17 +1,8 @@
-export interface HealthResponse {
-  status: string;
-  app: string;
-  version: string;
-  environment: string;
-  data_source: string;
-  timestamp: string;
-}
+import { getHealth } from './endpoints';
+import type { HealthResponse } from './types';
 
-export async function fetchHealth(): Promise<HealthResponse> {
-  const response = await fetch('/api/health');
-  if (!response.ok) {
-    throw new Error(`Health check failed with HTTP ${response.status}: ${response.statusText}`);
-  }
-  const data: HealthResponse = await response.json();
-  return data;
+export type { HealthResponse };
+
+export async function fetchHealth(signal?: AbortSignal): Promise<HealthResponse> {
+  return getHealth(signal);
 }
