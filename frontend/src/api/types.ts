@@ -256,6 +256,15 @@ export interface InventoryRiskSummary {
   components_evaluated: number;
 }
 
+export interface ShortageEpisode {
+  episode_index: number;
+  start_date: string;
+  end_date: string;
+  days: number;
+  unmet_units: number;
+  ends_because: 'inbound_receipt' | 'horizon_end' | 'other';
+}
+
 export interface InventoryRiskItem {
   component_id: number;
   sku: string;
@@ -271,6 +280,9 @@ export interface InventoryRiskItem {
   shortage_date: string | null;
   days_until_shortage: number | null;
   unmet_demand_units: number;
+  unmet_before_next_inbound: number | null;
+  first_episode_start_date: string | null;
+  first_episode_end_date: string | null;
   runout_date_without_inbound: string | null;
   risk_level: RiskLevel;
   risk_reason: string;
@@ -348,6 +360,208 @@ export interface InventoryRiskDetailResponse extends InventoryRiskItem {
   regional_usable_stock: RegionalStock[];
   regional_total_usable: number;
   daily_projection: DailyProjectionItem[];
+  shortage_episodes: ShortageEpisode[];
   assumptions: string[];
+}
+
+// ==========================================
+// Supplier Risk Types
+// ==========================================
+
+export type SupplierRiskBand = 'low' | 'medium' | 'high' | 'unknown';
+export type SupplierConfidence = 'high' | 'medium' | 'low' | 'none';
+
+export interface MetricScoreBreakdown {
+  metric_name: string;
+  raw_value: number | null;
+  penalty: number | null;
+  nominal_weight: number;
+  effective_weight: number;
+  contribution_points: number;
+  dropped: boolean;
+  dropped_reason: string | null;
+}
+
+export interface MonthlyPerformance {
+  month: string;
+  n_deliveries: number;
+  on_time_rate: number | null;
+}
+
+export interface SupplierRiskConfig {
+  lookback_days: number;
+  on_time_grace_days: number;
+  w_on_time: number;
+  w_delay: number;
+  w_rejection: number;
+  w_fill: number;
+  late_rate_full_penalty: number;
+  delay_full_penalty_days: number;
+  rejection_full_penalty: number;
+  fill_shortfall_full_penalty: number;
+  band_medium: number;
+  band_high: number;
+  low_confidence_below: number;
+  high_confidence_from: number;
+}
+
+export interface SupplierRiskItem {
+  supplier_id: number;
+  supplier_code: string;
+  supplier_name: string;
+  country: string;
+  n_deliveries: number;
+  risk_score: number | null;
+  risk_band: SupplierRiskBand;
+  confidence: SupplierConfidence;
+  on_time_rate: number | null;
+  on_time_ci_lower: number | null;
+  on_time_ci_upper: number | null;
+  late_delivery_probability: number | null;
+  expected_delay_days_if_late: number | null;
+  avg_delay_days_all: number | null;
+  avg_delay_days_when_late: number | null;
+  rejection_rate: number | null;
+  fill_rate: number | null;
+  open_po_count: number;
+  open_pos_slipped_count: number;
+  open_pos_overdue_count: number;
+  open_remaining_qty: number;
+}
+
+export interface SupplierRiskSummary {
+  counts_by_band: Record<SupplierRiskBand, number>;
+  total_suppliers: number;
+}
+
+export interface SupplierRiskListResponse {
+  seeded: boolean;
+  as_of: string | null;
+  summary: SupplierRiskSummary;
+  items: SupplierRiskItem[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export interface SupplierRiskDetailResponse extends SupplierRiskItem {
+  as_of: string;
+  excluded_future_deliveries: number;
+  has_excluded_future_deliveries: boolean;
+  p50_delay_days_when_late: number | null;
+  p90_delay_days_when_late: number | null;
+  max_delay_days: number | null;
+  total_ordered_qty: number;
+  total_received_qty: number;
+  total_rejected_qty: number;
+  metrics_breakdown: MetricScoreBreakdown[];
+  nominal_weights: Record<string, number>;
+  effective_weights: Record<string, number>;
+  metrics_used: string[];
+  metrics_dropped: string[];
+  thresholds_used: SupplierRiskConfig;
+  monthly_breakdown: MonthlyPerformance[];
+  main_drivers: string[];
+  explanation: string;
+  assumptions: string[];
+}
+
+// ==========================================
+// Demand Forecasting Types
+// ==========================================
+
+export interface ForecastingProtocol {
+  min_train_days: number;
+  horizon_days: number;
+  step_days: number;
+  folds: number;
+  origin_dates: string[];
+}
+
+export interface ForecastModelInfo {
+  name: string;
+  type: string;
+  description: string;
+  used_by_inventory_risk: boolean;
+}
+
+export interface ForecastModelAggregate {
+  model_name: string;
+  pooled_wape: number | null;
+  macro_wape: number | null;
+  mae: number;
+  rmse: number;
+  bias: number;
+  n_points: number;
+  n_components: number;
+}
+
+export interface ForecastDecision {
+  rule_text: string;
+  champion: string;
+  challenger: string;
+  recommended: boolean;
+  pooled_wape_improvement_pct: number | null;
+  win_rate: number | null;
+  reason: string;
+}
+
+export interface ComponentModelMetrics {
+  n_points: number;
+  mae: number;
+  rmse: number;
+  wape: number | null;
+  bias: number;
+}
+
+export interface ComponentForecastEvaluation {
+  component_id: number;
+  sku: string;
+  name: string;
+  zero_demand: boolean;
+  models: Record<string, ComponentModelMetrics>;
+  best_model: string | null;
+}
+
+export interface SkippedComponentInfo {
+  component_id: number;
+  sku: string;
+  name: string;
+  reason: string;
+}
+
+export interface ForecastEvaluationResponse {
+  seeded: boolean;
+  as_of: string | null;
+  data_caveat: string;
+  protocol: ForecastingProtocol;
+  models: ForecastModelInfo[];
+  aggregate: Record<string, ForecastModelAggregate>;
+  decision: ForecastDecision;
+  per_component: ComponentForecastEvaluation[];
+  skipped: SkippedComponentInfo[];
+}
+
+export interface DayForecastItem {
+  date: string;
+  weekday: string;
+  forecasts: Record<string, number>;
+}
+
+export interface BacktestPointItem {
+  date: string;
+  actual: number;
+  forecasts: Record<string, number>;
+}
+
+export interface ComponentForecastDetailResponse {
+  seeded: boolean;
+  component_id: number;
+  sku: string;
+  name: string;
+  as_of: string;
+  days: number;
+  forecast_days: DayForecastItem[];
+  backtest_last_fold: BacktestPointItem[];
 }
 

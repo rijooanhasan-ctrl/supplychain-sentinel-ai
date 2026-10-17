@@ -19,6 +19,11 @@ import type {
   InventoryRiskListResponse,
   InventoryRiskDetailResponse,
   RiskLevel,
+  SupplierRiskBand,
+  SupplierRiskListResponse,
+  SupplierRiskDetailResponse,
+  ForecastEvaluationResponse,
+  ComponentForecastDetailResponse,
 } from './types';
 
 export function getHealth(signal?: AbortSignal): Promise<HealthResponse> {
@@ -170,5 +175,48 @@ export function getInventoryRiskDetail(
   signal?: AbortSignal
 ): Promise<InventoryRiskDetailResponse> {
   return getJson<InventoryRiskDetailResponse>(`/api/inventory-risk/${id}`, { signal });
+}
+
+export function getSupplierRisk(
+  params?: {
+    band?: SupplierRiskBand | '';
+    country?: string;
+    limit?: number;
+    offset?: number;
+  },
+  signal?: AbortSignal
+): Promise<SupplierRiskListResponse> {
+  return getJson<SupplierRiskListResponse>('/api/supplier-risk', {
+    params: {
+      ...params,
+      band: params?.band || undefined,
+      country: params?.country || undefined,
+    },
+    signal,
+  });
+}
+
+export function getSupplierRiskDetail(
+  supplierId: number,
+  signal?: AbortSignal
+): Promise<SupplierRiskDetailResponse> {
+  return getJson<SupplierRiskDetailResponse>(`/api/supplier-risk/${supplierId}`, { signal });
+}
+
+export function getForecastEvaluation(
+  signal?: AbortSignal
+): Promise<ForecastEvaluationResponse> {
+  return getJson<ForecastEvaluationResponse>('/api/forecasting/evaluation', { signal });
+}
+
+export function getComponentForecastDetail(
+  componentId: number,
+  days: number = 14,
+  signal?: AbortSignal
+): Promise<ComponentForecastDetailResponse> {
+  return getJson<ComponentForecastDetailResponse>(`/api/forecasting/components/${componentId}`, {
+    params: { days },
+    signal,
+  });
 }
 

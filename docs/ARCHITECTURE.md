@@ -44,19 +44,28 @@
 ### Layer Responsibilities & Rules
 
 1. **API Layer (`backend/app/api/`):**
-   - **Routes stay thin:** Route functions parse query parameters (e.g. `limit`, `offset`, filters), execute optimized queries, and return typed Pydantic response schemas (`app/schemas/`).
+   - **Routes stay thin:** Route functions parse query parameters (e.g. `limit`, `offset`, filters), execute optimized queries via services, and return typed Pydantic response schemas (`app/schemas/`).
    - No risk scoring, threshold logic, or data-fabrication calculations occur in route handlers.
-   - **Read-Only:** The API exposes raw stored facts via GET requests only. Non-GET methods (POST, PUT, DELETE) are unrouted and return HTTP 405 Method Not Allowed.
+   - **Read-Only:** The API exposes raw stored facts and domain analytical projections via GET requests only. Non-GET methods (POST, PUT, DELETE) are unrouted and return HTTP 405 Method Not Allowed.
+   - Route modules:
+     - `routes/meta.py`, `routes/components.py`, `routes/inventory.py`, `routes/suppliers.py`, `routes/purchase_orders.py`, `routes/data_sources.py`
+     - `routes/inventory_risk.py` (`/api/inventory-risk`, `/api/inventory-risk/{id}`)
+     - `routes/supplier_risk.py` (`/api/supplier-risk`, `/api/supplier-risk/{id}`)
+     - `routes/forecasting.py` (`/api/forecasting/evaluation`, `/api/forecasting/components/{id}`)
 
 2. **Domain Layer (`backend/app/domain/`):**
-   - Implemented in `backend/app/domain/inventory.py`.
-   - **Pure Functions Only:** Contains deterministic mathematical algorithms, weekday-aware consumption baselines, intra-day stockout projections, and transparent threshold-based risk classification.
-   - **Zero Side Effects:** Zero imports from FastAPI, Starlette, SQLAlchemy, or system time. Operates strictly over plain, frozen dataclasses (`InventoryRiskConfig`, `ComponentInventoryInput`, `DemandWindowInput`, `InboundSupplyInput`, etc.).
-   - **Scenario Simulator Reusability:** Exposes `evaluate_component(inputs, config) -> ComponentRiskResult`. Future scenario simulator and digital twin phases will reuse this exact domain function without modification by simply passing synthetic perturbations (e.g., supplier shipment delays, unexpected demand spikes, expedited delivery dates) and comparing the resulting projection timelines and risk classifications.
+   - Implemented across three focused pure modules:
+     - `backend/app/domain/inventory.py`: Deterministic intra-day stockout projections, weekday-aware consumption profiles, multi-episode shortage segmentation, and component risk classification.
+     - `backend/app/domain/supplier_risk.py`: Supplier delivery performance scoring, 95% Wilson score confidence intervals, delay distribution percentiles (nearest-rank p50/p90), penalty transformations, dynamic weight renormalization, and transparent rule-based explanation generation.
+     - `backend/app/domain/forecasting.py`: Pure forecast models (`seasonal_naive`, `weekday_average`, `ridge_weekday_trend`), rolling-origin backtest evaluation engine, error metrics (MAE, RMSE, WAPE, Bias, Pooled WAPE, Macro WAPE), and frozen decision-rule logic.
+   - **Pure Functions Only:** Zero side-effects, zero imports from FastAPI, SQLAlchemy, or system clock. Operates strictly over plain, frozen dataclasses.
+   - **Strict Dependency Confinement:** `numpy` and `scikit-learn` are permitted and imported **strictly** inside `backend/app/domain/forecasting.py`. No other module in the codebase (API, services, DB, or other domain modules) imports numpy or scikit-learn. Pandas is strictly prohibited.
 
 3. **Services Layer (`backend/app/services/`):**
    - `ingest.py`: Orchestrates loading `SourceDataset` into the relational database. Resolves business keys to internal IDs, validates all entity references, enforces all-or-nothing transactional guarantees, and guards against accidental data overwrites without explicit `--reset`.
-   - `inventory_risk.py`: Bridges the database and domain layer. Efficiently batches relational queries (active components, plant and regional warehouse inventory, historical demand windows, and open inbound purchase order lines), builds domain input DTOs, executes `evaluate_component`, sorts by risk severity and shortage proximity, and transforms outputs into Pydantic API response models. Handles unseeded database states gracefully (`seeded=false`).
+   - `inventory_risk.py`: Batches inventory levels, demand history windows, and inbound supply lines; builds domain DTOs; calls `domain/inventory.py`; and formats API responses.
+   - `supplier_risk.py`: Bulk-loads delivery records within lookback windows and open PO lines, invokes `domain/supplier_risk.py`, and maps metrics to API schemas.
+   - `forecasting.py`: Extracts component consumption series, runs rolling-origin backtests, and maintains an in-process cache keyed by `(as_of, generated_at, config)`. All services handle unseeded database states gracefully (`seeded=false`).
 
 4. **Integrations Layer (`backend/app/integrations/`):**
    - External systems are accessed **only** through a formal adapter interface (`SourceAdapter`).
@@ -119,7 +128,10 @@ The frontend application is structured with strict separation of concerns, zero 
                     │
                     ▼  Route Outlet
 [ Page Views (src/pages/) ]
-  ├── OverviewPage        (Master counts, open/overdue POs, upcoming deliveries)
+  ├── OverviewPage        (Master counts, priority shortage list, supplier risk summary)
+  ├── InventoryRiskPage   (Stockout projections, critical risk alerts, shortage episodes table)
+  ├── SupplierRiskPage    (Transparent vendor risk scoring, penalty weights, monthly history)
+  ├── ForecastingPage     (Evaluation protocol, aggregate WAPE, challenger decision, projections)
   ├── InventoryPage       (Stock levels, warehouse/component filters, usable stock)
   ├── SuppliersPage       (Supplier directory, expandable procurement terms)
   ├── PurchaseOrdersPage  (Inbound PO book, status/supplier filters, timing labels, lines)

@@ -16,10 +16,9 @@ export default defineConfig({
     },
   },
   resolve: {
+    // Ensures a single React instance is shared across all dependencies (including react-router-dom),
+    // preventing the "Cannot read properties of null (reading 'useCallback')" dual-instance dispatcher error.
     dedupe: ['react', 'react-dom'],
-  },
-  optimizeDeps: {
-    exclude: ['react-router-dom', 'react-router', '@tailwindcss/oxide', '@tailwindcss/oxide-win32-x64-msvc'],
   },
   test: {
     globals: true,

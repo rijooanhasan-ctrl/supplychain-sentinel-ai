@@ -97,6 +97,14 @@ class DailyProjectionItemSchema(BaseModel):
     unmet: float
 
 
+class ShortageEpisodeSchema(BaseModel):
+    start_date: date
+    end_date: date
+    days: int
+    unmet_units: float
+    ends_because: str
+
+
 class InventoryRiskItem(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -115,6 +123,9 @@ class InventoryRiskItem(BaseModel):
     days_until_shortage: Optional[int] = None
     unmet_demand_units: float = 0.0
     runout_date_without_inbound: Optional[date] = None
+    unmet_before_next_inbound: Optional[float] = None
+    first_episode_start_date: Optional[date] = None
+    first_episode_end_date: Optional[date] = None
     risk_level: str
     risk_reason: str
     forecast_status: str
@@ -146,4 +157,5 @@ class InventoryRiskDetailResponse(InventoryRiskItem):
     regional_usable_stock: List[RegionalStockSchema] = Field(default_factory=list)
     regional_total_usable: int = 0
     daily_projection: List[DailyProjectionItemSchema] = Field(default_factory=list)
+    shortage_episodes: List[ShortageEpisodeSchema] = Field(default_factory=list)
     assumptions: List[str] = Field(default_factory=list)

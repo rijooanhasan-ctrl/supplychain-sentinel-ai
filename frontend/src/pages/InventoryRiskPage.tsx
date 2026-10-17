@@ -324,7 +324,93 @@ function ComponentRiskDetailPanel({ componentId }: { componentId: number }) {
         )}
       </section>
 
-      {/* 6. Assumptions */}
+      {/* 6. Shortage Episodes & Unmet Demand Semantics */}
+      <section aria-labelledby={`episodes-heading-${componentId}`} className="bg-white p-4 rounded-lg border border-slate-200 shadow-xs space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+          <h3 id={`episodes-heading-${componentId}`} className="font-bold text-slate-700 uppercase tracking-wider">
+            Shortage Episodes &amp; Unmet Demand Semantics
+          </h3>
+          <span className="text-[11px] text-slate-500 font-medium">
+            Lost sales / deferred demand convention: Unmet demand is not backlogged.
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+          <div>
+            <div className="text-[11px] text-slate-500 uppercase font-semibold">
+              Immediate Unmet (Before Next Inbound)
+            </div>
+            <div className="text-lg font-bold font-mono text-red-700 mt-0.5" data-testid={`unmet-pre-inbound-${componentId}`}>
+              {detail.unmet_before_next_inbound != null ? `${detail.unmet_before_next_inbound.toFixed(1)} units` : 'None (0.0)'}
+            </div>
+            <p className="text-[10px] text-slate-500 mt-0.5">
+              Unmet demand strictly before first replenishment arrives.
+            </p>
+          </div>
+          <div>
+            <div className="text-[11px] text-slate-500 uppercase font-semibold">
+              Total horizon unmet, assuming no further supply
+            </div>
+            <div className="text-lg font-bold font-mono text-slate-900 mt-0.5" data-testid={`unmet-horizon-total-${componentId}`}>
+              {detail.unmet_demand_units > 0 ? `${detail.unmet_demand_units.toFixed(1)} units` : 'None (0.0)'}
+            </div>
+            <p className="text-[10px] text-slate-500 mt-0.5">
+              Cumulative unmet units over full 60-day horizon assuming no additional supply.
+            </p>
+          </div>
+        </div>
+
+        {detail.shortage_episodes && detail.shortage_episodes.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-slate-200 text-xs" data-testid={`episodes-table-${componentId}`}>
+              <thead className="bg-slate-50 text-slate-600 font-semibold">
+                <tr>
+                  <th scope="col" className="px-3 py-2 text-left">Episode #</th>
+                  <th scope="col" className="px-3 py-2 text-left">Date Range</th>
+                  <th scope="col" className="px-3 py-2 text-right">Duration</th>
+                  <th scope="col" className="px-3 py-2 text-right">Unmet Units</th>
+                  <th scope="col" className="px-3 py-2 text-left">Episode Conclusion Reason</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {detail.shortage_episodes.map((ep) => (
+                  <tr key={ep.episode_index} className="hover:bg-slate-50/80">
+                    <td className="px-3 py-2 font-mono font-bold text-slate-900">Episode {ep.episode_index}</td>
+                    <td className="px-3 py-2 font-mono text-slate-800">
+                      {formatDate(ep.start_date)} &ndash; {formatDate(ep.end_date)}
+                    </td>
+                    <td className="px-3 py-2 font-mono text-right text-slate-900">{ep.days} days</td>
+                    <td className="px-3 py-2 font-mono text-right font-bold text-red-700">
+                      {ep.unmet_units.toFixed(1)}
+                    </td>
+                    <td className="px-3 py-2">
+                      {ep.ends_because === 'inbound_receipt' && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-900 border border-emerald-300">
+                          Inbound replenishment arrival
+                        </span>
+                      )}
+                      {ep.ends_because === 'horizon_end' && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-100 text-amber-900 border border-amber-300">
+                          Runs to 60-day horizon end
+                        </span>
+                      )}
+                      {ep.ends_because === 'other' && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-800 border border-slate-300">
+                          Demand drops to 0
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="text-slate-500 italic">No shortage episodes projected across the 60-day planning horizon.</p>
+        )}
+      </section>
+
+      {/* 7. Assumptions */}
       {detail.assumptions.length > 0 && (
         <section aria-labelledby={`assumptions-heading-${componentId}`} className="p-4 bg-slate-100/70 rounded-lg border border-slate-200">
           <h3 id={`assumptions-heading-${componentId}`} className="text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-2">

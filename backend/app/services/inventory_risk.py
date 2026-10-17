@@ -44,6 +44,7 @@ from app.schemas.inventory_risk import (
     ReplenishmentInfoSchema,
     RiskFlagSchema,
     RiskLevelEnum,
+    ShortageEpisodeSchema,
     UsableStockBreakdownSchema,
     WeekdayForecastItem,
 )
@@ -505,6 +506,9 @@ def get_inventory_risk_detail(
         days_until_shortage=result.days_until_shortage,
         unmet_demand_units=round(result.unmet_demand_units, 1),
         runout_date_without_inbound=result.runout_date_without_inbound,
+        unmet_before_next_inbound=result.unmet_before_next_inbound,
+        first_episode_start_date=result.first_episode_start_date,
+        first_episode_end_date=result.first_episode_end_date,
         risk_level=result.risk_level,
         risk_reason=result.risk_reason,
         forecast_status=result.forecast_status,
@@ -521,6 +525,16 @@ def get_inventory_risk_detail(
         regional_usable_stock=regional_stock,
         regional_total_usable=result.regional_total_usable,
         daily_projection=projections,
+        shortage_episodes=[
+            ShortageEpisodeSchema(
+                start_date=ep.start_date,
+                end_date=ep.end_date,
+                days=ep.days,
+                unmet_units=ep.unmet_units,
+                ends_because=ep.ends_because,
+            )
+            for ep in result.shortage_episodes
+        ],
         assumptions=result.assumptions,
     )
 
@@ -551,6 +565,9 @@ def _to_list_item(r: ComponentRiskResult) -> InventoryRiskItem:
         days_until_shortage=r.days_until_shortage,
         unmet_demand_units=round(r.unmet_demand_units, 1),
         runout_date_without_inbound=r.runout_date_without_inbound,
+        unmet_before_next_inbound=r.unmet_before_next_inbound,
+        first_episode_start_date=r.first_episode_start_date,
+        first_episode_end_date=r.first_episode_end_date,
         risk_level=r.risk_level,
         risk_reason=r.risk_reason,
         forecast_status=r.forecast_status,

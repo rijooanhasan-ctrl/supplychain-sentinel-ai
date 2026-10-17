@@ -13,8 +13,23 @@ from app.domain.inventory import (
     RegionalStockItem,
     ReplenishmentInfo,
     RiskFlag,
+    ShortageEpisode,
     UsableStockBreakdown,
+    WeekdayAverageProfile,
+    compute_weekday_average_profile,
     evaluate_component,
+)
+from app.domain.supplier_risk import (
+    DEFAULT_SUPPLIER_RISK_ASSUMPTIONS,
+    DeliveryInput,
+    InformationalCurrentState,
+    MetricScoreBreakdown,
+    MonthlyPerformance,
+    OpenPoInput,
+    SupplierEvaluationInput,
+    SupplierRiskConfig,
+    SupplierRiskResult,
+    evaluate_supplier,
 )
 
 __all__ = [
@@ -30,6 +45,19 @@ __all__ = [
     "RegionalStockItem",
     "ReplenishmentInfo",
     "RiskFlag",
+    "ShortageEpisode",
     "UsableStockBreakdown",
+    "WeekdayAverageProfile",
+    "compute_weekday_average_profile",
     "evaluate_component",
+    "DEFAULT_SUPPLIER_RISK_ASSUMPTIONS",
+    "DeliveryInput",
+    "InformationalCurrentState",
+    "MetricScoreBreakdown",
+    "MonthlyPerformance",
+    "OpenPoInput",
+    "SupplierEvaluationInput",
+    "SupplierRiskConfig",
+    "SupplierRiskResult",
+    "evaluate_supplier",
 ]

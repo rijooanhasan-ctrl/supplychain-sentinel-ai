@@ -259,6 +259,30 @@ from app.schemas.inventory_risk import (
     ReplenishmentInfoSchema,
     RiskFlagSchema,
     RiskLevelEnum,
+    ShortageEpisodeSchema,
     UsableStockBreakdownSchema,
     WeekdayForecastItem,
+)
+from app.schemas.supplier_risk import (
+    InformationalPoSchema,
+    MetricScoreBreakdownSchema,
+    MonthlyPerformanceSchema,
+    SupplierRiskConfigSchema,
+    SupplierRiskDetailResponse,
+    SupplierRiskListItem,
+    SupplierRiskListResponse,
+    SupplierRiskSummary,
+)
+from app.schemas.forecasting import (
+    AggregateModelSummarySchema,
+    BacktestPointSchema,
+    ComponentEvaluationSchema,
+    ComponentForecastDetailResponse,
+    DayForecastSchema,
+    DecisionResultSchema,
+    ForecastEvaluationResponse,
+    ModelMetadataSchema,
+    ModelMetricSummarySchema,
+    ProtocolInfoSchema,
+    SkippedComponentSchema,
 )

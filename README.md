@@ -25,10 +25,12 @@ SAP/
 ├── README.md
 ├── docs/
 │   ├── ARCHITECTURE.md          # Architectural layers, adapter boundaries, and data model decisions
-│   └── INVENTORY_INTELLIGENCE.md # Inventory risk rules, daily projection math, and CPU-X7 benchmark
+│   ├── INVENTORY_INTELLIGENCE.md # Inventory risk rules, daily projection math, episodes, and CPU-X7 benchmark
+│   ├── SUPPLIER_RISK.md         # Transparent supplier risk scoring formulas, weights, and SUP-HELIX example
+│   └── FORECASTING.md           # Demand forecast evaluation protocol, models, leakage safeguards, and measured results
 ├── backend/
 │   ├── .env.example             # Backend environment template
-│   ├── requirements.txt         # Production runtime dependencies (FastAPI, Uvicorn, Pydantic, SQLAlchemy)
+│   ├── requirements.txt         # Production runtime dependencies (FastAPI, Uvicorn, Pydantic, SQLAlchemy, numpy, scikit-learn)
 │   ├── requirements-dev.txt     # Development and testing dependencies (pytest, httpx)
 │   ├── scripts/
 │   │   └── verify_dataset_hash.py # Deterministic multi-table SHA-256 verification script
@@ -38,14 +40,16 @@ SAP/
 │   │   ├── cli.py               # Seed CLI command (python -m app.cli seed)
 │   │   ├── core/
 │   │   │   ├── __init__.py
-│   │   │   └── config.py        # Pydantic Settings (env configuration, inventory thresholds validation)
+│   │   │   └── config.py        # Pydantic Settings (inventory, supplier risk, and forecasting threshold validation)
 │   │   ├── db/
 │   │   │   ├── __init__.py
 │   │   │   ├── models.py        # 13 SQLAlchemy 2.x declarative models with DB constraints
 │   │   │   └── session.py       # Engine creation, lazy sessionmaker, SQLite foreign key pragmas
 │   │   ├── schemas/
 │   │   │   ├── __init__.py      # Pydantic response models, UtcDatetime serializer, and envelopes
-│   │   │   └── inventory_risk.py# Inventory risk & shortage projection schemas
+│   │   │   ├── inventory_risk.py# Inventory risk & shortage projection schemas
+│   │   │   ├── supplier_risk.py # Supplier risk performance, penalties, and monthly breakdown schemas
+│   │   │   └── forecasting.py   # Forecast evaluation, backtest fold, and candidate projection schemas
 │   │   ├── api/
 │   │   │   ├── __init__.py
 │   │   │   └── routes/
@@ -53,6 +57,8 @@ SAP/
 │   │   │       ├── health.py    # GET /api/health
 │   │   │       ├── meta.py      # GET /api/meta
 │   │   │       ├── inventory_risk.py # GET /api/inventory-risk, /api/inventory-risk/{component_id}
+│   │   │       ├── supplier_risk.py  # GET /api/supplier-risk, /api/supplier-risk/{supplier_id}
+│   │   │       ├── forecasting.py    # GET /api/forecasting/evaluation, /api/forecasting/components/{component_id}
 │   │   │       ├── products.py  # GET /api/products, /api/products/{id}
 │   │   │       ├── components.py# GET /api/components, /api/components/{id}, demand-history
 │   │   │       ├── suppliers.py # GET /api/suppliers, /api/suppliers/{id}
@@ -61,13 +67,17 @@ SAP/
 │   │   │       ├── purchase_orders.py # GET /api/purchase-orders, /api/purchase-orders/{id}
 │   │   │       ├── customer_orders.py # GET /api/customer-orders
 │   │   │       └── delivery_records.py# GET /api/delivery-records
-│   │   ├── domain/              # Pure business logic layer
+│   │   ├── domain/              # Pure business logic layer (zero DB/framework imports)
 │   │   │   ├── __init__.py
-│   │   │   └── inventory.py     # Pure frozen dataclasses, weekday baseline, daily stock projection
+│   │   │   ├── inventory.py     # Stock projections, shortage episodes, weekday consumption profile
+│   │   │   ├── supplier_risk.py # Performance scoring, Wilson interval, delay percentiles, explanations
+│   │   │   └── forecasting.py   # Pure forecast models (isolated numpy/sklearn), backtesting, decision rule
 │   │   ├── services/
 │   │   │   ├── __init__.py
 │   │   │   ├── ingest.py        # Transactional dataset loader (load_dataset)
-│   │   │   └── inventory_risk.py# Inventory risk service orchestrating DB queries and domain evaluation
+│   │   │   ├── inventory_risk.py# Inventory risk service orchestrating DB queries and domain evaluation
+│   │   │   ├── supplier_risk.py # Supplier risk service querying deliveries and calculating metrics
+│   │   │   └── forecasting.py   # Demand forecast service with in-process evaluation caching
 │   │   └── integrations/
 │   │       ├── __init__.py
 │   │       ├── base.py          # SourceAdapter interface and SourceDataset DTOs
@@ -82,8 +92,12 @@ SAP/
 │       ├── test_loader.py       # All-or-nothing loader and overwrite guard tests
 │       ├── test_cli.py          # CLI seed command exit codes and argument tests
 │       ├── test_api.py          # Complete API endpoint, pagination, filter, and 404 tests
-│       ├── test_domain_inventory.py # Pure domain tests (projections, weekday baseline, risk thresholds)
-│       └── test_inventory_risk_api.py # Service/API integration tests, edge cases, multi-seed determinism
+│       ├── test_domain_inventory.py # Pure domain tests (projections, weekday baseline, episodes, boundaries)
+│       ├── test_inventory_risk_api.py # Service/API integration tests, edge cases, multi-seed determinism
+│       ├── test_domain_supplier_risk.py # Pure supplier risk domain tests (penalties, weights, Wilson CI, limits)
+│       ├── test_supplier_risk_api.py    # Supplier risk service/API tests, ranking, sorting, 404/422
+│       ├── test_domain_forecasting.py   # Pure forecasting tests (leakage, models, rolling backtest, decision rule)
+│       └── test_forecasting_api.py      # Forecasting service/API tests, determinism, caching, 404/422
 └── frontend/
     ├── package.json             # React 19, react-router-dom v7, Tailwind CSS v4, Vitest
     ├── vite.config.ts           # Vite server config (port 5173, /api proxy to 8000, Vitest)
@@ -178,25 +192,31 @@ npm run dev
 ```
 - Web Application: `http://localhost:5173` (proxies `/api/*` to `http://localhost:8000`)
 - **Core Application Views:**
-  1. `/` (**Overview**): Master entity totals, open purchase order counts, overdue order tracking with explicit definition, upcoming delivery schedule with slipped-vs-promise indicators, and an inventory stockout risk summary section.
-  2. `/inventory-risk` (**Inventory Risk & Shortage Projections**): Forward-looking stockout risk and daily shortage projection model across manufacturing plant components with filters, pagination, and expandable 14-day projection tables.
-  3. `/inventory` (**Inventory Levels**): On-hand, reserved, and usable stock (`on_hand - reserved`) per warehouse, filterable by component and warehouse, with text badges for deficit or zero-stock states.
-  4. `/suppliers` (**Supplier Directory**): Global supplier directory with expandable commercial agreement panels showing component unit costs (USD), lead times, minimum order quantities, weekly capacities, and expedite terms.
-  5. `/purchase-orders` (**Purchase Orders**): Inbound replenishment orders filterable by status and supplier, displaying derived timing cells with slipped-vs-promise alerts and expandable fulfillment line items.
-  6. `/data-sources` (**Data Sources & Integration Status**): Backend health metrics, active dataset metadata, unverified connector indicators, and record counts.
+  1. `/` (**Overview**): Master entity totals, open purchase order counts, overdue order tracking with explicit definition, upcoming delivery schedule, priority component shortage alerts (`unmet_before_next_inbound`), and supplier risk summary card.
+  2. `/inventory-risk` (**Inventory Risk & Shortage Projections**): Forward-looking stockout risk and daily shortage projection model across manufacturing plant components with filters, pagination, shortage episodes table, and labeled horizon total.
+  3. `/supplier-risk` (**Supplier Risk Scoring**): Transparent weighted delivery performance scoring (on-time rate with 95% Wilson CI, delay percentiles, rejection rate, fill rate), score bands, informational open-order metrics, expandable penalty point contributions, and 12-month delivery breakdown.
+  4. `/forecasting` (**Demand Forecast Evaluation**): Backtesting protocol summary, synthetic-data caveat banner, aggregate error metrics (Lowest WAPE indicator), frozen champion vs. challenger decision rule, per-component performance table, and expandable 14-day projections and backtest fold comparison.
+  5. `/inventory` (**Inventory Levels**): On-hand, reserved, and usable stock (`on_hand - reserved`) per warehouse, filterable by component and warehouse, with text badges for deficit or zero-stock states.
+  6. `/suppliers` (**Supplier Directory**): Global supplier directory with expandable commercial agreement panels showing component unit costs (USD), lead times, minimum order quantities, weekly capacities, and expedite terms.
+  7. `/purchase-orders` (**Purchase Orders**): Inbound replenishment orders filterable by status and supplier, displaying derived timing cells with slipped-vs-promise alerts and expandable fulfillment line items.
+  8. `/data-sources` (**Data Sources & Integration Status**): Backend health metrics, active dataset metadata, unverified connector indicators, and record counts.
 
 ---
 
 ## 5. Read-Only API Endpoints
 
-All data endpoints return standard JSON envelopes with pagination (`items`, `total`, `limit`, `offset`):
+All data endpoints return standard JSON envelopes with pagination (`items`, `total`, `limit`, `offset`) or structured analysis summaries:
 
 | Method | Endpoint | Description & Filters |
 | :--- | :--- | :--- |
 | `GET` | `/api/health` | Health status and data source verification |
 | `GET` | `/api/meta` | Active dataset metadata, seed, as-of date, and entity counts |
 | `GET` | `/api/inventory-risk` | Inventory stockout risk and shortage projection summary (filters: `risk_level`, `category`, `criticality`, `include_inactive`) |
-| `GET` | `/api/inventory-risk/{component_id}` | Comprehensive component risk detail, explanation, weekday forecast, inbound breakdown, and full daily projection |
+| `GET` | `/api/inventory-risk/{component_id}` | Component risk detail, multi-episode breakdown, weekday forecast profile, inbound breakdown, and full daily projection |
+| `GET` | `/api/supplier-risk` | Supplier delivery risk ranking, summary counts by band (filters: `band`, `country`, `limit`, `offset`, sort by score descending) |
+| `GET` | `/api/supplier-risk/{supplier_id}` | Comprehensive supplier risk detail, penalties, effective weights, contribution points, 12-month delivery breakdown, open orders, and plain-language explanation |
+| `GET` | `/api/forecasting/evaluation` | Demand forecast evaluation backtest summary across models (`seasonal_naive`, `weekday_average`, `ridge_weekday_trend`), aggregate WAPE/MAE/RMSE/bias, frozen decision rule outcome, and per-component breakdown |
+| `GET` | `/api/forecasting/components/{id}` | Component next-N-day demand forecasts from each model (filter: `days=1..60`, default 14) and last-fold backtest actuals vs predictions |
 | `GET` | `/api/products` | Finished laptop models (`limit`, `offset`) |
 | `GET` | `/api/products/{id}` | Product detail with BOM lines and component information |
 | `GET` | `/api/components` | Component catalog (filters: `category`, `q`, `is_active`) |
@@ -227,20 +247,31 @@ The backend supports configuration via environment variables or a `.env` file:
 | `INVENTORY_HIGH_DAYS` | `14` | Threshold for High risk ($\le 14$ days until shortage) |
 | `INVENTORY_MEDIUM_DAYS` | `30` | Threshold for Medium risk ($\le 30$ days until shortage) |
 | `INVENTORY_OVERDUE_INBOUND_POLICY` | `"exclude"` | Policy for overdue inbound POs (only `"exclude"` supported) |
-
-*Validation rule:* $0 < \text{CRITICAL\_DAYS} < \text{HIGH\_DAYS} < \text{MEDIUM\_DAYS} \le \text{HORIZON\_DAYS}$.
+| `SUPPLIER_RISK_LOOKBACK_DAYS` | `365` | Lookback window for delivery evaluation (valid: 30..730) |
+| `SUPPLIER_RISK_GRACE_DAYS` | `0` | Grace period in calendar days for on-time delivery classification |
+| `SUPPLIER_RISK_W_ON_TIME` | `0.40` | Weight for on-time delivery penalty (weights must sum to 1.0) |
+| `SUPPLIER_RISK_W_DELAY` | `0.25` | Weight for average lateness penalty |
+| `SUPPLIER_RISK_W_REJECTION` | `0.20` | Weight for quality rejection rate penalty |
+| `SUPPLIER_RISK_W_FILL` | `0.15` | Weight for quantity fill shortfall penalty |
+| `SUPPLIER_RISK_BAND_MEDIUM` | `25.0` | Threshold between Low and Medium supplier risk band |
+| `SUPPLIER_RISK_BAND_HIGH` | `50.0` | Threshold between Medium and High supplier risk band |
+| `FORECAST_MIN_TRAIN_DAYS` | `84` | Minimum training history required before first backtest fold (valid: 28..150) |
+| `FORECAST_HORIZON_DAYS` | `14` | Evaluation forecast horizon per backtest fold (valid: 7..30) |
+| `FORECAST_STEP_DAYS` | `14` | Rolling origin step stride in days (valid: 7..30) |
+| `FORECAST_MIN_IMPROVEMENT_PCT` | `5.0` | Relative WAPE reduction required to recommend challenger |
+| `FORECAST_MIN_WIN_RATE` | `0.60` | Minimum fraction of component-folds challenger must win |
 
 ---
 
 ## 7. Running Tests
 
-### Backend Test Suite (75 tests)
+### Backend Test Suite (130 tests)
 From `backend/`:
 ```powershell
 & ".\.venv\Scripts\python.exe" -m pytest tests -v
 ```
 
-### Frontend Test Suite (69 tests)
+### Frontend Test Suite (81 tests)
 From `frontend/`:
 ```powershell
 npm test

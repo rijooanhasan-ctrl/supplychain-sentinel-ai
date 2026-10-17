@@ -185,11 +185,13 @@ def test_cpu_x7_independent_calculation(test_db_setup):
         sim_balance = float(raw_usable)
         manual_shortage_day = None
         manual_shortage_date = None
+        unmet_before_manual = 0.0
+        inbound_date = as_of + timedelta(days=7)
         for day_idx in range(60):
             sim_date = as_of + timedelta(days=day_idx)
             w = sim_date.weekday()
             demand_k = manual_forecast[w]
-            receipts_k = 800.0 if sim_date == (as_of + timedelta(days=7)) else 0.0
+            receipts_k = 800.0 if sim_date == inbound_date else 0.0
 
             bal_start = sim_balance + receipts_k
             unmet_k = max(0.0, demand_k - bal_start)
@@ -199,8 +201,12 @@ def test_cpu_x7_independent_calculation(test_db_setup):
                 manual_shortage_day = day_idx
                 manual_shortage_date = sim_date
 
+            if sim_date < inbound_date and unmet_k > 0:
+                unmet_before_manual += unmet_k
+
     assert manual_shortage_day is not None
-    assert 3 <= manual_shortage_day <= 5
+    assert manual_shortage_day == 4
+    assert manual_shortage_date == as_of + timedelta(days=4)
 
     # Now verify the API detail response matches the independent calculation
     res = client.get(f"/api/inventory-risk/{cpu_id}")
@@ -215,6 +221,25 @@ def test_cpu_x7_independent_calculation(test_db_setup):
     assert data["next_replenishment"]["po_number"] == "PO-CPU-701"
     assert data["next_replenishment"]["date"] == str(as_of + timedelta(days=7))
     assert data["next_replenishment"]["date_basis"] == "promised"
+
+    # Verify shortage episodes and unmet_before_next_inbound independently
+    assert len(data["shortage_episodes"]) == 2
+    ep1 = data["shortage_episodes"][0]
+    ep2 = data["shortage_episodes"][1]
+
+    assert ep1["start_date"] == str(as_of + timedelta(days=4))
+    assert ep1["end_date"] == str(as_of + timedelta(days=6))
+    assert ep1["days"] == 3
+    assert ep1["ends_because"] == "inbound_receipt"
+    assert ep1["unmet_units"] == pytest.approx(round(unmet_before_manual, 1), abs=0.1)
+
+    assert data["unmet_before_next_inbound"] == pytest.approx(round(unmet_before_manual, 1), abs=0.1)
+    assert data["first_episode_start_date"] == ep1["start_date"]
+    assert data["first_episode_end_date"] == ep1["end_date"]
+
+    ep2_start = date.fromisoformat(ep2["start_date"])
+    assert as_of + timedelta(days=12) <= ep2_start <= as_of + timedelta(days=16)
+    assert ep2["ends_because"] == "horizon_end"
 
     flag_codes = [f["code"] for f in data["flags"]]
     assert "inbound_promise_only" in flag_codes

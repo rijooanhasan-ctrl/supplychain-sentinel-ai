@@ -68,9 +68,26 @@ $$\text{unmet}_k = \max(0, \text{forecast\_demand}_k - \text{available\_stock}_k
 - **Shortage condition:** A day has a shortage if and only if $\text{unmet}_k > 0$.
 - **`shortage_date`:** The earliest projection date where $\text{unmet}_k > 0$ with counted inbound.
 - **`days_until_shortage`:** $(\text{shortage\_date} - \text{as\_of}).\text{days}$.
-- **`unmet_demand_units`:** $\sum_{k=0}^{\text{horizon}-1} \text{unmet}_k$.
+- **`unmet_demand_units`:** Total unmet demand units over the entire horizon ($\sum_{k=0}^{\text{horizon}-1} \text{unmet}_k$), assuming no further uncommitted supply arrives.
+- **`unmet_before_next_inbound`:** Cumulative unmet demand units from `shortage_date` up to the day before the first counted inbound receipt arriving on or after `shortage_date` (null if no shortage; equals the horizon total if no subsequent inbound receipt is scheduled).
 - **`shortage_days`:** Count of days in the horizon with $\text{unmet}_k > 0$.
 - **`runout_date_without_inbound`:** Shortage date when evaluating the exact same demand projection with all receipts forced to $0$.
+
+### Shortage Episodes
+A shortage episode is a contiguous sequence of projection days where $\text{unmet}_k > 0$:
+- **`start_date`:** First calendar day of the episode.
+- **`end_date`:** Final calendar day of the episode.
+- **`days`:** Duration in calendar days ($(\text{end\_date} - \text{start\_date}).\text{days} + 1$).
+- **`unmet_units`:** Sum of unmet demand across the episode.
+- **`ends_because`:**
+  - `"inbound_receipt"`: A counted inbound receipt arrives on the day immediately following `end_date` ($\text{receipts}_{j+1} > 0$).
+  - `"horizon_end"`: The episode extends through the final day of the planning horizon.
+  - `"other"`: The episode resolves through other means (e.g. demand drops to 0).
+
+### The Non-Backlog (Lost or Deferred Demand) Convention
+- In our daily balance equation, when demand exceeds available stock, $\text{ending\_balance}_k$ resets to $0$, and $\text{unmet}_k$ captures the shortfall for that day.
+- **Unmet demand is NOT carried forward as an accumulated backlog into subsequent days.** It is treated as lost sales or deferred assembly demand.
+- **Consequence:** This convention makes post-receipt stock projections optimistic; when 800 units arrive on Day 7, the full 800 units are available to meet Day 7 assembly needs rather than being retroactively consumed by Day 4–6 deficits.
 
 ### Why `coverage_days` Differs from Projected Shortage Date
 - **Simple Coverage Days:**
@@ -146,17 +163,29 @@ Using the active benchmark dataset (`seed=42`, `as_of="2026-10-17"`, Saturday):
   - Overall Mean Daily Demand: **101.36 units/day**
 - **Inbound Orders:** `PO-CPU-701`, qty_ordered = 800, qty_received = 0, status = `in_transit`, promised_date = `2026-10-24`, latest_estimate_date = `null` (basis: `"promised"`).
 
-### Projection Walkthrough
+### Projection Walkthrough and Two Shortage Episodes
 | Day | Date | Day Name | Demand | Receipts | Ending Balance | Unmet | Notes |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
 | 0 | 2026-10-17 | Sat | 40.00 | 0.00 | 380.00 | 0.00 | Weekend demand consumed |
 | 1 | 2026-10-18 | Sun | 39.50 | 0.00 | 340.50 | 0.00 | Weekend demand consumed |
 | 2 | 2026-10-19 | Mon | 126.50 | 0.00 | 214.00 | 0.00 | Weekday assembly rate |
 | 3 | 2026-10-20 | Tue | 126.00 | 0.00 | 88.00 | 0.00 | Stock drops to 88 units |
-| 4 | 2026-10-21 | Wed | 124.25 | 0.00 | 0.00 | **36.25** | **SHORTAGE OCCURS** ($88 - 124.25 = -36.25$) |
-| 5 | 2026-10-22 | Thu | 128.50 | 0.00 | 0.00 | **128.50** | Stockout persists |
-| 6 | 2026-10-23 | Fri | 124.75 | 0.00 | 0.00 | **124.75** | Stockout persists |
-| 7 | 2026-10-24 | Sat | 40.00 | 800.00 | 760.00 | 0.00 | PO-CPU-701 arrives at start of day; replenishes stock |
+| 4 | 2026-10-21 | Wed | 124.25 | 0.00 | 0.00 | **36.25** | **Episode 1 begins** ($88 - 124.25 = -36.25$) |
+| 5 | 2026-10-22 | Thu | 128.50 | 0.00 | 0.00 | **128.50** | Episode 1 continues |
+| 6 | 2026-10-23 | Fri | 124.75 | 0.00 | 0.00 | **124.75** | Episode 1 ends; receipt arrives next day |
+| 7 | 2026-10-24 | Sat | 40.00 | 800.00 | 760.00 | 0.00 | PO-CPU-701 arrives (800 units); stock replenished |
+| 8 | 2026-10-25 | Sun | 39.50 | 0.00 | 720.50 | 0.00 | Consumption continues |
+| 9..13 | 10-26..10-30 | Mon..Fri | 630.00 | 0.00 | 90.50 | 0.00 | Weekday consumption reduces balance to 90.50 |
+| 14 | 2026-10-31 | Sat | 40.00 | 0.00 | 50.50 | 0.00 | Balance drops to 50.50 |
+| 15 | 2026-11-01 | Sun | 39.50 | 0.00 | 11.00 | 0.00 | Balance drops to 11.00 |
+| 16 | 2026-11-02 | Mon | 126.50 | 0.00 | 0.00 | **115.50** | **Episode 2 begins** ($11 - 126.50 = -115.50$) |
+| 17..59 | 11-03..12-15 | ... | ... | 0.00 | 0.00 | >0.00 | Episode 2 persists to horizon end |
+
+### Shortage Episodes Analysis
+1. **Episode 1:** `2026-10-21` to `2026-10-23` (3 days), unmet = **289.5 units**, `ends_because = "inbound_receipt"`.
+2. **Episode 2:** `2026-11-02` to `2026-12-15` (44 days), unmet = **4498.5 units**, `ends_because = "horizon_end"`.
+- **`unmet_before_next_inbound`:** **289.5 units** (the shortfall strictly during Episode 1 before PO-CPU-701 arrives).
+- **`unmet_demand_units`:** **4788.0 units** (total unmet demand over the full 60-day horizon across both episodes).
 
 ### Evaluation Summary
 - **First Shortage Date:** `2026-10-21` (Day 4)
@@ -166,13 +195,14 @@ Using the active benchmark dataset (`seed=42`, `as_of="2026-10-17"`, Saturday):
 - **Next Replenishment:** 800 units on `2026-10-24` (PO-CPU-701, date_basis: `"promised"`)
 - **Risk Level:** **`critical`** (Shortage projected in 4 days $\le 7$ days)
 - **Explanation:**
-  > "Usable plant stock 420 (on hand 520 − reserved 100). Expected demand ~101.4/day (weekday-aware: ~126.0 weekdays, ~39.8 weekends). Stock runs out on 2026-10-21 (in 4 days). Next inbound: 800 units on 2026-10-24 (promised date; supplier gave no updated estimate), 3 days after the projected shortage. Estimated unmet demand: 4788.0 units across the 60-day horizon."
+  > "Usable plant stock 420 (on hand 520 − reserved 100). Expected demand ~101.4/day (weekday-aware: ~126.0 weekdays, ~39.8 weekends). Stock runs out on 2026-10-21 (in 4 days). Next inbound: 800 units on 2026-10-24 (promised date; supplier gave no updated estimate), 3 days after the projected shortage. Shortage episode 1: 2026-10-21 to 2026-10-23 (3 days, 289.5 units unmet before next inbound). After this inbound is consumed, a further shortage begins on 2026-11-02 (about 4498.5 units over the rest of the horizon) unless more supply is secured. Total unmet demand over horizon: 4788.0 units."
 
 ---
 
 ## 7. Assumptions and Limitations
 
-1. **Heuristic Baseline:** Demand estimation is a weekday-average arithmetic heuristic, not a trained machine-learning model or neural network.
-2. **Single Plant Focus:** Stockout projections currently model the primary manufacturing plant. Inter-warehouse transfers are not automatically scheduled.
-3. **Deterministic Lead Times:** Assumes inbound shipments arrive on their promised or estimated date; supplier historical delivery variability is not yet dynamically factored into delivery dates (planned for Phase 5).
-4. **No Intra-Week Seasonality:** Captures recurring day-of-week patterns, but does not model monthly, quarterly, or promotional demand spikes.
+1. **Non-Backlog Convention:** Unmet demand is not accumulated as an unfulfilled backlog into subsequent days (treated as lost sales or deferred assembly). Projections post-receipt are therefore optimistic.
+2. **Heuristic Baseline:** Demand estimation is a weekday-average arithmetic heuristic, not a trained machine-learning model or neural network.
+3. **Single Plant Focus:** Stockout projections currently model the primary manufacturing plant. Inter-warehouse transfers are not automatically scheduled.
+4. **Deterministic Lead Times:** Assumes inbound shipments arrive on their promised or estimated date; supplier historical delivery variability is evaluated in the Supplier Risk module (`docs/SUPPLIER_RISK.md`).
+5. **No Intra-Week Seasonality:** Captures recurring day-of-week patterns, but does not model monthly, quarterly, or promotional demand spikes.

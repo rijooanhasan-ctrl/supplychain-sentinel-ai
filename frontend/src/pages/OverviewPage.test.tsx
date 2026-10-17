@@ -307,6 +307,9 @@ describe('OverviewPage', () => {
           shortage_date: '2026-10-21',
           days_until_shortage: 4,
           unmet_demand_units: 36.0,
+          unmet_before_next_inbound: 36.0,
+          first_episode_start_date: '2026-10-21',
+          first_episode_end_date: '2026-10-23',
           runout_date_without_inbound: '2026-10-21',
           risk_level: 'critical',
           risk_reason: 'Projected shortage in 4 days.',
@@ -328,6 +331,9 @@ describe('OverviewPage', () => {
           shortage_date: '2026-10-27',
           days_until_shortage: 10,
           unmet_demand_units: 50.0,
+          unmet_before_next_inbound: 50.0,
+          first_episode_start_date: '2026-10-27',
+          first_episode_end_date: '2026-10-31',
           runout_date_without_inbound: '2026-10-27',
           risk_level: 'high',
           risk_reason: 'Projected shortage in 10 days.',
@@ -349,6 +355,9 @@ describe('OverviewPage', () => {
           shortage_date: null,
           days_until_shortage: null,
           unmet_demand_units: 0.0,
+          unmet_before_next_inbound: null,
+          first_episode_start_date: null,
+          first_episode_end_date: null,
           runout_date_without_inbound: null,
           risk_level: 'low',
           risk_reason: 'No shortage.',
@@ -427,5 +436,91 @@ describe('OverviewPage', () => {
 
     // Inventory risk section shows error view independently
     expect(screen.getByText('Could not load inventory risk summary')).toBeInTheDocument();
+  });
+
+  it('renders supplier risk section with summary counts and links to highest risk supplier', async () => {
+    const mockSupplierList = {
+      seeded: true,
+      as_of: '2026-10-17',
+      summary: {
+        counts_by_band: { high: 1, medium: 2, low: 4, unknown: 1 },
+        total_suppliers: 8,
+      },
+      items: [
+        {
+          supplier_id: 1,
+          supplier_code: 'SUP-HELIX',
+          supplier_name: 'Helix Microelectronics',
+          country: 'DE',
+          n_deliveries: 40,
+          risk_score: 68.2,
+          risk_band: 'high',
+          confidence: 'high',
+          on_time_rate: 0.675,
+          open_po_count: 2,
+        },
+      ],
+      total: 8,
+      limit: 100,
+      offset: 0,
+    };
+
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+      const urlStr = url.toString();
+      if (urlStr.includes('/api/meta')) {
+        return { ok: true, status: 200, json: async () => mockMeta } as Response;
+      }
+      if (urlStr.includes('/api/supplier-risk')) {
+        return { ok: true, status: 200, json: async () => mockSupplierList } as Response;
+      }
+      return { ok: true, status: 200, json: async () => ({ items: [], total: 0 }) } as Response;
+    });
+
+    render(
+      <MetaProvider>
+        <MemoryRouter>
+          <OverviewPage />
+        </MemoryRouter>
+      </MetaProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('overview-supplier-risk-section')).toBeInTheDocument();
+    });
+
+    expect(screen.getByTestId('overview-supplier-count-high')).toHaveTextContent('1');
+    expect(screen.getByTestId('overview-supplier-count-medium')).toHaveTextContent('2');
+    expect(screen.getByTestId('overview-supplier-count-low')).toHaveTextContent('4');
+    expect(screen.getByTestId('overview-supplier-count-unknown')).toHaveTextContent('1');
+
+    expect(screen.getByTestId('highest-supplier-score')).toHaveTextContent('68.2');
+    expect(screen.getByTestId('link-highest-supplier')).toHaveAttribute('href', '/supplier-risk');
+  });
+
+  it('handles independent failure of supplier risk section without breaking other overview sections', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+      const urlStr = url.toString();
+      if (urlStr.includes('/api/meta')) {
+        return { ok: true, status: 200, json: async () => mockMeta } as Response;
+      }
+      if (urlStr.includes('/api/supplier-risk')) {
+        return { ok: false, status: 500, json: async () => ({ detail: 'Supplier service error' }) } as Response;
+      }
+      return { ok: true, status: 200, json: async () => ({ items: [], total: 0 }) } as Response;
+    });
+
+    render(
+      <MetaProvider>
+        <MemoryRouter>
+          <OverviewPage />
+        </MemoryRouter>
+      </MetaProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('count-products')).toHaveTextContent('4');
+    });
+
+    expect(screen.getByText('Could not load supplier risk summary')).toBeInTheDocument();
   });
 });

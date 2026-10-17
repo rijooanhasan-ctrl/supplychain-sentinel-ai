@@ -53,7 +53,7 @@ Conventions and Rules:
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import date, timedelta
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Sequence
 
 
 @dataclass(frozen=True)
@@ -216,6 +216,17 @@ class DailyProjectionItem:
 
 
 @dataclass(frozen=True)
+class ShortageEpisode:
+    """Contiguous run of projection days with unmet demand > 0."""
+
+    start_date: date
+    end_date: date
+    days: int
+    unmet_units: float
+    ends_because: str  # "inbound_receipt" | "horizon_end" | "other"
+
+
+@dataclass(frozen=True)
 class UsableStockBreakdown:
     """Detailed components of plant usable stock."""
 
@@ -248,6 +259,10 @@ class ComponentRiskResult:
     unmet_demand_units: float
     shortage_days: int
     runout_date_without_inbound: Optional[date]
+    shortage_episodes: List[ShortageEpisode]
+    unmet_before_next_inbound: Optional[float]
+    first_episode_start_date: Optional[date]
+    first_episode_end_date: Optional[date]
     risk_level: str
     risk_reason: str
     explanation: str
@@ -277,10 +292,111 @@ DEFAULT_ASSUMPTIONS = [
     "Demand projection uses a 28-day weekday-average heuristic baseline, not a trained ML model.",
     "Inbound receipts are assumed available at the start of their expected arrival date.",
     "Daily consumption occurs continuously throughout the day after receipts are stocked.",
+    "Unmet demand is not carried forward as backlog (treated as lost or deferred), which makes the post-receipt projection optimistic.",
     "Overdue purchase orders (expected before as_of) are excluded from projected supply under conservative risk policy.",
     "Stock at regional warehouses is not automatically transferred to the production plant.",
     "Supplier lead time reliability and expedite options are not factored into baseline projections.",
 ]
+
+
+@dataclass(frozen=True)
+class WeekdayAverageProfile:
+    """Result of computing weekday-average demand profile over a lookback window."""
+
+    status: str  # "adequate", "insufficient_history", "no_demand"
+    mean_daily_demand: Optional[float]
+    weekday_forecast: Optional[Dict[int, float]]
+    flags: List[RiskFlag]
+    distinct_dates_count: int
+    coverage_ratio: float
+
+
+def compute_weekday_average_profile(
+    demand_records: Sequence[DemandHistoryRecordInput],
+    as_of: date,
+    lookback_days: int = 28,
+    min_history_days: int = 14,
+    min_coverage_ratio: float = 0.5,
+) -> WeekdayAverageProfile:
+    """Pure function calculating the weekday average profile over [as_of - lookback_days, as_of - 1]."""
+    window_start = as_of - timedelta(days=lookback_days)
+    window_end = as_of - timedelta(days=1)
+
+    window_records_by_date: Dict[date, float] = {}
+    for rec in demand_records:
+        if window_start <= rec.date <= window_end:
+            window_records_by_date[rec.date] = window_records_by_date.get(rec.date, 0.0) + float(rec.quantity)
+
+    distinct_dates_count = len(window_records_by_date)
+    coverage_ratio = distinct_dates_count / lookback_days if lookback_days > 0 else 0.0
+    flags: List[RiskFlag] = []
+
+    if distinct_dates_count < min_history_days or coverage_ratio < min_coverage_ratio:
+        return WeekdayAverageProfile(
+            status="insufficient_history",
+            mean_daily_demand=None,
+            weekday_forecast=None,
+            flags=[
+                RiskFlag(
+                    code="insufficient_history",
+                    message=(
+                        f"Only {distinct_dates_count} history days present in {lookback_days}-day "
+                        f"window (minimum {min_history_days} days and {min_coverage_ratio * 100:.1f}% "
+                        f"coverage required)."
+                    ),
+                )
+            ],
+            distinct_dates_count=distinct_dates_count,
+            coverage_ratio=coverage_ratio,
+        )
+
+    total_demand = sum(window_records_by_date.values())
+    mean_daily_demand = total_demand / distinct_dates_count
+
+    if mean_daily_demand == 0.0:
+        return WeekdayAverageProfile(
+            status="no_demand",
+            mean_daily_demand=0.0,
+            weekday_forecast={i: 0.0 for i in range(7)},
+            flags=[
+                RiskFlag(
+                    code="zero_demand",
+                    message="Zero consumption recorded across all history days in lookback window.",
+                )
+            ],
+            distinct_dates_count=distinct_dates_count,
+            coverage_ratio=coverage_ratio,
+        )
+
+    weekday_samples: Dict[int, List[float]] = {i: [] for i in range(7)}
+    for rec_date, qty in window_records_by_date.items():
+        weekday_samples[rec_date.weekday()].append(qty)
+
+    weekday_forecast = {}
+    for w in range(7):
+        samples = weekday_samples[w]
+        if samples:
+            weekday_forecast[w] = sum(samples) / len(samples)
+        else:
+            weekday_forecast[w] = mean_daily_demand
+            flags.append(
+                RiskFlag(
+                    code="weekday_fallback",
+                    message=(
+                        f"{WEEKDAY_NAMES[w]} has no demand records in window; "
+                        f"fell back to overall window mean ({mean_daily_demand:.1f})."
+                    ),
+                )
+            )
+
+    return WeekdayAverageProfile(
+        status="adequate",
+        mean_daily_demand=mean_daily_demand,
+        weekday_forecast=weekday_forecast,
+        flags=flags,
+        distinct_dates_count=distinct_dates_count,
+        coverage_ratio=coverage_ratio,
+    )
 
 
 def evaluate_component(
@@ -366,77 +482,33 @@ def evaluate_component(
         )
 
     # 3. Demand Forecast (weekday-average baseline)
-    window_start = as_of - timedelta(days=config.lookback_days)
-    window_end = as_of - timedelta(days=1)
-
-    # Aggregate by date in the lookback window
-    window_records_by_date: Dict[date, float] = {}
-    for rec in inputs.demand_records:
-        if window_start <= rec.date <= window_end:
-            window_records_by_date[rec.date] = window_records_by_date.get(rec.date, 0.0) + float(rec.quantity)
-
-    distinct_dates_count = len(window_records_by_date)
-    coverage_ratio = distinct_dates_count / config.lookback_days
-
     mean_daily_demand: Optional[float] = None
     weekday_forecast: Optional[Dict[int, float]] = None
     coverage_days: Optional[float] = None
+    distinct_dates_count: int = 0
+    coverage_ratio: float = 0.0
     forecast_status: str
 
     if inputs.plant_inventory is None:
         forecast_status = "no_plant_inventory"
-    elif distinct_dates_count < config.min_history_days or coverage_ratio < config.min_coverage_ratio:
-        forecast_status = "insufficient_history"
-        flags.append(
-            RiskFlag(
-                code="insufficient_history",
-                message=(
-                    f"Only {distinct_dates_count} history days present in {config.lookback_days}-day "
-                    f"window (minimum {config.min_history_days} days and {config.min_coverage_ratio * 100:.1f}% "
-                    f"coverage required)."
-                ),
-            )
-        )
     else:
-        total_demand = sum(window_records_by_date.values())
-        mean_daily_demand = total_demand / distinct_dates_count
-
-        if mean_daily_demand == 0.0:
-            forecast_status = "no_demand"
-            flags.append(
-                RiskFlag(
-                    code="zero_demand",
-                    message="Zero consumption recorded across all history days in lookback window.",
-                )
-            )
-            weekday_forecast = {i: 0.0 for i in range(7)}
+        profile = compute_weekday_average_profile(
+            demand_records=inputs.demand_records,
+            as_of=as_of,
+            lookback_days=config.lookback_days,
+            min_history_days=config.min_history_days,
+            min_coverage_ratio=config.min_coverage_ratio,
+        )
+        forecast_status = profile.status
+        mean_daily_demand = profile.mean_daily_demand
+        weekday_forecast = profile.weekday_forecast
+        distinct_dates_count = profile.distinct_dates_count
+        coverage_ratio = profile.coverage_ratio
+        flags.extend(profile.flags)
+        if profile.status == "adequate" and plant_usable_stock is not None and mean_daily_demand is not None:
+            coverage_days = plant_usable_stock / mean_daily_demand
+        elif profile.status == "no_demand":
             coverage_days = None
-        else:
-            forecast_status = "adequate"
-            # Calculate mean per day of week (0=Monday..6=Sunday)
-            weekday_samples: Dict[int, List[float]] = {i: [] for i in range(7)}
-            for rec_date, qty in window_records_by_date.items():
-                weekday_samples[rec_date.weekday()].append(qty)
-
-            weekday_forecast = {}
-            for w in range(7):
-                samples = weekday_samples[w]
-                if samples:
-                    weekday_forecast[w] = sum(samples) / len(samples)
-                else:
-                    weekday_forecast[w] = mean_daily_demand
-                    flags.append(
-                        RiskFlag(
-                            code="weekday_fallback",
-                            message=(
-                                f"{WEEKDAY_NAMES[w]} has no demand records in window; "
-                                f"fell back to overall window mean ({mean_daily_demand:.1f})."
-                            ),
-                        )
-                    )
-
-            if plant_usable_stock is not None:
-                coverage_days = plant_usable_stock / mean_daily_demand
 
     # 4. Inbound Supply Classification
     counted_inbound: List[InboundSummaryItem] = []
@@ -602,6 +674,73 @@ def evaluate_component(
                 runout_date_without_inbound = date_k
                 break
 
+        # Compute shortage episodes (contiguous runs of days with unmet > 0)
+        shortage_episodes: List[ShortageEpisode] = []
+        ep_start_k: Optional[int] = None
+        ep_unmet: float = 0.0
+
+        for k, item in enumerate(daily_projection):
+            if item.unmet > 0.0:
+                if ep_start_k is None:
+                    ep_start_k = k
+                    ep_unmet = item.unmet
+                else:
+                    ep_unmet += item.unmet
+            else:
+                if ep_start_k is not None:
+                    ep_end_k = k - 1
+                    ep_days = ep_end_k - ep_start_k + 1
+                    next_receipt = daily_projection[k].receipts if k < len(daily_projection) else 0.0
+                    ends_because = "inbound_receipt" if next_receipt > 0.0 else "other"
+                    shortage_episodes.append(
+                        ShortageEpisode(
+                            start_date=as_of + timedelta(days=ep_start_k),
+                            end_date=as_of + timedelta(days=ep_end_k),
+                            days=ep_days,
+                            unmet_units=round(ep_unmet, 1),
+                            ends_because=ends_because,
+                        )
+                    )
+                    ep_start_k = None
+                    ep_unmet = 0.0
+
+        if ep_start_k is not None:
+            ep_end_k = len(daily_projection) - 1
+            ep_days = ep_end_k - ep_start_k + 1
+            shortage_episodes.append(
+                ShortageEpisode(
+                    start_date=as_of + timedelta(days=ep_start_k),
+                    end_date=as_of + timedelta(days=ep_end_k),
+                    days=ep_days,
+                    unmet_units=round(ep_unmet, 1),
+                    ends_because="horizon_end",
+                )
+            )
+
+        # Compute unmet_before_next_inbound and episode dates
+        unmet_before_next_inbound: Optional[float] = None
+        first_episode_start_date: Optional[date] = None
+        first_episode_end_date: Optional[date] = None
+
+        if shortage_date is not None:
+            first_episode_start_date = shortage_episodes[0].start_date if shortage_episodes else None
+            first_episode_end_date = shortage_episodes[0].end_date if shortage_episodes else None
+
+            receipt_dates = sorted([d for d in receipts_by_date.keys() if d >= shortage_date and receipts_by_date[d] > 0.0])
+            if not receipt_dates:
+                unmet_before_next_inbound = round(unmet_demand_units, 1)
+            else:
+                first_receipt_date = receipt_dates[0]
+                unmet_sum = sum(
+                    p.unmet for p in daily_projection if shortage_date <= p.date < first_receipt_date
+                )
+                unmet_before_next_inbound = round(unmet_sum, 1)
+    else:
+        shortage_episodes = []
+        unmet_before_next_inbound = None
+        first_episode_start_date = None
+        first_episode_end_date = None
+
     # 6. Risk Level & Risk Reason
     risk_level: str
     risk_reason: str
@@ -664,6 +803,8 @@ def evaluate_component(
         days_until_shortage=days_until_shortage,
         next_replenishment=next_replenishment,
         unmet_demand_units=unmet_demand_units,
+        shortage_episodes=shortage_episodes,
+        unmet_before_next_inbound=unmet_before_next_inbound,
         distinct_dates_count=distinct_dates_count,
         config=config,
     )
@@ -688,6 +829,10 @@ def evaluate_component(
         unmet_demand_units=unmet_demand_units,
         shortage_days=shortage_days,
         runout_date_without_inbound=runout_date_without_inbound,
+        shortage_episodes=shortage_episodes,
+        unmet_before_next_inbound=unmet_before_next_inbound,
+        first_episode_start_date=first_episode_start_date,
+        first_episode_end_date=first_episode_end_date,
         risk_level=risk_level,
         risk_reason=risk_reason,
         explanation=explanation,
@@ -719,6 +864,8 @@ def _build_explanation(
     days_until_shortage: Optional[int],
     next_replenishment: Optional[ReplenishmentInfo],
     unmet_demand_units: float,
+    shortage_episodes: List[ShortageEpisode],
+    unmet_before_next_inbound: Optional[float],
     distinct_dates_count: int,
     config: InventoryRiskConfig,
 ) -> str:
@@ -778,6 +925,10 @@ def _build_explanation(
         else f"Stock runs out on {shortage_date} (in {days_until_shortage} days)."
     )
 
+    first_ep = shortage_episodes[0] if shortage_episodes else None
+    first_ep_range = f" (from {first_ep.start_date} to {first_ep.end_date})" if first_ep else ""
+    unmet_before = unmet_before_next_inbound if unmet_before_next_inbound is not None else unmet_demand_units
+
     if next_replenishment is not None:
         qty_int = int(round(next_replenishment.qty))
         basis_note = (
@@ -793,19 +944,27 @@ def _build_explanation(
                 f"Next inbound: {qty_int} units on {next_replenishment.date} "
                 f"({next_replenishment.date_basis} date; {basis_note}), "
                 f"{gap_str} after the projected shortage. "
-                f"Estimated unmet demand until then: {unmet_demand_units:.1f} units."
+                f"Estimated unmet demand before next inbound: {unmet_before:.1f} units{first_ep_range}."
             )
         else:
             inbound_desc = (
                 f"Next inbound: {qty_int} units on {next_replenishment.date} "
                 f"({next_replenishment.date_basis} date; {basis_note}). "
                 f"Shortage projected on {shortage_date} (in {days_until_shortage} days) "
-                f"with {unmet_demand_units:.1f} units unmet demand."
+                f"with {unmet_before:.1f} units unmet demand before next inbound."
             )
     else:
         inbound_desc = (
             f"No open inbound replenishment orders scheduled within the planning horizon. "
-            f"Estimated unmet demand: {unmet_demand_units:.1f} units."
+            f"Estimated unmet demand: {unmet_demand_units:.1f} units over horizon."
+        )
+
+    if len(shortage_episodes) > 1:
+        second_ep = shortage_episodes[1]
+        remaining_unmet = sum(ep.unmet_units for ep in shortage_episodes[1:])
+        inbound_desc += (
+            f" After this inbound is consumed, a further shortage begins on {second_ep.start_date} "
+            f"(about {remaining_unmet:.1f} units over the rest of the horizon) unless more supply is secured."
         )
 
     return f"{stock_desc} {runout_str} {inbound_desc}"

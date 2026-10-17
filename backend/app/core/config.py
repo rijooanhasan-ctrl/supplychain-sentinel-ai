@@ -20,6 +20,23 @@ class Settings(BaseSettings):
     INVENTORY_HIGH_DAYS: int = 14
     INVENTORY_MEDIUM_DAYS: int = 30
 
+    # Supplier Risk thresholds
+    SUPPLIER_RISK_LOOKBACK_DAYS: int = 365
+    SUPPLIER_RISK_GRACE_DAYS: int = 0
+    SUPPLIER_RISK_W_ON_TIME: float = 0.40
+    SUPPLIER_RISK_W_DELAY: float = 0.25
+    SUPPLIER_RISK_W_REJECTION: float = 0.20
+    SUPPLIER_RISK_W_FILL: float = 0.15
+    SUPPLIER_RISK_BAND_MEDIUM: float = 25.0
+    SUPPLIER_RISK_BAND_HIGH: float = 50.0
+
+    # Demand Forecasting settings
+    FORECAST_MIN_TRAIN_DAYS: int = 84
+    FORECAST_HORIZON_DAYS: int = 14
+    FORECAST_STEP_DAYS: int = 14
+    FORECAST_MIN_IMPROVEMENT_PCT: float = 5.0
+    FORECAST_MIN_WIN_RATE: float = 0.60
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -64,6 +81,58 @@ class Settings(BaseSettings):
                 f"Invalid inventory threshold ordering: must satisfy "
                 f"0 < CRITICAL ({self.INVENTORY_CRITICAL_DAYS}) < HIGH ({self.INVENTORY_HIGH_DAYS}) "
                 f"< MEDIUM ({self.INVENTORY_MEDIUM_DAYS}) <= HORIZON ({self.INVENTORY_HORIZON_DAYS})"
+            )
+        return self
+
+    @model_validator(mode="after")
+    def validate_supplier_risk_settings(self) -> "Settings":
+        if self.SUPPLIER_RISK_LOOKBACK_DAYS <= 0:
+            raise ValueError(
+                f"SUPPLIER_RISK_LOOKBACK_DAYS must be positive, got {self.SUPPLIER_RISK_LOOKBACK_DAYS}"
+            )
+        if self.SUPPLIER_RISK_GRACE_DAYS < 0:
+            raise ValueError(
+                f"SUPPLIER_RISK_GRACE_DAYS cannot be negative, got {self.SUPPLIER_RISK_GRACE_DAYS}"
+            )
+        weights = [
+            self.SUPPLIER_RISK_W_ON_TIME,
+            self.SUPPLIER_RISK_W_DELAY,
+            self.SUPPLIER_RISK_W_REJECTION,
+            self.SUPPLIER_RISK_W_FILL,
+        ]
+        if any(w < 0 for w in weights):
+            raise ValueError(f"Supplier risk weights cannot be negative: {weights}")
+        total_w = sum(weights)
+        if abs(total_w - 1.0) > 1e-6:
+            raise ValueError(f"Supplier risk weights must sum to 1 within 1e-6, got {total_w}")
+        if not (0 < self.SUPPLIER_RISK_BAND_MEDIUM < self.SUPPLIER_RISK_BAND_HIGH <= 100):
+            raise ValueError(
+                f"Invalid supplier risk band ordering: must satisfy "
+                f"0 < MEDIUM ({self.SUPPLIER_RISK_BAND_MEDIUM}) < HIGH ({self.SUPPLIER_RISK_BAND_HIGH}) <= 100"
+            )
+        return self
+
+    @model_validator(mode="after")
+    def validate_forecasting_settings(self) -> "Settings":
+        if self.FORECAST_MIN_TRAIN_DAYS < 14:
+            raise ValueError(
+                f"FORECAST_MIN_TRAIN_DAYS must be at least 14, got {self.FORECAST_MIN_TRAIN_DAYS}"
+            )
+        if self.FORECAST_HORIZON_DAYS <= 0:
+            raise ValueError(
+                f"FORECAST_HORIZON_DAYS must be positive, got {self.FORECAST_HORIZON_DAYS}"
+            )
+        if self.FORECAST_STEP_DAYS <= 0:
+            raise ValueError(
+                f"FORECAST_STEP_DAYS must be positive, got {self.FORECAST_STEP_DAYS}"
+            )
+        if self.FORECAST_MIN_IMPROVEMENT_PCT < 0:
+            raise ValueError(
+                f"FORECAST_MIN_IMPROVEMENT_PCT cannot be negative, got {self.FORECAST_MIN_IMPROVEMENT_PCT}"
+            )
+        if not (0.0 <= self.FORECAST_MIN_WIN_RATE <= 1.0):
+            raise ValueError(
+                f"FORECAST_MIN_WIN_RATE must be between 0.0 and 1.0, got {self.FORECAST_MIN_WIN_RATE}"
             )
         return self
 

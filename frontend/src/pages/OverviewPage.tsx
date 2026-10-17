@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { getInventoryRisk, listPurchaseOrders } from '../api/endpoints';
+import { getInventoryRisk, getSupplierRisk, listPurchaseOrders } from '../api/endpoints';
 import { useApi } from '../api/useApi';
 import { useMeta } from '../hooks/useMeta';
 import { PageHeader } from '../components/PageHeader';
@@ -57,6 +57,23 @@ export function OverviewPage() {
     error: riskError,
     reload: reloadRisk,
   } = useApi(fetchRisk, [fetchRisk]);
+
+  // Fetch supplier risk summary for independent section
+  const fetchSupplierRiskCall = useCallback(
+    (signal: AbortSignal) => getSupplierRisk({ limit: 100 }, signal),
+    []
+  );
+  const {
+    data: supplierRiskData,
+    loading: supplierRiskLoading,
+    error: supplierRiskError,
+    reload: reloadSupplierRisk,
+  } = useApi(fetchSupplierRiskCall, [fetchSupplierRiskCall]);
+
+  const highestScoringSupplier = useMemo(() => {
+    if (!supplierRiskData?.items) return null;
+    return supplierRiskData.items.find((s) => s.risk_score != null) || null;
+  }, [supplierRiskData]);
 
   // Derived metrics from fetched POs
   const { overdueCount, delayedCount, upcomingDeliveries, isTruncated } = useMemo(() => {
@@ -446,6 +463,7 @@ export function OverviewPage() {
                         <th scope="col" className="px-3 py-2 text-left">Criticality</th>
                         <th scope="col" className="px-3 py-2 text-right">Plant Usable</th>
                         <th scope="col" className="px-3 py-2 text-left">Predicted Shortage</th>
+                        <th scope="col" className="px-3 py-2 text-right">Immediate Unmet</th>
                         <th scope="col" className="px-3 py-2 text-left">Risk Level</th>
                         <th scope="col" className="px-3 py-2 text-right">Action</th>
                       </tr>
@@ -470,6 +488,11 @@ export function OverviewPage() {
                               '—'
                             )}
                           </td>
+                          <td className="px-3 py-2 font-mono text-right text-red-700 font-semibold">
+                            {comp.unmet_before_next_inbound != null
+                              ? `${comp.unmet_before_next_inbound.toFixed(1)} units`
+                              : '—'}
+                          </td>
                           <td className="px-3 py-2">
                             <RiskBadge level={comp.risk_level} />
                           </td>
@@ -489,6 +512,105 @@ export function OverviewPage() {
                 </div>
               )}
             </div>
+          </div>
+        )}
+      </section>
+
+      {/* Section 5: Supplier Risk & Reliability */}
+      <section aria-labelledby="supplier-risk-overview-heading" className="space-y-4" data-testid="overview-supplier-risk-section">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <h2 id="supplier-risk-overview-heading" className="text-sm font-semibold uppercase tracking-wider text-slate-500">
+            Supplier Delivery Reliability &amp; Performance
+          </h2>
+          <Link
+            to="/supplier-risk"
+            className="text-xs font-semibold text-blue-600 hover:text-blue-800 underline"
+            data-testid="link-to-supplier-risk"
+          >
+            Open Full Supplier Risk Analysis &rarr;
+          </Link>
+        </div>
+
+        {supplierRiskLoading && (
+          <LoadingView
+            message="Evaluating supplier risk scores and delivery histories..."
+            testId="overview-supplier-risk-loading"
+          />
+        )}
+
+        {supplierRiskError && (
+          <ErrorView
+            error={supplierRiskError}
+            onRetry={reloadSupplierRisk}
+            title="Could not load supplier risk summary"
+          />
+        )}
+
+        {supplierRiskData?.summary && !supplierRiskLoading && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3" data-testid="supplier-risk-summary-grid">
+              <div className="bg-white p-3.5 rounded-lg border border-red-200 bg-red-50/20 shadow-xs">
+                <dt className="text-[11px] font-bold text-red-900 uppercase tracking-wider">High Risk</dt>
+                <dd className="mt-1 text-2xl font-bold text-red-700" data-testid="overview-supplier-count-high">
+                  {formatInteger(supplierRiskData.summary.counts_by_band.high || 0)}
+                </dd>
+                <span className="text-[10px] text-slate-500 block mt-0.5">Score &ge; 50</span>
+              </div>
+
+              <div className="bg-white p-3.5 rounded-lg border border-amber-200 bg-amber-50/20 shadow-xs">
+                <dt className="text-[11px] font-bold text-amber-900 uppercase tracking-wider">Medium Risk</dt>
+                <dd className="mt-1 text-2xl font-bold text-amber-800" data-testid="overview-supplier-count-medium">
+                  {formatInteger(supplierRiskData.summary.counts_by_band.medium || 0)}
+                </dd>
+                <span className="text-[10px] text-slate-500 block mt-0.5">Score 25..49.9</span>
+              </div>
+
+              <div className="bg-white p-3.5 rounded-lg border border-emerald-200 bg-emerald-50/20 shadow-xs">
+                <dt className="text-[11px] font-bold text-emerald-900 uppercase tracking-wider">Low Risk</dt>
+                <dd className="mt-1 text-2xl font-bold text-emerald-700" data-testid="overview-supplier-count-low">
+                  {formatInteger(supplierRiskData.summary.counts_by_band.low || 0)}
+                </dd>
+                <span className="text-[10px] text-slate-500 block mt-0.5">Score &lt; 25</span>
+              </div>
+
+              <div className="bg-white p-3.5 rounded-lg border border-slate-200 shadow-xs">
+                <dt className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Unknown</dt>
+                <dd className="mt-1 text-2xl font-bold text-slate-700" data-testid="overview-supplier-count-unknown">
+                  {formatInteger(supplierRiskData.summary.counts_by_band.unknown || 0)}
+                </dd>
+                <span className="text-[10px] text-slate-500 block mt-0.5">0 Deliveries</span>
+              </div>
+            </div>
+
+            {highestScoringSupplier && (
+              <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">
+                    Highest-Risk Active Supplier
+                  </span>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="font-mono font-bold text-slate-900 text-sm">
+                      {highestScoringSupplier.supplier_code}
+                    </span>
+                    <span className="text-slate-600 text-xs">({highestScoringSupplier.supplier_name})</span>
+                    <span className="font-semibold text-xs text-red-700 ml-2" data-testid="highest-supplier-score">
+                      Score: {highestScoringSupplier.risk_score?.toFixed(1)}/100
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1">
+                    On-time rate: {(highestScoringSupplier.on_time_rate != null ? (highestScoringSupplier.on_time_rate * 100).toFixed(1) : 0)}%
+                    {highestScoringSupplier.avg_delay_days_when_late != null && ` | Avg delay when late: ${highestScoringSupplier.avg_delay_days_when_late.toFixed(1)} days`}
+                  </p>
+                </div>
+                <Link
+                  to="/supplier-risk"
+                  className="inline-flex items-center text-xs font-semibold text-blue-600 hover:text-blue-800 underline shrink-0"
+                  data-testid="link-highest-supplier"
+                >
+                  Inspect in Supplier Risk &rarr;
+                </Link>
+              </div>
+            )}
           </div>
         )}
       </section>

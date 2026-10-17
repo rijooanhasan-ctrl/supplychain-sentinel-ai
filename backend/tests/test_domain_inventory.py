@@ -659,6 +659,213 @@ class TestDailyProjectionAndTiming:
         assert res.non_plant_inbound_count == 1
         assert res.non_plant_inbound_qty == 300
 
+    def test_runout_date_without_inbound(self):
+        demand = _make_demand(self.as_of - timedelta(days=28), 28, 50.0, 50.0)
+        # Stock 100 will run out on day 2 without inbound (day 0 uses 50, day 1 uses 50 -> 0 remaining)
+        # Inbound on day 1 of 500 units prevents shortage
+        inbound = [
+            InboundLineInput(
+                po_id=1,
+                po_number="PO-REPLEN",
+                po_status="in_transit",
+                warehouse_id=1,
+                warehouse_code="WH-PLANT",
+                warehouse_name="Plant",
+                warehouse_role="plant",
+                qty_ordered=3000,
+                qty_received=0,
+                promised_date=self.as_of + timedelta(days=1),
+                latest_estimate_date=None,
+            )
+        ]
+        inputs = ComponentEvaluationInput(
+            as_of=self.as_of,
+            component_id=1,
+            sku="COMP-1",
+            name="Component 1",
+            category="Chips",
+            criticality="normal",
+            plant_inventory=PlantInventoryInput(on_hand=100, reserved=0),
+            demand_records=demand,
+            inbound_lines=inbound,
+        )
+        res = evaluate_component(inputs)
+        assert res.runout_date_without_inbound == self.as_of + timedelta(days=2)
+        assert res.shortage_date is None  # inbound of 500 covers the rest of the 60-day horizon
+
+    def test_horizon_boundary_receipt_inclusion_and_exclusion(self):
+        demand = _make_demand(self.as_of - timedelta(days=28), 28, 50.0, 50.0)
+        inbound = [
+            InboundLineInput(
+                po_id=1,
+                po_number="PO-LAST-DAY",
+                po_status="in_transit",
+                warehouse_id=1,
+                warehouse_code="WH-PLANT",
+                warehouse_name="Plant",
+                warehouse_role="plant",
+                qty_ordered=100,
+                qty_received=0,
+                promised_date=self.as_of + timedelta(days=59),  # day 59 is last day of 60-day horizon
+                latest_estimate_date=None,
+            ),
+            InboundLineInput(
+                po_id=2,
+                po_number="PO-DAY-AFTER",
+                po_status="in_transit",
+                warehouse_id=1,
+                warehouse_code="WH-PLANT",
+                warehouse_name="Plant",
+                warehouse_role="plant",
+                qty_ordered=200,
+                qty_received=0,
+                promised_date=self.as_of + timedelta(days=60),  # day 60 is out of horizon
+                latest_estimate_date=None,
+            ),
+        ]
+        inputs = ComponentEvaluationInput(
+            as_of=self.as_of,
+            component_id=1,
+            sku="COMP-1",
+            name="Component 1",
+            category="Chips",
+            criticality="normal",
+            plant_inventory=PlantInventoryInput(on_hand=50, reserved=0),
+            demand_records=demand,
+            inbound_lines=inbound,
+        )
+        res = evaluate_component(inputs)
+        assert len(res.counted_inbound) == 1
+        assert res.counted_inbound[0].po_number == "PO-LAST-DAY"
+        assert len(res.out_of_horizon_inbound) == 1
+        assert res.out_of_horizon_inbound[0].po_number == "PO-DAY-AFTER"
+        assert res.daily_projection[59].receipts == 100.0
+
+    def test_no_open_inbound_flag(self):
+        demand = _make_demand(self.as_of - timedelta(days=28), 28, 50.0, 50.0)
+        inputs = ComponentEvaluationInput(
+            as_of=self.as_of,
+            component_id=1,
+            sku="COMP-1",
+            name="Component 1",
+            category="Chips",
+            criticality="normal",
+            plant_inventory=PlantInventoryInput(on_hand=100, reserved=0),
+            demand_records=demand,
+            inbound_lines=[],
+        )
+        res = evaluate_component(inputs)
+        assert any(f.code == "no_open_inbound" for f in res.flags)
+
+    def test_shortage_days_count(self):
+        demand = _make_demand(self.as_of - timedelta(days=28), 28, 50.0, 50.0)
+        # Stock 150 covers day 0, 1, 2 (150 units). Days 3..59 (57 days) are shortages.
+        inputs = ComponentEvaluationInput(
+            as_of=self.as_of,
+            component_id=1,
+            sku="COMP-1",
+            name="Component 1",
+            category="Chips",
+            criticality="normal",
+            plant_inventory=PlantInventoryInput(on_hand=150, reserved=0),
+            demand_records=demand,
+            inbound_lines=[],
+        )
+        res = evaluate_component(inputs)
+        assert res.shortage_days == 57
+
+    def test_shortage_episodes_none(self):
+        demand = _make_demand(self.as_of - timedelta(days=28), 28, 50.0, 50.0)
+        inputs = ComponentEvaluationInput(
+            as_of=self.as_of,
+            component_id=1,
+            sku="COMP-1",
+            name="Component 1",
+            category="Chips",
+            criticality="normal",
+            plant_inventory=PlantInventoryInput(on_hand=10000, reserved=0),
+            demand_records=demand,
+            inbound_lines=[],
+        )
+        res = evaluate_component(inputs)
+        assert res.shortage_episodes == []
+        assert res.unmet_before_next_inbound is None
+        assert res.first_episode_start_date is None
+
+    def test_shortage_episodes_single_through_horizon_end(self):
+        demand = _make_demand(self.as_of - timedelta(days=28), 28, 50.0, 50.0)
+        # 100 stock covers days 0 and 1. Days 2..59 have shortage.
+        inputs = ComponentEvaluationInput(
+            as_of=self.as_of,
+            component_id=1,
+            sku="COMP-1",
+            name="Component 1",
+            category="Chips",
+            criticality="normal",
+            plant_inventory=PlantInventoryInput(on_hand=100, reserved=0),
+            demand_records=demand,
+            inbound_lines=[],
+        )
+        res = evaluate_component(inputs)
+        assert len(res.shortage_episodes) == 1
+        ep = res.shortage_episodes[0]
+        assert ep.start_date == self.as_of + timedelta(days=2)
+        assert ep.end_date == self.as_of + timedelta(days=59)
+        assert ep.days == 58
+        assert ep.ends_because == "horizon_end"
+        assert res.unmet_before_next_inbound == ep.unmet_units
+
+    def test_shortage_episodes_two_episodes_like_cpu_x7(self):
+        demand = _make_demand(self.as_of - timedelta(days=28), 28, 50.0, 50.0)
+        # 100 stock covers days 0 and 1. Days 2 and 3 are shortages.
+        # Day 4 has receipt of 100 units covering days 4 and 5.
+        # Day 6 onwards are shortages.
+        inbound = [
+            InboundLineInput(
+                po_id=1,
+                po_number="PO-MID",
+                po_status="in_transit",
+                warehouse_id=1,
+                warehouse_code="WH-PLANT",
+                warehouse_name="Plant",
+                warehouse_role="plant",
+                qty_ordered=100,
+                qty_received=0,
+                promised_date=self.as_of + timedelta(days=4),
+                latest_estimate_date=None,
+            )
+        ]
+        inputs = ComponentEvaluationInput(
+            as_of=self.as_of,
+            component_id=1,
+            sku="COMP-1",
+            name="Component 1",
+            category="Chips",
+            criticality="normal",
+            plant_inventory=PlantInventoryInput(on_hand=100, reserved=0),
+            demand_records=demand,
+            inbound_lines=inbound,
+        )
+        res = evaluate_component(inputs)
+        assert len(res.shortage_episodes) == 2
+
+        ep1 = res.shortage_episodes[0]
+        assert ep1.start_date == self.as_of + timedelta(days=2)
+        assert ep1.end_date == self.as_of + timedelta(days=3)
+        assert ep1.days == 2
+        assert ep1.unmet_units == 100.0  # 50 + 50
+        assert ep1.ends_because == "inbound_receipt"
+
+        ep2 = res.shortage_episodes[1]
+        assert ep2.start_date == self.as_of + timedelta(days=6)
+        assert ep2.end_date == self.as_of + timedelta(days=59)
+        assert ep2.days == 54
+        assert ep2.ends_because == "horizon_end"
+
+        assert res.unmet_before_next_inbound == 100.0
+        assert res.first_episode_start_date == ep1.start_date
+        assert res.first_episode_end_date == ep1.end_date
+
 
 class TestRiskThresholdsAndExplanation:
     as_of = date(2026, 10, 17)
@@ -732,4 +939,9 @@ class TestRiskThresholdsAndExplanation:
         assert "PO-CPU-701" not in res.explanation  # explanation mentions units and date
         assert "promised date" in res.explanation
         assert "Stock runs out on" in res.explanation
+        assert "Estimated unmet demand before next inbound" in res.explanation
+        assert "After this inbound is consumed, a further shortage begins on" in res.explanation
         assert res.risk_level == "critical"
+        assert len(res.shortage_episodes) == 2
+        assert res.unmet_before_next_inbound is not None
+        assert res.unmet_before_next_inbound > 0
