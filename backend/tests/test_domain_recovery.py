@@ -580,3 +580,36 @@ def test_recovery_evaluation_determinism():
         recovery_config=rec_cfg,
     )
     assert rec1 == rec2
+
+
+def test_recommendation_never_worse_than_accept_delay():
+    from app.domain.inventory import evaluate_component
+
+    as_of = datetime.date(2026, 10, 17)
+    inv_cfg = InventoryRiskConfig()
+    rec_cfg = RecoveryConfig()
+
+    comp_in = make_test_input(as_of=as_of, plant_stock=50, daily_demand=50.0)
+    base_res = evaluate_component(comp_in, inv_cfg)
+
+    rec = evaluate_component_recovery(
+        component_input=comp_in,
+        baseline_result=base_res,
+        supplier_offers=[],
+        regional_stocks=[],
+        customer_orders=[],
+        bom_by_product={},
+        products_by_id={},
+        inventory_config=inv_cfg,
+        recovery_config=rec_cfg,
+    )
+    assert rec is not None
+    accept_delay_opt = next(o for o in rec.options if o.id == "accept_delay")
+    
+    # Selected recommendation residual must be <= accept_delay residual
+    chosen_opt = next(o for o in rec.options if o.id == rec.recommended_option_id) if rec.recommended_option_id != "combined_plan" else None
+    if chosen_opt is not None:
+        assert chosen_opt.residual_unmet_before_next_inbound <= accept_delay_opt.residual_unmet_before_next_inbound
+    elif rec.combined_plan is not None:
+        assert rec.combined_plan.residual_unmet_before_next_inbound <= accept_delay_opt.residual_unmet_before_next_inbound
+

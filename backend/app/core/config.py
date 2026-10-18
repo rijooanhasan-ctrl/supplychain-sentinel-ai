@@ -57,22 +57,38 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
+    @field_validator("DATABASE_URL", mode="after")
+    @classmethod
+    def validate_database_url(cls, v: str) -> str:
+        clean_url = str(v).strip()
+        if not clean_url.startswith("sqlite"):
+            raise ValueError(
+                f"DATABASE_URL must be an SQLite database URL (e.g. 'sqlite:///./sentinel.db'), got '{v}'"
+            )
+        return clean_url
+
     @field_validator("CORS_ORIGINS", mode="after")
     @classmethod
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
+        origins: List[str] = []
         if isinstance(v, str):
             clean_str = v.strip()
             if clean_str.startswith("[") and clean_str.endswith("]"):
                 try:
                     parsed = json.loads(clean_str)
                     if isinstance(parsed, list):
-                        return [str(item).strip() for item in parsed]
+                        origins = [str(item).strip() for item in parsed]
                 except Exception:
                     pass
-            return [i.strip() for i in clean_str.split(",") if i.strip()]
+            if not origins:
+                origins = [i.strip() for i in clean_str.split(",") if i.strip()]
         elif isinstance(v, list):
-            return [str(item).strip() for item in v]
-        return v
+            origins = [str(item).strip() for item in v]
+
+        for origin in origins:
+            if origin == "*":
+                raise ValueError("CORS_ORIGINS cannot contain wildcard '*'; explicit origins required.")
+        return origins
 
     @model_validator(mode="after")
     def validate_inventory_thresholds(self) -> "Settings":

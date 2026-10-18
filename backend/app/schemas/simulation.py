@@ -47,6 +47,17 @@ class ShortageEpisodeSummarySchema(BaseModel):
     unmet_units: float
 
 
+class LaterShortageSummarySchema(BaseModel):
+    """Summary of later shortage episode not covered by recovery."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    date: datetime.date
+    days: int
+    units: float
+    note: str = "Later shortage not covered by this recovery"
+
+
 class InboundSummarySchema(BaseModel):
     """Summary of the next scheduled replenishment."""
 
@@ -93,6 +104,8 @@ class ScenarioResultSchema(BaseModel):
     exposed_orders_summary: str
     applied_actions: List[AppliedRecoveryActionSchema] = Field(default_factory=list)
     recovery_note: Optional[str] = None
+    shortage_resolved_for_first_window: bool = False
+    later_shortage: Optional[LaterShortageSummarySchema] = None
 
 
 class ComponentBriefSchema(BaseModel):

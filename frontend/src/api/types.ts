@@ -813,6 +813,13 @@ export interface ShortageEpisodeSummary {
   unmet_units: number;
 }
 
+export interface LaterShortageSummary {
+  date: string;
+  days: number;
+  units: number;
+  note: string;
+}
+
 export interface InboundSummary {
   date: string;
   qty: number;
@@ -847,6 +854,8 @@ export interface ScenarioResult {
   exposed_orders_summary: string;
   applied_actions: AppliedRecoveryAction[];
   recovery_note: string | null;
+  shortage_resolved_for_first_window?: boolean;
+  later_shortage?: LaterShortageSummary | null;
 }
 
 export interface ComponentBrief {
@@ -874,6 +883,15 @@ export interface SimulationRequestParams {
   demand_multiplier?: number;
   on_hand_delta?: number;
   alt_supplier_available?: boolean;
+}
+
+export interface IntegrationStatus {
+  active_source: string;
+  is_live: boolean;
+  label: string;
+  entities_covered: string[];
+  entities_missing: string[];
+  disclaimer: string;
 }
 
 

@@ -102,7 +102,10 @@ If no single feasible intervention eliminates the shortage (`residual_unmet_befo
 1. **Transfers First**: Apply available regional warehouse stock (known cost first, then unknown cost), up to each warehouse's usable stock.
 2. **Expedite Second**: Apply existing PO expedite if available and earlier.
 3. **Alternative Supplier Third**: Apply alternative suppliers up to their declared weekly capacity (lowest unit cost first).
-4. **Stopping Condition**: Halts as soon as residual unmet demand reaches 0.0 or no further feasible actions remain.
+4. **Exact Domain Re-simulation**: The plan is evaluated by incrementally re-running `evaluate_component` (never heuristic estimation) to compute exact true daily projections and residual unmet demand.
+5. **Stopping Condition**: Halts as soon as residual unmet demand reaches 0.0 or no further feasible actions remain.
+6. **Partial Mitigation Disclosure**: If all feasible actions are exhausted and residual remains > 0, the plan rationale explicitly states the residual deficit (e.g. `leaving X.X units residual unmet demand before next inbound`).
+7. **Monotonicity Guarantee**: The recommendation is mathematically guaranteed never to be worse in residual unmet units than `accept_delay` (the unmitigated raw unmet demand).
 
 ---
 

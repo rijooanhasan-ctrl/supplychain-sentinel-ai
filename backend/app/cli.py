@@ -7,10 +7,11 @@ from app.core.config import get_settings
 from app.db.models import Base
 from app.db.session import create_engine_and_sessionmaker
 from app.integrations.demo_adapter import DemoAdapter
+from app.integrations.sap_sample_adapter import SapSampleAdapter
 from app.services.ingest import load_dataset
 
 
-def run_seed(seed: int, as_of_str: Optional[str], reset: bool) -> int:
+def run_seed(seed: int, as_of_str: Optional[str], reset: bool, source: str = "demo") -> int:
     settings = get_settings()
     as_of = None
     if as_of_str:
@@ -23,9 +24,26 @@ def run_seed(seed: int, as_of_str: Optional[str], reset: bool) -> int:
     engine, session_factory = create_engine_and_sessionmaker(settings.DATABASE_URL)
     Base.metadata.create_all(engine)
 
-    adapter = DemoAdapter(seed=seed, as_of=as_of)
-    print(f"Generating synthetic dataset using {adapter.name} adapter (seed={seed}, as_of={adapter.as_of})...")
-    dataset = adapter.fetch_dataset()
+    if source == "sap-sample":
+        adapter = SapSampleAdapter()
+        rep = adapter.get_coverage_report()
+        print(f"Loading SAP-style static sample fixture using {adapter.name} adapter...")
+        print("\n=======================================================")
+        print(" SAP-Style Sample Fixture Coverage Report")
+        print("=======================================================")
+        print(f"Entities Covered: {', '.join(rep['entities_covered'])}")
+        print(f"Entities Missing: {', '.join(rep['entities_missing'])}")
+        print("\nCoverage Notes:")
+        for ent, note in rep.get("notes", {}).items():
+            print(f"  * {ent}: {note}")
+        print("\nDisclaimer:")
+        print(f"  {rep['disclaimer']}")
+        print("=======================================================\n")
+        dataset = adapter.fetch_dataset()
+    else:
+        adapter = DemoAdapter(seed=seed, as_of=as_of)
+        print(f"Generating synthetic dataset using {adapter.name} adapter (seed={seed}, as_of={adapter.as_of})...")
+        dataset = adapter.fetch_dataset()
 
     with session_factory() as session:
         try:
@@ -40,9 +58,10 @@ def run_seed(seed: int, as_of_str: Optional[str], reset: bool) -> int:
             return 3
 
     print("\n=======================================================")
-    print(" SupplyChain Sentinel AI — Demo Dataset Seeded")
+    print(f" SupplyChain Sentinel AI — Dataset Seeded ({dataset.meta.label})")
     print("=======================================================")
     print(f"Database: {settings.DATABASE_URL}")
+    print(f"Source: {dataset.meta.source}")
     print(f"Dataset Label: {dataset.meta.label}")
     print(f"Reference As-Of Date: {dataset.meta.as_of}")
     print("-------------------------------------------------------")
@@ -63,15 +82,16 @@ def main() -> None:
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    seed_parser = subparsers.add_parser("seed", help="Seed the database with deterministic demo data")
-    seed_parser.add_argument("--seed", type=int, default=42, help="Seed integer for deterministic generation")
+    seed_parser = subparsers.add_parser("seed", help="Seed the database with deterministic demo data or SAP-style sample")
+    seed_parser.add_argument("--source", type=str, choices=["demo", "sap-sample"], default="demo", help="Data source adapter to seed from")
+    seed_parser.add_argument("--seed", type=int, default=42, help="Seed integer for deterministic generation (demo adapter)")
     seed_parser.add_argument("--as-of", type=str, default=None, help="Reference cutoff date in YYYY-MM-DD format")
     seed_parser.add_argument("--reset", action="store_true", help="Reset and overwrite existing database tables")
 
     args = parser.parse_args()
 
     if args.command == "seed":
-        exit_code = run_seed(seed=args.seed, as_of_str=args.as_of, reset=args.reset)
+        exit_code = run_seed(seed=args.seed, as_of_str=args.as_of, reset=args.reset, source=args.source)
         sys.exit(exit_code)
 
 

@@ -1,0 +1,102 @@
+{
+  "_comment": "SAMPLE ONLY: Fictional illustrative SAP-style OData structure for demonstration and test purposes.",
+  "as_of": "2026-10-18",
+  "plants": [
+    {
+      "Plant": "1010",
+      "PlantName": "Frankfurt Laptop Assembly Plant"
+    }
+  ],
+  "materials": [
+    {
+      "Material": "MAT-CPU-01",
+      "MaterialDescription": "High-Efficiency Core Processor 3.2GHz",
+      "MaterialGroup": "Semiconductors",
+      "BaseUnit": "EA",
+      "Criticality": "critical"
+    },
+    {
+      "Material": "MAT-MEM-01",
+      "MaterialDescription": "16GB DDR5 5600MHz SO-DIMM",
+      "MaterialGroup": "Memory",
+      "BaseUnit": "EA",
+      "Criticality": "high"
+    },
+    {
+      "Material": "MAT-SSD-01",
+      "MaterialDescription": "1TB NVMe PCIe 4.0 SSD",
+      "MaterialGroup": "Storage",
+      "BaseUnit": "EA",
+      "Criticality": "normal"
+    }
+  ],
+  "suppliers": [
+    {
+      "Supplier": "LIFNR-1001",
+      "SupplierName": "EuroSilicon Technologies GmbH",
+      "Country": "DE"
+    },
+    {
+      "Supplier": "LIFNR-1002",
+      "SupplierName": "Global Memory Solutions B.V.",
+      "Country": "NL"
+    }
+  ],
+  "stock": [
+    {
+      "Material": "MAT-CPU-01",
+      "Plant": "1010",
+      "StorageLocation": "0001",
+      "UnrestrictedStock": 350,
+      "ReservedQuantity": 50
+    },
+    {
+      "Material": "MAT-MEM-01",
+      "Plant": "1010",
+      "StorageLocation": "0001",
+      "UnrestrictedStock": 800,
+      "ReservedQuantity": 100
+    },
+    {
+      "Material": "MAT-SSD-01",
+      "Plant": "1010",
+      "StorageLocation": "0001",
+      "UnrestrictedStock": 500,
+      "ReservedQuantity": 0
+    }
+  ],
+  "purchase_orders": [
+    {
+      "PurchaseOrder": "4500000001",
+      "Supplier": "LIFNR-1001",
+      "PurchaseOrderDate": "2026-10-10",
+      "Status": "open",
+      "items": [
+        {
+          "Material": "MAT-CPU-01",
+          "Plant": "1010",
+          "OrderQuantity": 500,
+          "ReceivedQuantity": 0,
+          "ScheduleLineDeliveryDate": "2026-10-25",
+          "NetPriceAmount": "180.00"
+        }
+      ]
+    },
+    {
+      "PurchaseOrder": "4500000002",
+      "Supplier": "LIFNR-1002",
+      "PurchaseOrderDate": "2026-10-12",
+      "Status": "partially_received",
+      "items": [
+        {
+          "Material": "MAT-MEM-01",
+          "Plant": "1010",
+          "OrderQuantity": 1000,
+          "ReceivedQuantity": 200,
+          "ScheduleLineDeliveryDate": "2026-10-28",
+          "NetPriceAmount": "45.00"
+        }
+      ]
+    }
+  ]
+}

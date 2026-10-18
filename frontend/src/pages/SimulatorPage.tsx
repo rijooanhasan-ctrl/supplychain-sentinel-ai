@@ -587,7 +587,51 @@ export function SimulatorPage() {
                       {formatNumber(simData.disrupted.unmet_before_next_inbound, 1)} units
                     </td>
                     <td className="py-2.5 px-4 bg-emerald-50/30 font-bold text-emerald-800">
-                      {formatNumber(simData.recovered.unmet_before_next_inbound, 1)} units
+                      {simData.recovered.shortage_resolved_for_first_window
+                        ? '0.0 units (Resolved)'
+                        : `${formatNumber(simData.recovered.unmet_before_next_inbound, 1)} units`}
+                    </td>
+                  </tr>
+
+                  {/* Later Shortage (Not Covered) Row */}
+                  <tr>
+                    <td className="py-2.5 px-4 font-sans font-semibold text-slate-700">
+                      Later shortage (not covered)
+                    </td>
+                    <td className="py-2.5 px-4 text-xs font-sans text-slate-600">
+                      {simData.baseline.later_shortage ? (
+                        <span>
+                          From {simData.baseline.later_shortage.date} ({simData.baseline.later_shortage.days} days,{' '}
+                          {formatNumber(simData.baseline.later_shortage.units, 1)} units)
+                        </span>
+                      ) : (
+                        '—'
+                      )}
+                    </td>
+                    <td className="py-2.5 px-4 bg-red-50/30 text-xs font-sans text-red-800">
+                      {simData.disrupted.later_shortage ? (
+                        <span>
+                          From {simData.disrupted.later_shortage.date} ({simData.disrupted.later_shortage.days} days,{' '}
+                          {formatNumber(simData.disrupted.later_shortage.units, 1)} units)
+                        </span>
+                      ) : (
+                        '—'
+                      )}
+                    </td>
+                    <td className="py-2.5 px-4 bg-emerald-50/30 text-xs font-sans text-slate-700">
+                      {simData.recovered.later_shortage ? (
+                        <div>
+                          <span className="font-medium text-amber-900">
+                            From {simData.recovered.later_shortage.date} ({simData.recovered.later_shortage.days} days,{' '}
+                            {formatNumber(simData.recovered.later_shortage.units, 1)} units)
+                          </span>
+                          <span className="block text-[10px] text-slate-500 italic">
+                            Later shortage not covered by this recovery
+                          </span>
+                        </div>
+                      ) : (
+                        '—'
+                      )}
                     </td>
                   </tr>
 

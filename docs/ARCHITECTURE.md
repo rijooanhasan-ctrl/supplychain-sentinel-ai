@@ -74,8 +74,11 @@
    - External systems are accessed **only** through a formal adapter interface (`SourceAdapter`).
    - Implementations:
      - `DemoAdapter`: Generates deterministic, synthetic supply chain datasets from `(seed, as_of)` using Python stdlib `random.Random`.
-     - `SAPAdapter` (future): Connects via SAP OData/BTP APIs behind the same unified adapter interface.
-   - High-level business logic is completely insulated from SAP communication details.
+     - `SapSampleAdapter` (`sap_sample_adapter.py`): Ingests illustrative, static SAP OData fixtures (`sap_style_sample.json`) with zero network calls and `is_live = False`. Provides an entity coverage report detailing covered vs missing dataset records.
+     - `sap_mapping.py`: Pure mapping functions transforming illustrative SAP Material, Supplier, Plant, Stock, and Purchase Order structures into domain DTOs.
+     - `LiveSapAdapter` (future production connector): Reserved boundary for authenticated SAP BTP / S/4HANA OData integration (see `docs/SAP_INTEGRATION.md`).
+   - Integration status and connectivity prerequisites are surfaced via `GET /api/integration-status` and displayed on the Data Sources page.
+   - High-level business logic is completely insulated from ERP communication details.
 
 5. **Database Layer (`backend/app/db/`):**
    - Manages relational models (`models.py`) and connection pooling (`session.py`).

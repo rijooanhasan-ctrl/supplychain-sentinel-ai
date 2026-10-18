@@ -179,6 +179,9 @@ def evaluate_component_recovery(
 
     Returns None if component does not have a projected shortage.
     """
+    if recovery_config is None:
+        recovery_config = RecoveryConfig()
+
     # Target validation: need_units = unmet_before_next_inbound of baseline rounded up
     if (
         baseline_result.shortage_date is None
@@ -756,10 +759,19 @@ def evaluate_component_recovery(
     if rec_residual <= 0.0:
         residual_text = f"Eliminates 100% of the {raw_unmet:.1f} units unmet demand before the next inbound replenishment."
     else:
-        residual_text = (
-            f"Reduces unmet demand before next inbound from {raw_unmet:.1f} to {rec_residual:.1f} units "
-            f"({(raw_unmet - rec_residual):.1f} units covered)."
-        )
+        if recommended_id == "combined_plan":
+            residual_text = (
+                f"Combined plan leaves residual unmet demand of {rec_residual:.1f} units before next inbound replenishment "
+                f"(reduces unmet from {raw_unmet:.1f} to {rec_residual:.1f} units; {(raw_unmet - rec_residual):.1f} units covered)."
+            )
+        else:
+            residual_text = (
+                f"Reduces unmet demand before next inbound from {raw_unmet:.1f} to {rec_residual:.1f} units "
+                f"({(raw_unmet - rec_residual):.1f} units covered)."
+            )
+
+    # Invariant: recommendation must never be worse than accept_delay
+    assert rec_residual <= raw_unmet, f"Recommendation cannot be worse than accept_delay ({rec_residual} > {raw_unmet})"
 
     cost_text = f"Incremental cost: ${rec_cost:,.2f}." if rec_cost is not None else "Incremental cost is unknown."
 

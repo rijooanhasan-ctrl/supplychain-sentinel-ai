@@ -1,4 +1,4 @@
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, within } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import DataSourcesPage from './DataSourcesPage';
 
@@ -34,6 +34,16 @@ const mockMeta = {
     delivery_records: 300,
   },
   message: 'Dataset loaded successfully.',
+};
+
+const mockIntegrationStatus = {
+  active_source: 'demo',
+  is_live: false,
+  label: 'Demo Supply Chain Dataset',
+  entities_covered: ['plants', 'materials', 'stock', 'purchase_orders', 'suppliers'],
+  entities_missing: ['demand_history', 'delivery_performance', 'multi_source_offers'],
+  disclaimer:
+    'No live SAP connection is configured. To connect a real SAP system you need: an SAP BTP or S/4HANA account with API access, credentials stored as environment secrets, and verification of the API field mapping.',
 };
 
 describe('Data Sources & Integration Status Page', () => {
@@ -72,6 +82,13 @@ describe('Data Sources & Integration Status Page', () => {
           json: async () => mockMeta,
         } as Response;
       }
+      if (urlStr.includes('/api/integration-status')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => mockIntegrationStatus,
+        } as Response;
+      }
       throw new Error(`Unhandled URL: ${urlStr}`);
     });
 
@@ -89,31 +106,32 @@ describe('Data Sources & Integration Status Page', () => {
     expect(screen.getByTestId('health-version')).toHaveTextContent('0.1.0');
 
     // Record counts table
-    expect(screen.getByTestId('record-counts-table')).toBeInTheDocument();
-    expect(screen.getByText('Warehouses')).toBeInTheDocument();
-    expect(screen.getByText('4')).toBeInTheDocument();
-    expect(screen.getByText('Products')).toBeInTheDocument();
-    expect(screen.getByText('3')).toBeInTheDocument();
-    expect(screen.getByText('Components')).toBeInTheDocument();
-    expect(screen.getByText('12')).toBeInTheDocument();
-    expect(screen.getByText('Bill of Materials (BOM) Lines')).toBeInTheDocument();
-    expect(screen.getByText('15')).toBeInTheDocument();
-    expect(screen.getByText('Suppliers')).toBeInTheDocument();
-    expect(screen.getByText('8')).toBeInTheDocument();
-    expect(screen.getByText('Supplier Component Offers')).toBeInTheDocument();
-    expect(screen.getByText('18')).toBeInTheDocument();
-    expect(screen.getByText('Inventory Levels')).toBeInTheDocument();
-    expect(screen.getByText('48')).toBeInTheDocument();
-    expect(screen.getByText('Purchase Orders')).toBeInTheDocument();
-    expect(screen.getByText('25')).toBeInTheDocument();
-    expect(screen.getByText('Purchase Order Lines')).toBeInTheDocument();
-    expect(screen.getByText('60')).toBeInTheDocument();
-    expect(screen.getByText('Customer Orders')).toBeInTheDocument();
-    expect(screen.getByText('120')).toBeInTheDocument();
-    expect(screen.getByText('Daily Demand Records')).toBeInTheDocument();
-    expect(screen.getByText('1,080')).toBeInTheDocument();
-    expect(screen.getByText('Historical Delivery Records')).toBeInTheDocument();
-    expect(screen.getByText('300')).toBeInTheDocument();
+    const countsTable = screen.getByTestId('record-counts-table');
+    expect(countsTable).toBeInTheDocument();
+    expect(within(countsTable).getByText('Warehouses')).toBeInTheDocument();
+    expect(within(countsTable).getByText('4')).toBeInTheDocument();
+    expect(within(countsTable).getByText('Products')).toBeInTheDocument();
+    expect(within(countsTable).getByText('3')).toBeInTheDocument();
+    expect(within(countsTable).getByText('Components')).toBeInTheDocument();
+    expect(within(countsTable).getByText('12')).toBeInTheDocument();
+    expect(within(countsTable).getByText('Bill of Materials (BOM) Lines')).toBeInTheDocument();
+    expect(within(countsTable).getByText('15')).toBeInTheDocument();
+    expect(within(countsTable).getByText('Suppliers')).toBeInTheDocument();
+    expect(within(countsTable).getByText('8')).toBeInTheDocument();
+    expect(within(countsTable).getByText('Supplier Component Offers')).toBeInTheDocument();
+    expect(within(countsTable).getByText('18')).toBeInTheDocument();
+    expect(within(countsTable).getByText('Inventory Levels')).toBeInTheDocument();
+    expect(within(countsTable).getByText('48')).toBeInTheDocument();
+    expect(within(countsTable).getByText('Purchase Orders')).toBeInTheDocument();
+    expect(within(countsTable).getByText('25')).toBeInTheDocument();
+    expect(within(countsTable).getByText('Purchase Order Lines')).toBeInTheDocument();
+    expect(within(countsTable).getByText('60')).toBeInTheDocument();
+    expect(within(countsTable).getByText('Customer Orders')).toBeInTheDocument();
+    expect(within(countsTable).getByText('120')).toBeInTheDocument();
+    expect(within(countsTable).getByText('Daily Demand Records')).toBeInTheDocument();
+    expect(within(countsTable).getByText('1,080')).toBeInTheDocument();
+    expect(within(countsTable).getByText('Historical Delivery Records')).toBeInTheDocument();
+    expect(within(countsTable).getByText('300')).toBeInTheDocument();
   });
 
   it('renders unseeded state and displays seed command when meta.seeded is false', async () => {
@@ -143,6 +161,13 @@ describe('Data Sources & Integration Status Page', () => {
           ok: true,
           status: 200,
           json: async () => unseededMeta,
+        } as Response;
+      }
+      if (urlStr.includes('/api/integration-status')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => mockIntegrationStatus,
         } as Response;
       }
       throw new Error(`Unhandled URL: ${urlStr}`);
@@ -189,6 +214,13 @@ describe('Data Sources & Integration Status Page', () => {
           json: async () => mockMeta,
         } as Response;
       }
+      if (urlStr.includes('/api/integration-status')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => mockIntegrationStatus,
+        } as Response;
+      }
       throw new Error(`Unhandled URL: ${urlStr}`);
     });
 
@@ -224,6 +256,13 @@ describe('Data Sources & Integration Status Page', () => {
           json: async () => mockMeta,
         } as Response;
       }
+      if (urlStr.includes('/api/integration-status')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => mockIntegrationStatus,
+        } as Response;
+      }
       throw new Error(`Unhandled URL: ${urlStr}`);
     });
 
@@ -242,7 +281,7 @@ describe('Data Sources & Integration Status Page', () => {
     expect(screen.getByTestId('record-counts-table')).toBeInTheDocument();
   });
 
-  it('displays demo connector and not configured for data_source "demo"', async () => {
+  it('displays demo connector and integration status for data_source "demo"', async () => {
     vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
       const urlStr = url.toString();
       if (urlStr.includes('/api/health')) {
@@ -259,15 +298,26 @@ describe('Data Sources & Integration Status Page', () => {
           json: async () => mockMeta,
         } as Response;
       }
+      if (urlStr.includes('/api/integration-status')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => mockIntegrationStatus,
+        } as Response;
+      }
       throw new Error(`Unhandled URL: ${urlStr}`);
     });
 
     render(<DataSourcesPage />);
 
     await waitFor(() => {
-      expect(screen.getByText(/Demo connector — synthetic data, not a live SAP integration/i)).toBeInTheDocument();
-      expect(screen.getByText(/SAP connection: not configured/i)).toBeInTheDocument();
+      expect(screen.getByTestId('integration-status-section')).toBeInTheDocument();
     });
+
+    const section = screen.getByTestId('integration-status-section');
+    expect(within(section).getByText('demo')).toBeInTheDocument();
+    expect(screen.getByText(/False — Standalone decision support environment/i)).toBeInTheDocument();
+    expect(screen.getByTestId('sap-disclaimer-box')).toBeInTheDocument();
   });
 
   it('displays unverified integration and does not say live for unknown data source', async () => {
@@ -278,6 +328,12 @@ describe('Data Sources & Integration Status Page', () => {
     const customHealth = {
       ...mockHealth,
       data_source: 'oracle_mock',
+    };
+    const customIntegrationStatus = {
+      ...mockIntegrationStatus,
+      active_source: 'oracle_mock',
+      label: 'Oracle Mock Adapter',
+      is_live: false,
     };
 
     vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
@@ -296,17 +352,68 @@ describe('Data Sources & Integration Status Page', () => {
           json: async () => customMeta,
         } as Response;
       }
+      if (urlStr.includes('/api/integration-status')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => customIntegrationStatus,
+        } as Response;
+      }
       throw new Error(`Unhandled URL: ${urlStr}`);
     });
 
     render(<DataSourcesPage />);
 
     await waitFor(() => {
-      expect(screen.getByText(/oracle_mock \(unverified integration\)/i)).toBeInTheDocument();
-      expect(screen.getByText(/SAP connection: unverified integration/i)).toBeInTheDocument();
+      expect(screen.getByTestId('integration-status-section')).toBeInTheDocument();
     });
 
-    // Must NOT claim live connection
-    expect(screen.queryByText(/\blive\b/i)).not.toBeInTheDocument();
+    const customSection = screen.getByTestId('integration-status-section');
+    expect(within(customSection).getByText('oracle_mock')).toBeInTheDocument();
+    expect(screen.getByText(/False — Standalone decision support environment/i)).toBeInTheDocument();
+
+    // Must NOT claim connection to SAP
+    expect(screen.queryByText(/connected to SAP/i)).not.toBeInTheDocument();
+  });
+
+  it('renders SAP integration status card and mandatory disclaimer from endpoint', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+      const urlStr = url.toString();
+      if (urlStr.includes('/api/health')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => mockHealth,
+        } as Response;
+      }
+      if (urlStr.includes('/api/meta')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => mockMeta,
+        } as Response;
+      }
+      if (urlStr.includes('/api/integration-status')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => mockIntegrationStatus,
+        } as Response;
+      }
+      throw new Error(`Unhandled URL: ${urlStr}`);
+    });
+
+    render(<DataSourcesPage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('integration-status-section')).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByText(/No live SAP connection is configured/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText('Plants')).toBeInTheDocument();
+    expect(screen.getByText('Demand History')).toBeInTheDocument();
+    expect(screen.queryByText(/connected to SAP/i)).not.toBeInTheDocument();
   });
 });

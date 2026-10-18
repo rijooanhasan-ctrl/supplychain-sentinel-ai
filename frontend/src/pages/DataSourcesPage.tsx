@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { getHealth, getMeta } from '../api/endpoints';
+import { getHealth, getIntegrationStatus, getMeta } from '../api/endpoints';
 import { ApiError, NetworkError } from '../api/http';
 import { useApi } from '../api/useApi';
 
@@ -63,9 +63,11 @@ function renderErrorMessage(err: Error): { type: string; message: string } {
 export function DataSourcesPage() {
   const fetchHealthFn = useCallback((signal: AbortSignal) => getHealth(signal), []);
   const fetchMetaFn = useCallback((signal: AbortSignal) => getMeta(signal), []);
+  const fetchIntegrationFn = useCallback((signal: AbortSignal) => getIntegrationStatus(signal), []);
 
   const healthApi = useApi(fetchHealthFn, [fetchHealthFn]);
   const metaApi = useApi(fetchMetaFn, [fetchMetaFn]);
+  const integrationApi = useApi(fetchIntegrationFn, [fetchIntegrationFn]);
 
   const isDemo =
     metaApi.data?.data_source === 'demo' ||
@@ -278,60 +280,113 @@ export function DataSourcesPage() {
               {/* Section 3: Integration Status */}
               <section
                 aria-labelledby="integration-heading"
-                className="bg-white border border-slate-200 rounded-lg p-5 shadow-xs"
+                className="bg-white border border-slate-200 rounded-lg p-5 shadow-xs space-y-4"
+                data-testid="integration-status-section"
               >
-                <h2 id="integration-heading" className="text-base font-semibold text-slate-900 border-b border-slate-100 pb-3 mb-4">
-                  3. Integration Status
-                </h2>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full text-left text-sm divide-y divide-slate-200 border border-slate-200 rounded">
-                    <caption className="sr-only">Integration status and connector details</caption>
-                    <thead className="bg-slate-50 text-slate-700">
-                      <tr>
-                        <th scope="col" className="px-4 py-2.5 font-semibold text-xs uppercase tracking-wider w-1/3">
-                          Integration Target
-                        </th>
-                        <th scope="col" className="px-4 py-2.5 font-semibold text-xs uppercase tracking-wider">
-                          Status &amp; Configuration
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 bg-white">
-                      <tr>
-                        <th scope="row" className="px-4 py-3 font-medium text-slate-900 whitespace-nowrap">
-                          Data source
-                        </th>
-                        <td className="px-4 py-3 text-slate-700">
-                          {metaApi.data.data_source === 'demo' ? (
-                            <span className="inline-flex items-center text-amber-800 bg-amber-50 px-2 py-0.5 rounded text-xs font-medium border border-amber-200">
-                              Demo connector — synthetic data, not a live SAP integration
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center text-slate-800 bg-slate-100 px-2 py-0.5 rounded text-xs font-medium">
-                              {metaApi.data.data_source} (unverified integration)
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                      <tr>
-                        <th scope="row" className="px-4 py-3 font-medium text-slate-900 whitespace-nowrap">
-                          SAP connection
-                        </th>
-                        <td className="px-4 py-3 text-slate-700">
-                          {metaApi.data.data_source === 'demo' ? (
-                            <span className="text-slate-600 text-xs">
-                              SAP connection: not configured
-                            </span>
-                          ) : (
-                            <span className="text-amber-700 text-xs font-medium">
-                              SAP connection: unverified integration
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <h2 id="integration-heading" className="text-base font-semibold text-slate-900">
+                    3. Integration Status &amp; Connector Capabilities
+                  </h2>
+                  {integrationApi.data && (
+                    <span className="inline-flex items-center text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-800 border border-slate-200">
+                      Live Connection: {integrationApi.data.is_live ? 'YES' : 'NO'}
+                    </span>
+                  )}
                 </div>
+
+                {integrationApi.loading && (
+                  <p className="text-xs text-slate-500 py-3 text-center">Loading integration capabilities...</p>
+                )}
+
+                {integrationApi.error && (
+                  <p className="text-xs text-red-600 py-2">Failed to load integration status from /api/integration-status</p>
+                )}
+
+                {integrationApi.data && !integrationApi.loading && (
+                  <div className="space-y-4">
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full text-left text-sm divide-y divide-slate-200 border border-slate-200 rounded">
+                        <caption className="sr-only">Integration status and connector details</caption>
+                        <thead className="bg-slate-50 text-slate-700">
+                          <tr>
+                            <th scope="col" className="px-4 py-2.5 font-semibold text-xs uppercase tracking-wider w-1/3">
+                              Integration Property
+                            </th>
+                            <th scope="col" className="px-4 py-2.5 font-semibold text-xs uppercase tracking-wider">
+                              Status &amp; Configuration
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 bg-white">
+                          <tr>
+                            <th scope="row" className="px-4 py-3 font-medium text-slate-900 whitespace-nowrap">
+                              Active Connector
+                            </th>
+                            <td className="px-4 py-3 text-slate-700 font-mono text-xs">
+                              {integrationApi.data.active_source}
+                              <span className="ml-2 font-sans font-medium text-slate-600">({integrationApi.data.label})</span>
+                            </td>
+                          </tr>
+                          <tr>
+                            <th scope="row" className="px-4 py-3 font-medium text-slate-900 whitespace-nowrap">
+                              Live System Connection
+                            </th>
+                            <td className="px-4 py-3 text-slate-700 text-xs">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-50 text-amber-900 border border-amber-200">
+                                False — Standalone decision support environment
+                              </span>
+                            </td>
+                          </tr>
+                          <tr>
+                            <th scope="row" className="px-4 py-3 font-medium text-slate-900 whitespace-nowrap">
+                              Entities Covered
+                            </th>
+                            <td className="px-4 py-3 text-slate-700 text-xs">
+                              <div className="flex flex-wrap gap-1.5">
+                                {(integrationApi.data.entities_covered || []).map((ent: string) => (
+                                  <span key={ent} className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                    {formatEntityName(ent)}
+                                  </span>
+                                ))}
+                              </div>
+                            </td>
+                          </tr>
+                          {(integrationApi.data.entities_missing || []).length > 0 && (
+                            <tr>
+                              <th scope="row" className="px-4 py-3 font-medium text-slate-900 whitespace-nowrap">
+                                Entities Missing
+                              </th>
+                              <td className="px-4 py-3 text-slate-700 text-xs">
+                                <div className="flex flex-wrap gap-1.5">
+                                  {(integrationApi.data.entities_missing || []).map((ent: string) => (
+                                    <span key={ent} className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-300">
+                                      {formatEntityName(ent)}
+                                    </span>
+                                  ))}
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Mandatory Disclaimer Box */}
+                    <div
+                      role="note"
+                      aria-label="SAP Connectivity Disclaimer"
+                      className="p-4 rounded-md bg-amber-50/80 border border-amber-200/90 text-amber-900 space-y-1"
+                      data-testid="sap-disclaimer-box"
+                    >
+                      <div className="text-xs font-bold uppercase tracking-wider text-amber-800 flex items-center gap-1.5">
+                        <span aria-hidden="true">⚠️</span> Integration Notice &amp; Connectivity Prerequisites
+                      </div>
+                      <p className="text-xs text-amber-900 leading-relaxed font-sans" data-testid="sap-disclaimer-text">
+                        {integrationApi.data.disclaimer}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </section>
 
               {/* Section 4: Record Counts */}

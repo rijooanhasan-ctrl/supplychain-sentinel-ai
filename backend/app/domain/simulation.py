@@ -114,6 +114,16 @@ class ShortageEpisodeSummary:
 
 
 @dataclass(frozen=True)
+class LaterShortageSummary:
+    """Summary of a later shortage episode not covered by recovery intervention."""
+
+    date: datetime.date
+    days: int
+    units: float
+    note: str = "Later shortage not covered by this recovery"
+
+
+@dataclass(frozen=True)
 class InboundSummary:
     """Summary of next scheduled replenishment."""
 
@@ -156,6 +166,8 @@ class ScenarioResult:
     exposed_orders_summary: str
     applied_actions: List[AppliedRecoveryAction] = field(default_factory=list)
     recovery_note: Optional[str] = None
+    shortage_resolved_for_first_window: bool = False
+    later_shortage: Optional[LaterShortageSummary] = None
 
 
 @dataclass(frozen=True)
@@ -180,25 +192,107 @@ def _build_scenario_result(
     impact: AlertImpact,
     applied_actions: Optional[List[AppliedRecoveryAction]] = None,
     recovery_note: Optional[str] = None,
+    target_cutoff: Optional[datetime.date] = None,
+    is_recovered: bool = False,
 ) -> ScenarioResult:
-    """Build a ScenarioResult from evaluation and order exposure impact."""
-    first_episode = None
-    if evaluation.shortage_episodes:
-        ep = evaluation.shortage_episodes[0]
-        first_episode = ShortageEpisodeSummary(
-            start_date=ep.start_date,
-            end_date=ep.end_date,
-            days=ep.days,
-            unmet_units=ep.unmet_units,
-        )
+    """Build a ScenarioResult from evaluation and order exposure impact.
 
+    Headlines for all scenarios focus on the primary target window. For the recovered
+    scenario, if the first shortage episode from the disrupted case's timeframe is eliminated
+    (no shortage prior to target_cutoff), residual unmet demand is reported as 0.0,
+    shortage_resolved_for_first_window is set to True, and subsequent shortage is isolated
+    in later_shortage.
+    """
+    first_episode = None
+    later_shortage = None
     later_note = None
-    if len(evaluation.shortage_episodes) > 1:
-        ep2 = evaluation.shortage_episodes[1]
-        later_note = (
-            f"Later shortage episode begins {ep2.start_date.isoformat()} "
-            f"({ep2.unmet_units:.1f} units over {ep2.days} days); not covered by this recommendation."
-        )
+    shortage_resolved = False
+
+    risk_level = evaluation.risk_level
+    shortage_date = evaluation.shortage_date
+    days_until = evaluation.days_until_shortage
+    unmet_units = evaluation.unmet_before_next_inbound or 0.0
+
+    if is_recovered and target_cutoff is not None:
+        # Check if any shortage episode exists prior to target_cutoff
+        episodes_in_window = [
+            ep for ep in evaluation.shortage_episodes
+            if ep.start_date < target_cutoff
+        ]
+        if not episodes_in_window:
+            # First shortage window is completely resolved!
+            shortage_resolved = True
+            first_episode = None
+            shortage_date = None
+            days_until = None
+            unmet_units = 0.0
+            risk_level = "low"
+
+            if evaluation.shortage_episodes:
+                # Any episode starting >= target_cutoff is recorded as later shortage
+                lat_ep = evaluation.shortage_episodes[0]
+                later_shortage = LaterShortageSummary(
+                    date=lat_ep.start_date,
+                    days=lat_ep.days,
+                    units=lat_ep.unmet_units,
+                    note="Later shortage not covered by this recovery",
+                )
+                later_note = (
+                    f"Later shortage episode begins {lat_ep.start_date.isoformat()} "
+                    f"({lat_ep.unmet_units:.1f} units over {lat_ep.days} days); not covered by this recovery."
+                )
+        else:
+            # First episode still exists but might be reduced
+            p_ep = episodes_in_window[0]
+            first_episode = ShortageEpisodeSummary(
+                start_date=p_ep.start_date,
+                end_date=p_ep.end_date,
+                days=p_ep.days,
+                unmet_units=p_ep.unmet_units,
+            )
+            shortage_date = p_ep.start_date
+            unmet_units = p_ep.unmet_units
+            shortage_resolved = False
+
+            # Later episodes (e.g. beyond first window or 2nd episode)
+            later_candidates = [
+                ep for ep in evaluation.shortage_episodes if ep.start_date >= target_cutoff or ep != p_ep
+            ]
+            if later_candidates:
+                lat_ep = later_candidates[0]
+                later_shortage = LaterShortageSummary(
+                    date=lat_ep.start_date,
+                    days=lat_ep.days,
+                    units=lat_ep.unmet_units,
+                    note="Later shortage not covered by this recovery",
+                )
+                later_note = (
+                    f"Later shortage episode begins {lat_ep.start_date.isoformat()} "
+                    f"({lat_ep.unmet_units:.1f} units over {lat_ep.days} days); not covered by this recovery."
+                )
+    else:
+        # Baseline or disrupted scenario
+        if evaluation.shortage_episodes:
+            ep = evaluation.shortage_episodes[0]
+            first_episode = ShortageEpisodeSummary(
+                start_date=ep.start_date,
+                end_date=ep.end_date,
+                days=ep.days,
+                unmet_units=ep.unmet_units,
+            )
+
+        if len(evaluation.shortage_episodes) > 1:
+            ep2 = evaluation.shortage_episodes[1]
+            later_shortage = LaterShortageSummary(
+                date=ep2.start_date,
+                days=ep2.days,
+                units=ep2.unmet_units,
+                note="Later shortage not covered by this recovery",
+            )
+            later_note = (
+                f"Later shortage episode begins {ep2.start_date.isoformat()} "
+                f"({ep2.unmet_units:.1f} units over {ep2.days} days); not covered by this recommendation."
+            )
 
     next_inb = None
     if evaluation.next_replenishment is not None:
@@ -237,11 +331,11 @@ def _build_scenario_result(
         exp_sum = "No customer orders exposed within the planning horizon."
 
     return ScenarioResult(
-        risk_level=evaluation.risk_level,
-        shortage_date=evaluation.shortage_date,
-        days_until_shortage=evaluation.days_until_shortage,
+        risk_level=risk_level,
+        shortage_date=shortage_date,
+        days_until_shortage=days_until,
         first_shortage_episode=first_episode,
-        unmet_before_next_inbound=evaluation.unmet_before_next_inbound or 0.0,
+        unmet_before_next_inbound=unmet_units,
         later_episodes_note=later_note,
         next_inbound=next_inb,
         mean_daily_demand=evaluation.mean_daily_demand,
@@ -252,6 +346,8 @@ def _build_scenario_result(
         exposed_orders_summary=exp_sum,
         applied_actions=applied_actions or [],
         recovery_note=recovery_note,
+        shortage_resolved_for_first_window=shortage_resolved,
+        later_shortage=later_shortage,
     )
 
 
@@ -332,7 +428,12 @@ def _build_what_changed(
     # 5. Recovery effect
     if recovered.applied_actions:
         action_desc = ", ".join(f"'{a.id}'" for a in recovered.applied_actions)
-        if recovered.unmet_before_next_inbound < disrupted.unmet_before_next_inbound:
+        if recovered.shortage_resolved_for_first_window:
+            changes.append(
+                f"Recovery intervention ({action_desc}) eliminates 100% of the "
+                f"{disrupted.unmet_before_next_inbound:.1f} units projected shortage in the first shortage window."
+            )
+        elif recovered.unmet_before_next_inbound < disrupted.unmet_before_next_inbound:
             cov = disrupted.unmet_before_next_inbound - recovered.unmet_before_next_inbound
             changes.append(
                 f"Recovery intervention ({action_desc}) reduces unmet demand before next inbound from "
@@ -351,7 +452,13 @@ def _build_what_changed(
                     f"{disrupted.shortage_date.isoformat()} to {recovered.shortage_date.isoformat()}."
                 )
             else:
-                changes.append("Recovery eliminates projected shortage across the planning horizon.")
+                changes.append("Recovery eliminates projected shortage across the first shortage window.")
+        if recovered.later_shortage is not None:
+            changes.append(
+                f"Note: Later shortage beginning {recovered.later_shortage.date.isoformat()} "
+                f"({recovered.later_shortage.units:.1f} units over {recovered.later_shortage.days} days) "
+                "is not covered by this recovery."
+            )
     else:
         if recovered.recovery_note:
             changes.append(f"Recovery status: {recovered.recovery_note}")
@@ -423,6 +530,13 @@ def simulate(
     )
     disrupted_scenario = _build_scenario_result(disrupted_res, disrupted_impact)
 
+    # Determine target cutoff window from disrupted scenario
+    target_cutoff: Optional[datetime.date] = None
+    if disrupted_res.next_replenishment is not None:
+        target_cutoff = disrupted_res.next_replenishment.date
+    elif disrupted_res.shortage_episodes:
+        target_cutoff = disrupted_res.shortage_episodes[0].end_date
+
     # -------------------------------------------------------------------------
     # 3. RECOVERED SCENARIO (Apply recovery engine to disrupted inputs)
     # -------------------------------------------------------------------------
@@ -438,6 +552,8 @@ def simulate(
             disrupted_impact,
             applied_actions=[],
             recovery_note="No recovery action needed: no shortage projected in the disrupted scenario.",
+            target_cutoff=target_cutoff,
+            is_recovered=True,
         )
     else:
         # Prepare supplier offers based on alt_supplier_available parameter
@@ -480,6 +596,8 @@ def simulate(
                 disrupted_impact,
                 applied_actions=[],
                 recovery_note="No feasible recovery options available to mitigate the projected shortage.",
+                target_cutoff=target_cutoff,
+                is_recovered=True,
             )
         else:
             applied_actions: List[AppliedRecoveryAction] = []
@@ -494,10 +612,15 @@ def simulate(
                             step.arrival_date,
                             f"TRANS-{step.source_code}",
                         )
-                    elif step.kind == "expedite":
+                    elif step.kind in ("expedite", "expedite_existing"):
+                        po_num = (
+                            step.option_id.split(".", 1)[1]
+                            if step.option_id.startswith("expedite.")
+                            else step.source_code
+                        )
                         recovered_inputs = expedite_inbound(
                             recovered_inputs,
-                            step.source_code,
+                            po_num,
                             step.arrival_date,
                         )
                     elif step.kind == "alternative_supplier":
@@ -552,10 +675,18 @@ def simulate(
                         )
                     )
 
-                    if chosen_opt.kind == "expedite" and chosen_opt.source_code and chosen_opt.arrival_date:
+                    if (
+                        chosen_opt.kind in ("expedite", "expedite_existing")
+                        and chosen_opt.arrival_date
+                    ):
+                        po_num = (
+                            chosen_opt.id.split(".", 1)[1]
+                            if chosen_opt.id.startswith("expedite.")
+                            else chosen_opt.source_code
+                        )
                         recovered_inputs = expedite_inbound(
                             recovered_inputs,
-                            chosen_opt.source_code,
+                            po_num,
                             chosen_opt.arrival_date,
                         )
                     elif (
@@ -596,6 +727,8 @@ def simulate(
                 recovered_impact,
                 applied_actions=applied_actions,
                 recovery_note=rec.reason,
+                target_cutoff=target_cutoff,
+                is_recovered=True,
             )
 
     what_changed = _build_what_changed(

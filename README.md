@@ -4,7 +4,8 @@ AI/ML-powered supply-chain risk prediction and decision-support web application 
 
 > **Important Notices:**
 > - **Decision-Support Only:** SupplyChain Sentinel AI is strictly an analytical and decision-support system. It does not create real purchase orders, touch real operational ERP transaction ledgers, or modify live enterprise data.
-> - **Demo Data Notice:** All data currently processed, stored, and exposed by this application is **DEMO DATA** generated deterministically by the `DemoAdapter`. No live connection or network call to SAP or any external business system exists in this phase. Real enterprise systems are integrated only through an isolated adapter boundary.
+> - **Zero Live SAP Claims / Synthetic Data Notice:** All data currently processed, stored, and exposed by this application is **DEMO DATA** (generated deterministically by `DemoAdapter`) or static sample fixtures (`SapSampleAdapter`). There is **NO live connection to SAP** or any external business system.
+> - **SAP Architectural Readiness:** An illustrative mapping layer (`app/integrations/sap_mapping.py`) and static sample adapter (`app/integrations/sap_sample_adapter.py`) demonstrate OData structural readiness. See [`docs/SAP_INTEGRATION.md`](file:///C:/Users/SK%20MD%20Rijooan%20Hasan/Desktop/SAP/docs/SAP_INTEGRATION.md) for full integration architecture and prerequisites.
 
 ---
 
@@ -181,6 +182,9 @@ cd "C:\Users\SK MD Rijooan Hasan\Desktop\SAP\backend"
 
 # Optional: seed with specific seed or reference as-of date
 & ".\.venv\Scripts\python.exe" -m app.cli seed --seed 100 --as-of 2026-03-01 --reset
+
+# Optional: seed illustrative SAP-style sample fixture (is_live=False, static fixture, no network calls)
+& ".\.venv\Scripts\python.exe" -m app.cli seed --source sap-sample --reset
 ```
 *Note: To protect stored data, the CLI refuses to overwrite an existing database without the explicit `--reset` flag.*
 
@@ -253,6 +257,7 @@ All data endpoints return standard JSON envelopes with pagination (`items`, `tot
 | `GET` | `/api/purchase-orders/{id}` | Purchase order detail with line items and fulfillment status |
 | `GET` | `/api/customer-orders` | Customer order book (filters: `status`, `priority`, `product_id`) |
 | `GET` | `/api/delivery-records` | Historical supplier delivery performance (filters: `supplier_id`, `component_id`) |
+| `GET` | `/api/integration-status` | Active connector capabilities, is_live flag (false), entity coverage report, and mandatory SAP connectivity notice |
 
 ---
 

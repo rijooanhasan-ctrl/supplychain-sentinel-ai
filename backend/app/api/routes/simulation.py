@@ -22,6 +22,7 @@ from app.schemas.simulation import (
     AppliedRecoveryActionSchema,
     ComponentBriefSchema,
     InboundSummarySchema,
+    LaterShortageSummarySchema,
     ScenarioResultSchema,
     ShortageEpisodeSummarySchema,
     SimulationDailyProjectionItemSchema,
@@ -83,6 +84,15 @@ def _to_scenario_schema(scenario: ScenarioResult) -> ScenarioResultSchema:
         for a in scenario.applied_actions
     ]
 
+    later_sh = None
+    if scenario.later_shortage is not None:
+        later_sh = LaterShortageSummarySchema(
+            date=scenario.later_shortage.date,
+            days=scenario.later_shortage.days,
+            units=scenario.later_shortage.units,
+            note=scenario.later_shortage.note,
+        )
+
     return ScenarioResultSchema(
         risk_level=scenario.risk_level,
         shortage_date=scenario.shortage_date,
@@ -99,6 +109,8 @@ def _to_scenario_schema(scenario: ScenarioResult) -> ScenarioResultSchema:
         exposed_orders_summary=scenario.exposed_orders_summary,
         applied_actions=actions,
         recovery_note=scenario.recovery_note,
+        shortage_resolved_for_first_window=scenario.shortage_resolved_for_first_window,
+        later_shortage=later_sh,
     )
 
 

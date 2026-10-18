@@ -405,3 +405,77 @@ def test_simulation_determinism(
     assert sim1.disrupted.unmet_before_next_inbound == sim2.disrupted.unmet_before_next_inbound
     assert sim1.recovered.unmet_before_next_inbound == sim2.recovered.unmet_before_next_inbound
     assert sim1.what_changed == sim2.what_changed
+
+
+def test_recovered_target_window_resolution(
+    sample_component_inputs: ComponentEvaluationInput,
+    sample_offers: list[SupplierOfferInput],
+    sample_regional_stocks: list[RegionalStockItem],
+):
+    """When recovery eliminates the first shortage window, headline reports 0 units unmet
+
+    and shortage_resolved_for_first_window=True, with any subsequent shortage in later_shortage.
+    """
+    sim = simulate(
+        component_inputs=sample_component_inputs,
+        supplier_offers=sample_offers,
+        regional_stocks=sample_regional_stocks,
+        customer_orders=[],
+        bom_by_product={},
+        products_by_id={},
+        params=SimulationParams(supplier_delay_days=0, alt_supplier_available=True),
+    )
+
+    # Disrupted has shortage in first window
+    assert sim.disrupted.unmet_before_next_inbound > 0
+    # Recovered resolves the first window
+    assert sim.recovered.shortage_resolved_for_first_window is True
+    assert sim.recovered.unmet_before_next_inbound == 0.0
+    assert sim.recovered.first_shortage_episode is None
+
+
+def test_alt_supplier_available_toggles_options(
+    sample_component_inputs: ComponentEvaluationInput,
+    sample_offers: list[SupplierOfferInput],
+    sample_regional_stocks: list[RegionalStockItem],
+):
+    """alt_supplier_available=False must exclude alternative supplier options."""
+    from app.domain.recovery import evaluate_component_recovery
+    from app.domain.inventory import evaluate_component, InventoryRiskConfig
+
+    inv_cfg = InventoryRiskConfig()
+    dis_res = evaluate_component(sample_component_inputs, inv_cfg)
+
+    # When True (sample_offers contains SUP-ALT)
+    rec_true = evaluate_component_recovery(
+        component_input=sample_component_inputs,
+        baseline_result=dis_res,
+        supplier_offers=sample_offers,
+        regional_stocks=sample_regional_stocks,
+        customer_orders=[],
+        bom_by_product={},
+        products_by_id={},
+        inventory_config=inv_cfg,
+        recovery_config=None,
+    )
+    alt_opts_true = [o for o in rec_true.options if o.kind == "alternative_supplier"]
+    assert len(alt_opts_true) > 0
+
+    # When False (filter out non-shortage suppliers)
+    shortage_supplier = sample_component_inputs.inbound_lines[0].supplier_code
+    active_offers_false = [o for o in sample_offers if o.supplier_code == shortage_supplier]
+    rec_false = evaluate_component_recovery(
+        component_input=sample_component_inputs,
+        baseline_result=dis_res,
+        supplier_offers=active_offers_false,
+        regional_stocks=sample_regional_stocks,
+        customer_orders=[],
+        bom_by_product={},
+        products_by_id={},
+        inventory_config=inv_cfg,
+        recovery_config=None,
+    )
+    alt_opts_false = [o for o in rec_false.options if o.kind == "alternative_supplier"]
+    assert len(alt_opts_false) == 0
+    assert len(rec_true.options) != len(rec_false.options)
+
