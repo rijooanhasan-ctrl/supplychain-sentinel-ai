@@ -790,4 +790,91 @@ export interface RecommendationsFilterParams {
   component_id?: number;
 }
 
+export interface SimulationParams {
+  supplier_delay_days: number;
+  demand_multiplier: number;
+  on_hand_delta: number;
+  alt_supplier_available: boolean;
+}
+
+export interface SimulationDailyProjectionItem {
+  day_index: number;
+  date: string;
+  forecast_demand: number;
+  receipts: number;
+  ending_balance: number;
+  unmet: number;
+}
+
+export interface ShortageEpisodeSummary {
+  start_date: string;
+  end_date: string;
+  days: number;
+  unmet_units: number;
+}
+
+export interface InboundSummary {
+  date: string;
+  qty: number;
+  po_number: string;
+  date_basis: string;
+}
+
+export interface AppliedRecoveryAction {
+  id: string;
+  kind: string;
+  description: string;
+  source_code: string | null;
+  quantity: number;
+  arrival_date: string | null;
+  incremental_cost: string | null;
+  cost_known: boolean;
+}
+
+export interface ScenarioResult {
+  risk_level: string;
+  shortage_date: string | null;
+  days_until_shortage: number | null;
+  first_shortage_episode: ShortageEpisodeSummary | null;
+  unmet_before_next_inbound: number;
+  later_episodes_note: string | null;
+  next_inbound: InboundSummary | null;
+  mean_daily_demand: number | null;
+  plant_usable_stock: number | null;
+  daily_projection_30d: SimulationDailyProjectionItem[];
+  exposed_orders_count: number;
+  exposed_revenue: string | null;
+  exposed_orders_summary: string;
+  applied_actions: AppliedRecoveryAction[];
+  recovery_note: string | null;
+}
+
+export interface ComponentBrief {
+  id: number;
+  sku: string;
+  name: string;
+}
+
+export interface SimulationResponse {
+  seeded: boolean;
+  as_of: string | null;
+  component: ComponentBrief | null;
+  params: SimulationParams | null;
+  baseline: ScenarioResult | null;
+  disrupted: ScenarioResult | null;
+  recovered: ScenarioResult | null;
+  what_changed: string[];
+  assumptions: string[];
+  note: string;
+}
+
+export interface SimulationRequestParams {
+  component_id: number;
+  supplier_delay_days?: number;
+  demand_multiplier?: number;
+  on_hand_delta?: number;
+  alt_supplier_available?: boolean;
+}
+
+
 

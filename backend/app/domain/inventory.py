@@ -1119,3 +1119,125 @@ def expedite_inbound(
         inbound_lines=new_inbound,
     )
 
+
+def scale_demand(
+    inputs: ComponentEvaluationInput,
+    multiplier: float,
+) -> ComponentEvaluationInput:
+    """Return a new ComponentEvaluationInput with demand history scaled by multiplier.
+
+    Scales every historical demand record's quantity so that weekday average forecasts
+    scale proportionately. Original input object is never mutated.
+    """
+    if multiplier <= 0.0:
+        raise ValueError(f"Demand multiplier must be strictly positive, got {multiplier}")
+
+    new_records = [
+        DemandHistoryRecordInput(
+            date=record.date,
+            quantity=float(record.quantity * multiplier),
+        )
+        for record in inputs.demand_records
+    ]
+
+    return ComponentEvaluationInput(
+        as_of=inputs.as_of,
+        component_id=inputs.component_id,
+        sku=inputs.sku,
+        name=inputs.name,
+        category=inputs.category,
+        criticality=inputs.criticality,
+        plant_inventory=inputs.plant_inventory,
+        regional_inventories=list(inputs.regional_inventories),
+        demand_records=new_records,
+        inbound_lines=list(inputs.inbound_lines),
+    )
+
+
+def adjust_plant_on_hand(
+    inputs: ComponentEvaluationInput,
+    delta: int,
+) -> ComponentEvaluationInput:
+    """Return a new ComponentEvaluationInput with plant on-hand stock adjusted by delta.
+
+    Raises ValueError if plant inventory is absent or if on_hand + delta would be negative.
+    Original input object is never mutated.
+    """
+    if inputs.plant_inventory is None:
+        raise ValueError("Cannot adjust plant on-hand: plant inventory is not available")
+
+    new_on_hand = inputs.plant_inventory.on_hand + delta
+    if new_on_hand < 0:
+        raise ValueError(
+            f"Plant on-hand cannot be negative: {inputs.plant_inventory.on_hand} + ({delta}) = {new_on_hand} < 0"
+        )
+
+    new_plant_inv = PlantInventoryInput(
+        on_hand=new_on_hand,
+        reserved=inputs.plant_inventory.reserved,
+    )
+
+    return ComponentEvaluationInput(
+        as_of=inputs.as_of,
+        component_id=inputs.component_id,
+        sku=inputs.sku,
+        name=inputs.name,
+        category=inputs.category,
+        criticality=inputs.criticality,
+        plant_inventory=new_plant_inv,
+        regional_inventories=list(inputs.regional_inventories),
+        demand_records=list(inputs.demand_records),
+        inbound_lines=list(inputs.inbound_lines),
+    )
+
+
+def shift_all_inbound(
+    inputs: ComponentEvaluationInput,
+    days: int,
+) -> ComponentEvaluationInput:
+    """Return a new ComponentEvaluationInput with all inbound purchase order lines shifted later by days.
+
+    Reuses shift logic from shift_inbound_for_supplier for all lines.
+    Raises ValueError if days < 0. Original input object is never mutated.
+    """
+    if days < 0:
+        raise ValueError(f"Supplier delay days must be non-negative, got {days}")
+
+    if days == 0:
+        return inputs
+
+    delta = timedelta(days=days)
+    new_inbound: List[InboundLineInput] = []
+    for line in inputs.inbound_lines:
+        new_promised = line.promised_date + delta
+        new_estimate = (line.latest_estimate_date + delta) if line.latest_estimate_date is not None else None
+        new_inbound.append(
+            InboundLineInput(
+                po_id=line.po_id,
+                po_number=line.po_number,
+                po_status=line.po_status,
+                warehouse_id=line.warehouse_id,
+                warehouse_code=line.warehouse_code,
+                warehouse_name=line.warehouse_name,
+                warehouse_role=line.warehouse_role,
+                qty_ordered=line.qty_ordered,
+                qty_received=line.qty_received,
+                promised_date=new_promised,
+                latest_estimate_date=new_estimate,
+                supplier_code=line.supplier_code,
+            )
+        )
+
+    return ComponentEvaluationInput(
+        as_of=inputs.as_of,
+        component_id=inputs.component_id,
+        sku=inputs.sku,
+        name=inputs.name,
+        category=inputs.category,
+        criticality=inputs.criticality,
+        plant_inventory=inputs.plant_inventory,
+        regional_inventories=list(inputs.regional_inventories),
+        demand_records=list(inputs.demand_records),
+        inbound_lines=new_inbound,
+    )
+

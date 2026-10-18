@@ -56,7 +56,7 @@
 
 2. **Domain Layer (`backend/app/domain/`):**
    - Implemented across four focused pure modules:
-     - `backend/app/domain/inventory.py`: Deterministic intra-day stockout projections, weekday-aware consumption profiles, multi-episode shortage segmentation, pure `shift_inbound_for_supplier` helper (reusable by Phase 8 simulator), and component risk classification.
+     - `backend/app/domain/inventory.py`: Deterministic intra-day stockout projections, weekday-aware consumption profiles, multi-episode shortage segmentation, immutable pure helpers `scale_demand`, `adjust_plant_on_hand`, `shift_all_inbound` (used by simulator), and component risk classification.
      - `backend/app/domain/supplier_risk.py`: Supplier delivery performance scoring, 95% Wilson score confidence intervals, delay distribution percentiles (nearest-rank p50/p90), penalty transformations, dynamic weight renormalization, and transparent rule-based explanation generation.
      - `backend/app/domain/forecasting.py`: Pure forecast models (`seasonal_naive`, `weekday_average`, `ridge_weekday_trend`), rolling-origin backtest evaluation engine, error metrics (MAE, RMSE, WAPE, Bias, Pooled WAPE, Macro WAPE), and frozen decision-rule logic.
      - `backend/app/domain/alerts.py`: Deterministic multi-tier disruption alert engine across 9 alert types, empirical what-if delay scenario simulation, customer order exposure calculation with exact Decimal revenue arithmetic, compound risk escalation, and deterministic multi-criteria sorting.
@@ -132,7 +132,9 @@ The frontend application is structured with strict separation of concerns, zero 
                     ▼  Route Outlet
 [ Page Views (src/pages/) ]
   ├── OverviewPage        (Master counts, priority shortage list, active alerts summary)
-  ├── AlertsPage          (Disruption alerts, what-if delay scenarios, order exposure)
+  ├── AlertsPage          (Disruption alerts, what-if delay scenarios, order exposure, Simulate/Recover links)
+  ├── RecommendationsPage (Per-component recovery options, combined plan, Simulate links)
+  ├── SimulatorPage       (What-if disruption simulator: controls, presets, 3-column comparison, SVG chart)
   ├── InventoryRiskPage   (Stockout projections, critical risk alerts, shortage episodes table)
   ├── SupplierRiskPage    (Transparent vendor risk scoring, penalty weights, monthly history)
   ├── ForecastingPage     (Evaluation protocol, aggregate WAPE, challenger decision, projections)
@@ -202,10 +204,15 @@ The frontend application is structured with strict separation of concerns, zero 
 
 ---
 
-## 11. Recovery Recommendations & Disruption Simulation (Phases 7 & 8)
+## 11. Recovery Recommendations & Scenario Simulator (Phases 7 & 8)
 
-The Phase 7 Recovery Recommendation engine (`app/domain/recovery.py`, `app/services/recovery.py`, and `GET /api/recommendations`) evaluates interventions through pure input cloning and deterministic re-evaluation. Pure domain helpers (`add_inbound`, `expedite_inbound`) return fresh, immutable `ComponentEvaluationInput` objects without mutating baseline operational states.
+The **Phase 7** Recovery Recommendation engine (`app/domain/recovery.py`, `app/services/recovery.py`, `GET /api/recommendations`) evaluates interventions through pure input cloning and deterministic re-evaluation. Pure domain helpers (`add_inbound`, `expedite_inbound`) return fresh, immutable `ComponentEvaluationInput` objects without mutating baseline operational states.
 
-In Phase 8, the interactive disruption simulator will build directly upon this foundation: the simulator will call the exact same pure evaluation functions (`evaluate_component`, `detect_alerts`, `evaluate_component_recovery`) with user-modified operational inputs (such as simulated supplier delays, quantity reductions, or synthetic emergency orders) to compute counterfactual risk and recovery outcomes in real time without creating or writing any database records.
+The **Phase 8** What-If Disruption Simulator (`app/domain/simulation.py`, `app/services/simulation.py`, `GET /api/simulation`) builds directly on this foundation. It calls the same pure evaluation functions with user-modified inputs to compute counterfactual risk outcomes in real time:
 
-
+- **Three scenarios**: baseline (unchanged), disrupted (shock applied), with recovery (best recovery option applied to disrupted inputs).
+- **Pure immutable helpers** `scale_demand`, `adjust_plant_on_hand`, `shift_all_inbound` produce new inputs without mutating existing ones.
+- **No database writes**: no orders created, no saved scenarios, no history tables.
+- **Frontend**: `SimulatorPage.tsx` at `/simulator` with controls, presets, 3-column comparison table (text risk badges), `what_changed` sentence list, hand-built accessible SVG line chart (30-day stock balance, solid/dashed/dotted lines), and accessible projection table.
+- **Cross-links**: Inventory shortage alerts and recommendation cards each carry `Simulate →` deep-links to `/simulator?component_id=<id>`.
+- **Order exposure upper-bound disclosure**: The exposed revenue figure is the selling price of potentially affected orders—not a modelled financial loss estimate.

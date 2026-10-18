@@ -11,6 +11,7 @@ import { InventoryPage } from './pages/InventoryPage';
 import { SuppliersPage } from './pages/SuppliersPage';
 import { PurchaseOrdersPage } from './pages/PurchaseOrdersPage';
 import { DataSourcesPage } from './pages/DataSourcesPage';
+import { SimulatorPage } from './pages/SimulatorPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
 export function App() {
@@ -22,6 +23,7 @@ export function App() {
             <Route index element={<OverviewPage />} />
             <Route path="alerts" element={<AlertsPage />} />
             <Route path="recommendations" element={<RecommendationsPage />} />
+            <Route path="simulator" element={<SimulatorPage />} />
             <Route path="inventory-risk" element={<InventoryRiskPage />} />
             <Route path="supplier-risk" element={<SupplierRiskPage />} />
             <Route path="forecasting" element={<ForecastingPage />} />

@@ -1,5 +1,5 @@
 import { Fragment, useCallback, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { getRecommendations } from '../api/endpoints';
 import type {
   ComponentRecoveryRecommendation,
@@ -193,6 +193,14 @@ function ComponentCard({
             >
               {rec.risk_level} Risk
             </span>
+            <Link
+              to={`/simulator?component_id=${rec.component_id}`}
+              className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 hover:underline inline-flex items-center gap-0.5 ml-2"
+              data-testid={`simulator-link-${rec.component_id}`}
+            >
+              <span>Simulate</span>
+              <span aria-hidden="true">&rarr;</span>
+            </Link>
           </div>
           <p className="text-xs text-slate-500 mt-1 font-mono">
             First Shortage Date:{' '}
@@ -403,11 +411,14 @@ function ComponentCard({
         </div>
       )}
 
-      {/* Card Footer: Later Shortage Note and Alternatives Note */}
+      {/* Card Footer: Scope Clarification, Later Shortage Note and Alternatives Note */}
       <div className="p-3 bg-slate-50/90 border-t border-slate-200 text-xs text-slate-600 flex flex-wrap items-center justify-between gap-3">
         <div className="italic text-slate-500">
           <span className="font-semibold text-slate-700">Alternatives Note: </span>
           {rec.alternatives_note}
+          <span className="block text-[11px] text-slate-500 mt-0.5">
+            * &quot;Recommended&quot; designates the option that fixes the first shortage window; later shortages are not covered.
+          </span>
         </div>
         {rec.later_shortage_note && (
           <div
@@ -478,8 +489,9 @@ export function RecommendationsPage() {
             Decision support only. No orders are created.
           </span>
           <p className="text-amber-800 text-xs">
-            Transfer time and cost are assumptions you can configure. All evaluated options remain
-            strictly non-binding recommendations.
+            Transfer time and cost are assumptions you can configure. "Recommended" designates the option
+            that resolves the first shortage window; later shortages are not covered. All evaluated options
+            remain strictly non-binding recommendations.
           </p>
         </div>
       </div>

@@ -15,6 +15,7 @@ from app.api.routes.meta import router as meta_router
 from app.api.routes.products import router as products_router
 from app.api.routes.purchase_orders import router as purchase_orders_router
 from app.api.routes.recovery import router as recovery_router
+from app.api.routes.simulation import router as simulation_router
 from app.api.routes.supplier_risk import router as supplier_risk_router
 from app.api.routes.suppliers import router as suppliers_router
 from app.api.routes.warehouses import router as warehouses_router
@@ -86,6 +87,7 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
     app.include_router(forecasting_router, prefix="/api")
     app.include_router(alerts_router, prefix="/api")
     app.include_router(recovery_router, prefix="/api")
+    app.include_router(simulation_router, prefix="/api")
 
     return app
 

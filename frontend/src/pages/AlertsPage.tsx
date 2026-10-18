@@ -508,18 +508,30 @@ export function AlertsPage() {
                             <div className="font-semibold text-slate-900 flex items-center justify-between gap-2">
                               <span>{alert.title}</span>
                               {alert.type === 'inventory_shortage' && (
-                                <Link
-                                  to={
-                                    alert.component_id
-                                      ? `/recommendations?component_id=${alert.component_id}`
-                                      : '/recommendations'
-                                  }
-                                  className="text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline inline-flex items-center gap-0.5 shrink-0"
-                                  data-testid={`recommendations-link-${alert.id}`}
-                                >
-                                  <span>Recover</span>
-                                  <span aria-hidden="true">&rarr;</span>
-                                </Link>
+                                <div className="flex items-center gap-2 shrink-0">
+                                  {alert.component_id && (
+                                    <Link
+                                      to={`/simulator?component_id=${alert.component_id}`}
+                                      className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 hover:underline inline-flex items-center gap-0.5"
+                                      data-testid={`simulator-link-${alert.id}`}
+                                    >
+                                      <span>Simulate</span>
+                                      <span aria-hidden="true">&rarr;</span>
+                                    </Link>
+                                  )}
+                                  <Link
+                                    to={
+                                      alert.component_id
+                                        ? `/recommendations?component_id=${alert.component_id}`
+                                        : '/recommendations'
+                                    }
+                                    className="text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline inline-flex items-center gap-0.5"
+                                    data-testid={`recommendations-link-${alert.id}`}
+                                  >
+                                    <span>Recover</span>
+                                    <span aria-hidden="true">&rarr;</span>
+                                  </Link>
+                                </div>
                               )}
                             </div>
                             <div className="text-slate-500 text-xs truncate mt-0.5" title={alert.summary}>

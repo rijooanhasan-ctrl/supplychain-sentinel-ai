@@ -29,6 +29,8 @@ import type {
   AlertDetail,
   RecommendationsFilterParams,
   RecommendationsResponse,
+  SimulationRequestParams,
+  SimulationResponse,
 } from './types';
 
 export function getHealth(signal?: AbortSignal): Promise<HealthResponse> {
@@ -259,5 +261,22 @@ export function getRecommendations(
     signal,
   });
 }
+
+export function getSimulation(
+  params: SimulationRequestParams,
+  signal?: AbortSignal
+): Promise<SimulationResponse> {
+  return getJson<SimulationResponse>('/api/simulation', {
+    params: {
+      component_id: params.component_id,
+      supplier_delay_days: params.supplier_delay_days !== undefined ? params.supplier_delay_days : undefined,
+      demand_multiplier: params.demand_multiplier !== undefined ? params.demand_multiplier : undefined,
+      on_hand_delta: params.on_hand_delta !== undefined ? params.on_hand_delta : undefined,
+      alt_supplier_available: params.alt_supplier_available !== undefined ? params.alt_supplier_available : undefined,
+    },
+    signal,
+  });
+}
+
 
 

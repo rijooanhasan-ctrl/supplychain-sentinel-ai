@@ -315,6 +315,8 @@ def test_recovery_options_evaluation_and_rules():
     assert rec.recommended_option_id == "expedite.PO-EXISTING"
     assert "PO-EXISTING" in rec.reason
     assert "alt_supplier.SUP-ALT" in rec.reason or "runner-up" in rec.reason.lower()
+    assert "transfer options have unknown cost and were ranked after" in rec.reason
+    assert "targets the first shortage window; later shortages are not covered" in rec.reason
 
 
 # =============================================================================

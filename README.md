@@ -29,7 +29,8 @@ SAP/
 │   ├── SUPPLIER_RISK.md         # Transparent supplier risk scoring formulas, weights, and SUP-HELIX example
 │   ├── FORECASTING.md           # Demand forecast evaluation protocol, models, leakage safeguards, and measured results
 │   ├── DISRUPTION_DETECTION.md  # Multi-tier disruption detection, what-if delay scenarios, order exposure, and CPU-X7 worked example
-│   └── RECOMMENDATIONS.md       # Recovery options, constraints, ranking rule, combined plan, and CPU-X7 worked example
+│   ├── RECOMMENDATIONS.md       # Recovery options, constraints, ranking rule, combined plan, and CPU-X7 worked example
+│   └── SIMULATOR.md             # What-If Disruption Simulator: inputs/ranges, scenario calc, assumptions, CPU-X7 worked example
 ├── backend/
 │   ├── .env.example             # Backend environment template
 │   ├── requirements.txt         # Production runtime dependencies (FastAPI, Uvicorn, Pydantic, SQLAlchemy, numpy, scikit-learn)
@@ -68,18 +69,23 @@ SAP/
 │   │   │       ├── inventory.py # GET /api/inventory
 │   │   │       ├── purchase_orders.py # GET /api/purchase-orders, /api/purchase-orders/{id}
 │   │   │       ├── customer_orders.py # GET /api/customer-orders
-│   │   │       └── delivery_records.py# GET /api/delivery-records
+│   │   │       ├── delivery_records.py# GET /api/delivery-records
+│   │   │       └── simulation.py      # GET /api/simulation (what-if scenario simulator)
 │   │   ├── domain/              # Pure business logic layer (zero DB/framework imports)
 │   │   │   ├── __init__.py
-│   │   │   ├── inventory.py     # Stock projections, shortage episodes, weekday consumption profile
+│   │   │   ├── inventory.py     # Stock projections, shortage episodes, weekday consumption profile; scale_demand, shift_all_inbound, adjust_plant_on_hand
 │   │   │   ├── supplier_risk.py # Performance scoring, Wilson interval, delay percentiles, explanations
-│   │   │   └── forecasting.py   # Pure forecast models (isolated numpy/sklearn), backtesting, decision rule
+│   │   │   ├── forecasting.py   # Pure forecast models (isolated numpy/sklearn), backtesting, decision rule
+│   │   │   ├── alerts.py        # Multi-tier alert generation, delay scenarios, order exposure impact
+│   │   │   ├── recovery.py      # Recovery options, combined plan, recommendation, scope note
+│   │   │   └── simulation.py    # SimulationParams, simulate() — baseline/disrupted/recovered + what_changed
 │   │   ├── services/
 │   │   │   ├── __init__.py
 │   │   │   ├── ingest.py        # Transactional dataset loader (load_dataset)
 │   │   │   ├── inventory_risk.py# Inventory risk service orchestrating DB queries and domain evaluation
 │   │   │   ├── supplier_risk.py # Supplier risk service querying deliveries and calculating metrics
-│   │   │   └── forecasting.py   # Demand forecast service with in-process evaluation caching
+│   │   │   ├── forecasting.py   # Demand forecast service with in-process evaluation caching
+│   │   │   └── simulation.py    # run_component_simulation — loads inputs, delegates to domain/simulation.py
 │   │   └── integrations/
 │   │       ├── __init__.py
 │   │       ├── base.py          # SourceAdapter interface and SourceDataset DTOs
@@ -99,7 +105,9 @@ SAP/
 │       ├── test_domain_supplier_risk.py # Pure supplier risk domain tests (penalties, weights, Wilson CI, limits)
 │       ├── test_supplier_risk_api.py    # Supplier risk service/API tests, ranking, sorting, 404/422
 │       ├── test_domain_forecasting.py   # Pure forecasting tests (leakage, models, rolling backtest, decision rule)
-│       └── test_forecasting_api.py      # Forecasting service/API tests, determinism, caching, 404/422
+│       ├── test_forecasting_api.py      # Forecasting service/API tests, determinism, caching, 404/422
+│       ├── test_domain_simulation.py    # Pure simulation domain tests (validation, immutability, delay extension, demand)
+│       └── test_simulation_api.py       # Simulation API integration tests (envelope, 404, 422, unseeded, multi-seed)
 └── frontend/
     ├── package.json             # React 19, react-router-dom v7, Tailwind CSS v4, Vitest
     ├── vite.config.ts           # Vite server config (port 5173, /api proxy to 8000, Vitest)
@@ -113,6 +121,12 @@ SAP/
         ├── pages/
         │   ├── OverviewPage.tsx         # Master entity counts, open/overdue POs, inventory risk summary
         │   ├── OverviewPage.test.tsx    # Tests for overview calculations, overdue logic, risk summary
+        │   ├── AlertsPage.tsx           # Disruption alerts table with filters, expandable detail, Simulate/Recover links
+        │   ├── AlertsPage.test.tsx      # Tests for alerts table, badges, expand, Simulate/Recover links
+        │   ├── RecommendationsPage.tsx  # Recovery recommendation cards with Simulate links
+        │   ├── RecommendationsPage.test.tsx # Tests for recommendation cards, combined plan, Simulate links
+        │   ├── SimulatorPage.tsx        # What-If Simulator: controls, presets, 3-col comparison, SVG chart
+        │   ├── SimulatorPage.test.tsx   # Tests for controls, URL preselect, presets, validation, results, error/unseeded
         │   ├── InventoryRiskPage.tsx    # Stockout risk table, filters, and expandable 14-day projection
         │   ├── InventoryRiskPage.test.tsx # Tests for risk table, null handling, expand panel, filters
         │   ├── InventoryPage.tsx        # Stock levels, filters (comp/wh), usable derivation, text flags
@@ -195,14 +209,16 @@ npm run dev
 - Web Application: `http://localhost:5173` (proxies `/api/*` to `http://localhost:8000`)
 - **Core Application Views:**
   1. `/` (**Overview**): Master entity totals, open purchase order counts, overdue order tracking with explicit definition, upcoming delivery schedule, active disruption alerts summary (counts by severity and top 5 critical alerts), priority component shortage alerts (`unmet_before_next_inbound`), and supplier risk summary card.
-  2. `/alerts` (**Disruption Detection & Alerts**): Multi-tier disruption detection across 9 alert types, severity and type filters, server-side pagination, expandable detail views with evidence tables, analytical assumptions, empirical what-if delay scenario tables (baseline, typical, severe), downstream customer order exposure (affected orders table and revenue), and compound risk cross-links.
-  3. `/inventory-risk` (**Inventory Risk & Shortage Projections**): Forward-looking stockout risk and daily shortage projection model across manufacturing plant components with filters, pagination, shortage episodes table, and labeled horizon total.
-  4. `/supplier-risk` (**Supplier Risk Scoring**): Transparent weighted delivery performance scoring (on-time rate with 95% Wilson CI, delay percentiles, rejection rate, fill rate), score bands, informational open-order metrics, expandable penalty point contributions, and 12-month delivery breakdown.
-  5. `/forecasting` (**Demand Forecast Evaluation**): Backtesting protocol summary, synthetic-data caveat banner, aggregate error metrics (Lowest WAPE indicator), frozen champion vs. challenger decision rule, per-component performance table, and expandable 14-day projections and backtest fold comparison.
-  6. `/inventory` (**Inventory Levels**): On-hand, reserved, and usable stock (`on_hand - reserved`) per warehouse, filterable by component and warehouse, with text badges for deficit or zero-stock states.
-  7. `/suppliers` (**Supplier Directory**): Global supplier directory with expandable commercial agreement panels showing component unit costs (USD), lead times, minimum order quantities, weekly capacities, and expedite terms.
-  8. `/purchase-orders` (**Purchase Orders**): Inbound replenishment orders filterable by status and supplier, displaying derived timing cells with slipped-vs-promise alerts and expandable fulfillment line items.
-  9. `/data-sources` (**Data Sources & Integration Status**): Backend health metrics, active dataset metadata, unverified connector indicators, and record counts.
+  2. `/alerts` (**Disruption Detection & Alerts**): Multi-tier disruption detection across 9 alert types, severity and type filters, server-side pagination, expandable detail views with evidence tables, analytical assumptions, empirical what-if delay scenario tables (baseline, typical, severe), downstream customer order exposure (affected orders table and revenue), compound risk cross-links, and **Simulate →** and **Recover →** links on shortage alerts.
+  3. `/recommendations` (**Recovery Recommendations**): Per-component recovery option cards (expedite PO, alternative supplier, transfer, accept delay), ranked by cost/feasibility, with combined-plan view and **Simulate →** link in each card header.
+  4. `/simulator` (**What-If Disruption Simulator**): Interactive scenario analysis: select component, set supplier delay (0–60d), demand multiplier (0.5x–3.0x), stock delta (±10 000), alt-supplier toggle; run baseline/disrupted/recovered comparison; 3-column table with text risk badges; `what_changed` sentences; hand-built accessible SVG 30-day stock balance chart; mandatory upper-bound disclosure. Deep-linked from Alerts and Recommendations pages.
+  5. `/inventory-risk` (**Inventory Risk & Shortage Projections**): Forward-looking stockout risk and daily shortage projection model across manufacturing plant components with filters, pagination, shortage episodes table, and labeled horizon total.
+  6. `/supplier-risk` (**Supplier Risk Scoring**): Transparent weighted delivery performance scoring (on-time rate with 95% Wilson CI, delay percentiles, rejection rate, fill rate), score bands, informational open-order metrics, expandable penalty point contributions, and 12-month delivery breakdown.
+  7. `/forecasting` (**Demand Forecast Evaluation**): Backtesting protocol summary, synthetic-data caveat banner, aggregate error metrics (Lowest WAPE indicator), frozen champion vs. challenger decision rule, per-component performance table, and expandable 14-day projections and backtest fold comparison.
+  8. `/inventory` (**Inventory Levels**): On-hand, reserved, and usable stock (`on_hand - reserved`) per warehouse, filterable by component and warehouse, with text badges for deficit or zero-stock states.
+  9. `/suppliers` (**Supplier Directory**): Global supplier directory with expandable commercial agreement panels showing component unit costs (USD), lead times, minimum order quantities, weekly capacities, and expedite terms.
+  10. `/purchase-orders` (**Purchase Orders**): Inbound replenishment orders filterable by status and supplier, displaying derived timing cells with slipped-vs-promise alerts and expandable fulfillment line items.
+  11. `/data-sources` (**Data Sources & Integration Status**): Backend health metrics, active dataset metadata, unverified connector indicators, and record counts.
 
 ---
 
@@ -222,6 +238,8 @@ All data endpoints return standard JSON envelopes with pagination (`items`, `tot
 | `GET` | `/api/forecasting/components/{id}` | Component next-N-day demand forecasts from each model (filter: `days=1..60`, default 14) and last-fold backtest actuals vs predictions |
 | `GET` | `/api/alerts` | Multi-tier disruption alerts and summary counts (filters: `severity`, `type`, `component_id`, `supplier_id`, `limit`, `offset`) |
 | `GET` | `/api/alerts/{alert_id}` | Full disruption alert detail, computed evidence, assumptions, downstream order exposure, and delay scenarios |
+| `GET` | `/api/recommendations` | Per-component recovery recommendations (filters: `component_id`) |
+| `GET` | `/api/simulation` | What-if scenario simulator (params: `component_id`, `supplier_delay_days`, `demand_multiplier`, `on_hand_delta`, `alt_supplier_available`) |
 | `GET` | `/api/products` | Finished laptop models (`limit`, `offset`) |
 | `GET` | `/api/products/{id}` | Product detail with BOM lines and component information |
 | `GET` | `/api/components` | Component catalog (filters: `category`, `q`, `is_active`) |
@@ -297,13 +315,13 @@ Exact versions installed in the local environment and verified from git reposito
 
 ## 8. Running Tests
 
-### Backend Test Suite (173 passing tests)
+### Backend Test Suite (191 passing tests)
 From `backend/`:
 ```powershell
 & ".\.venv\Scripts\python.exe" -m pytest tests -q
 ```
 
-### Frontend Test Suite (96 passing tests)
+### Frontend Test Suite (103 passing tests)
 From `frontend/`:
 ```powershell
 npm test

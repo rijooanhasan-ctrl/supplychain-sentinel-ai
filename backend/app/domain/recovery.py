@@ -763,15 +763,32 @@ def evaluate_component_recovery(
 
     cost_text = f"Incremental cost: ${rec_cost:,.2f}." if rec_cost is not None else "Incremental cost is unknown."
 
+    # Identify feasible candidate options with unknown cost
+    unknown_cost_kinds = sorted({
+        opt.kind for opt in options
+        if opt.feasible and not opt.cost_known
+    })
+
+    if rec_cost is not None:
+        if unknown_cost_kinds:
+            kinds_str = ", ".join(f"{k} options" for k in unknown_cost_kinds)
+            cost_comparison = f"lowest cost among options with a known cost ({kinds_str} have unknown cost and were ranked after)"
+        else:
+            cost_comparison = "lowest known cost"
+    else:
+        cost_comparison = "unknown cost"
+
+    scope_note = "Recommendation targets the first shortage window; later shortages are not covered."
+
     if runner_up_id:
         reason = (
             f"Recommended '{recommended_id}' because it achieves the lowest residual unmet demand ({rec_residual:.1f} units) "
-            f"at the lowest known cost. Preferred over runner-up '{runner_up_id}' ({runner_up_desc}). {residual_text} {cost_text}"
+            f"at the {cost_comparison}. Preferred over runner-up '{runner_up_id}' ({runner_up_desc}). {residual_text} {cost_text} {scope_note}"
         )
         alternatives_note = f"Runner-up option is '{runner_up_id}'. Evaluated {len(candidate_pool)} feasible candidate option(s)."
     else:
         reason = (
-            f"Recommended '{recommended_id}' as the primary feasible recovery path. {residual_text} {cost_text}"
+            f"Recommended '{recommended_id}' as the primary feasible recovery path. {residual_text} {cost_text} {scope_note}"
         )
         alternatives_note = "No other feasible candidate options available."
 
