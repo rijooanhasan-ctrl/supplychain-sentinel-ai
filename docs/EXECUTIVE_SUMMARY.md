@@ -12,7 +12,7 @@ The **Executive Summary** (`/executive-summary`) is a decision-support briefing 
 ## What Each Section Shows
 
 ### 1. Headline & Dataset Lineage Banner
-- **Headline Sentence**: A dynamically generated briefing statement summarizing active component shortages, identifying the single most urgent component SKU, its projected shortage date, and days until impact (e.g. `12 components face shortage risk; the most urgent is CPU-X7, short from 2026-10-21 (4 days).`). If no shortages are present, it clearly states `No components currently face shortage risk (none at risk).`
+- **Headline Sentence**: A dynamically generated briefing statement summarizing active component shortages, identifying the single most urgent component SKU, its projected shortage date, and days until impact (e.g. `9 components face shortage risk; the most urgent is CPU-X7, short from 2026-10-21 (4 days).`). If no shortages are present, it clearly states `No components currently face shortage risk (none at risk).`
 - **Data Source Badge**: Displays `DEMO DATA` or `SAP-STYLE-SAMPLE` along with the snapshot `as_of` date (`2026-10-17`) and confirmation that live ERP connectivity is inactive.
 
 ### 2. Top Priority Risks (Up to 3 Cards)

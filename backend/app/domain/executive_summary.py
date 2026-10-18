@@ -315,8 +315,12 @@ def build_executive_summary(inputs: ExecutiveSummaryInputs) -> ExecutiveSummary:
             if len(top_risks) >= 3:
                 break
 
-    # 2. Headline generation
-    shortage_count = sum(1 for c in inputs.inventory_results.values() if c.shortage_date is not None)
+    # 2. Headline generation (counts only critical, high, or medium shortage risk)
+    shortage_count = sum(
+        1
+        for c in inputs.inventory_results.values()
+        if c.risk_level in ("critical", "high", "medium") and c.shortage_date is not None
+    )
     if not top_risks or shortage_count == 0:
         headline = "No components currently face shortage risk (none at risk)."
     else:

@@ -608,3 +608,37 @@ def test_determinism():
     s1 = build_executive_summary(inputs)
     s2 = build_executive_summary(inputs)
     assert s1 == s2
+
+
+def test_headline_excludes_low_and_none_risk_shortages():
+    """Verify that headline counts only critical, high, or medium components facing shortage risk, excluding low and none."""
+    # 1 critical, 1 high, 1 medium, 2 low with shortage, 1 none
+    inv_results = {
+        1: _make_dummy_inventory_result(1, "COMP-CRIT", "Critical", risk_level="critical", shortage_date=date(2026, 10, 20)),
+        2: _make_dummy_inventory_result(2, "COMP-HIGH", "High", risk_level="high", shortage_date=date(2026, 10, 25)),
+        3: _make_dummy_inventory_result(3, "COMP-MED", "Medium", risk_level="medium", shortage_date=date(2026, 11, 2)),
+        4: _make_dummy_inventory_result(4, "COMP-LOW1", "Low 1", risk_level="low", shortage_date=date(2026, 11, 20)),
+        5: _make_dummy_inventory_result(5, "COMP-LOW2", "Low 2", risk_level="low", shortage_date=date(2026, 11, 25)),
+        6: _make_dummy_inventory_result(6, "COMP-NONE", "None", risk_level="none", shortage_date=None),
+    }
+    alerts = [
+        _make_dummy_alert(1, "COMP-CRIT", "critical", 3),
+        _make_dummy_alert(2, "COMP-HIGH", "high", 8),
+        _make_dummy_alert(3, "COMP-MED", "medium", 16),
+    ]
+    inputs = ExecutiveSummaryInputs(
+        as_of=date(2026, 10, 17),
+        dataset_label="DEMO DATA",
+        dataset_source="demo",
+        is_live=False,
+        alerts=alerts,
+        recommendations=[_make_dummy_recommendation(1, "COMP-CRIT")],
+        priority_simulation=_make_dummy_simulation(1, "COMP-CRIT"),
+        inventory_results=inv_results,
+        supplier_results={},
+    )
+    summary = build_executive_summary(inputs)
+    # Exactly 3 components should be counted (critical, high, medium), excluding the 2 low-risk components
+    assert "3 components face shortage risk;" in summary.headline
+    assert "the most urgent is COMP-CRIT" in summary.headline
+

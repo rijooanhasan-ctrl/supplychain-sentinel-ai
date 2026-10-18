@@ -16,9 +16,10 @@ export default defineConfig({
     },
   },
   resolve: {
-    // Retained as defensive guard against dual-instance React dispatcher errors in Vite dev/bundler resolution,
-    // though vitest and build currently succeed with flat node_modules resolution.
-    dedupe: ['react', 'react-dom'],
+    dedupe: ['react', 'react-dom', 'react-router-dom'],
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react-router-dom'],
   },
   test: {
     globals: true,

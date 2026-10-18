@@ -8,7 +8,7 @@ const mockSummaryResponse: ExecutiveSummaryResponse = {
   seeded: true,
   as_of: '2026-10-17',
   label: 'DEMO DATA',
-  headline: '12 components face shortage risk; the most urgent is CPU-X7, short from 2026-10-21 (4 days).',
+  headline: '9 components face shortage risk; the most urgent is CPU-X7, short from 2026-10-21 (4 days).',
   top_risks: [
     {
       component_id: 1,
@@ -176,7 +176,7 @@ describe('ExecutiveSummaryPage', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('executive-headline-text')).toHaveTextContent(
-        '12 components face shortage risk; the most urgent is CPU-X7, short from 2026-10-21 (4 days).'
+        '9 components face shortage risk; the most urgent is CPU-X7, short from 2026-10-21 (4 days).'
       );
     });
 
