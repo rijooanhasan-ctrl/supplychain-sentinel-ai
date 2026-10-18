@@ -1,4 +1,5 @@
 import { Fragment, useCallback, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { getAlerts, getAlertDetail } from '../api/endpoints';
 import {
   ALERT_TYPE_LABELS,
@@ -504,7 +505,23 @@ export function AlertsPage() {
                             {ALERT_TYPE_LABELS[alert.type] || alert.type}
                           </td>
                           <td className="py-3 px-4 max-w-md">
-                            <div className="font-semibold text-slate-900">{alert.title}</div>
+                            <div className="font-semibold text-slate-900 flex items-center justify-between gap-2">
+                              <span>{alert.title}</span>
+                              {alert.type === 'inventory_shortage' && (
+                                <Link
+                                  to={
+                                    alert.component_id
+                                      ? `/recommendations?component_id=${alert.component_id}`
+                                      : '/recommendations'
+                                  }
+                                  className="text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline inline-flex items-center gap-0.5 shrink-0"
+                                  data-testid={`recommendations-link-${alert.id}`}
+                                >
+                                  <span>Recover</span>
+                                  <span aria-hidden="true">&rarr;</span>
+                                </Link>
+                              )}
+                            </div>
                             <div className="text-slate-500 text-xs truncate mt-0.5" title={alert.summary}>
                               {alert.summary}
                             </div>

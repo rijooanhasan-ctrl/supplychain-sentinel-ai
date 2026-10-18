@@ -466,6 +466,8 @@ def test_supplier_delay_exposure_rules():
     assert scenarios["typical"].shift_days == 5
     assert scenarios["severe"].shift_days == 11
     assert scenarios["typical"].incremental_total_unmet > 0
+    assert "unmet before next inbound" in alert.summary
+    assert "Total over horizon, assuming no further supply" in alert.summary
 
     # 3. Low confidence cap at medium when n < 10
     sup_few = make_supplier_result(

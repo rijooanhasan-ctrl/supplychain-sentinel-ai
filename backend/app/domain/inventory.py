@@ -1023,3 +1023,99 @@ def shift_inbound_for_supplier(
         inbound_lines=new_inbound,
     )
 
+
+def add_inbound(
+    inputs: ComponentEvaluationInput,
+    qty: int,
+    arrival_date: date,
+    label: str,
+    supplier_code: Optional[str] = None,
+) -> ComponentEvaluationInput:
+    """Return a new ComponentEvaluationInput with an additional counted plant inbound line.
+    
+    Receipts are scheduled to arrive at `arrival_date` at the plant warehouse.
+    Original input object is not mutated.
+    """
+    wh_id = 1
+    wh_code = "WH-PLANT-01"
+    wh_name = "Plant Warehouse"
+    for line in inputs.inbound_lines:
+        if line.warehouse_role == "plant":
+            wh_id = line.warehouse_id
+            wh_code = line.warehouse_code
+            wh_name = line.warehouse_name
+            break
+
+    new_line = InboundLineInput(
+        po_id=0,
+        po_number=label,
+        po_status="open",
+        warehouse_id=wh_id,
+        warehouse_code=wh_code,
+        warehouse_name=wh_name,
+        warehouse_role="plant",
+        qty_ordered=qty,
+        qty_received=0,
+        promised_date=arrival_date,
+        latest_estimate_date=arrival_date,
+        supplier_code=supplier_code,
+    )
+    return ComponentEvaluationInput(
+        as_of=inputs.as_of,
+        component_id=inputs.component_id,
+        sku=inputs.sku,
+        name=inputs.name,
+        category=inputs.category,
+        criticality=inputs.criticality,
+        plant_inventory=inputs.plant_inventory,
+        regional_inventories=list(inputs.regional_inventories),
+        demand_records=list(inputs.demand_records),
+        inbound_lines=list(inputs.inbound_lines) + [new_line],
+    )
+
+
+def expedite_inbound(
+    inputs: ComponentEvaluationInput,
+    po_number: str,
+    new_arrival_date: date,
+) -> ComponentEvaluationInput:
+    """Return a new ComponentEvaluationInput with a specific inbound line expedited.
+
+    Lines matching `po_number` have their promised_date and latest_estimate_date set
+    to `new_arrival_date`. Original input object is not mutated.
+    """
+    new_inbound: List[InboundLineInput] = []
+    for line in inputs.inbound_lines:
+        if line.po_number == po_number:
+            new_inbound.append(
+                InboundLineInput(
+                    po_id=line.po_id,
+                    po_number=line.po_number,
+                    po_status=line.po_status,
+                    warehouse_id=line.warehouse_id,
+                    warehouse_code=line.warehouse_code,
+                    warehouse_name=line.warehouse_name,
+                    warehouse_role=line.warehouse_role,
+                    qty_ordered=line.qty_ordered,
+                    qty_received=line.qty_received,
+                    promised_date=new_arrival_date,
+                    latest_estimate_date=new_arrival_date,
+                    supplier_code=line.supplier_code,
+                )
+            )
+        else:
+            new_inbound.append(line)
+
+    return ComponentEvaluationInput(
+        as_of=inputs.as_of,
+        component_id=inputs.component_id,
+        sku=inputs.sku,
+        name=inputs.name,
+        category=inputs.category,
+        criticality=inputs.criticality,
+        plant_inventory=inputs.plant_inventory,
+        regional_inventories=list(inputs.regional_inventories),
+        demand_records=list(inputs.demand_records),
+        inbound_lines=new_inbound,
+    )
+

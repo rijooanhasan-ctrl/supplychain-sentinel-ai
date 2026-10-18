@@ -28,7 +28,8 @@ SAP/
 │   ├── INVENTORY_INTELLIGENCE.md # Inventory risk rules, daily projection math, episodes, and CPU-X7 benchmark
 │   ├── SUPPLIER_RISK.md         # Transparent supplier risk scoring formulas, weights, and SUP-HELIX example
 │   ├── FORECASTING.md           # Demand forecast evaluation protocol, models, leakage safeguards, and measured results
-│   └── DISRUPTION_DETECTION.md  # Multi-tier disruption detection, what-if delay scenarios, order exposure, and CPU-X7 worked example
+│   ├── DISRUPTION_DETECTION.md  # Multi-tier disruption detection, what-if delay scenarios, order exposure, and CPU-X7 worked example
+│   └── RECOMMENDATIONS.md       # Recovery options, constraints, ranking rule, combined plan, and CPU-X7 worked example
 ├── backend/
 │   ├── .env.example             # Backend environment template
 │   ├── requirements.txt         # Production runtime dependencies (FastAPI, Uvicorn, Pydantic, SQLAlchemy, numpy, scikit-learn)
@@ -271,18 +272,38 @@ The backend supports configuration via environment variables or a `.env` file:
 | `ALERT_QUALITY_REJECTION_THRESHOLD` | `0.02` | Recent 90-day rejection rate threshold for quality alert (valid: 0..1) |
 | `ALERT_DELAY_MIN_LATE_PROBABILITY` | `0.20` | Minimum supplier late delivery probability to trigger delay exposure (valid: 0..1) |
 | `ALERT_DELAY_MIN_DELIVERIES` | `10` | Delivery count threshold below which severity is capped at medium (valid: $\ge 1$) |
+| `RECOVERY_TRANSFER_DAYS` | `2` | Assumed calendar days required for inter-warehouse transfers (valid: $\ge 0$) |
+| `RECOVERY_TRANSFER_COST_PER_UNIT` | `null` | Optional assumed cost per unit for inter-warehouse transfers in USD (valid: $\ge 0$ or null) |
 
 ---
 
-## 7. Running Tests
+## 7. Technology Stack & Package Versions
 
-### Backend Test Suite (156 tests)
+Exact versions installed in the local environment and verified from git repository history:
+- **Python**: 3.13.3
+- **FastAPI**: 0.115.12
+- **SQLAlchemy**: 2.0.40
+- **NumPy**: 2.5.4 (strictly confined to demand forecasting domain)
+- **Scikit-learn**: 1.9.1 (strictly confined to demand forecasting domain)
+- **React**: 19.2.8
+- **React DOM**: 19.2.8
+- **React Router DOM**: 7.18.4
+- **Vite**: 8.3.4
+- **Vitest**: 5.0.5
+- **Tailwind CSS**: 4.1.18
+- **Oxlint**: 1.48.0
+
+---
+
+## 8. Running Tests
+
+### Backend Test Suite (173 passing tests)
 From `backend/`:
 ```powershell
-& ".\.venv\Scripts\python.exe" -m pytest tests -v
+& ".\.venv\Scripts\python.exe" -m pytest tests -q
 ```
 
-### Frontend Test Suite (90 tests)
+### Frontend Test Suite (96 passing tests)
 From `frontend/`:
 ```powershell
 npm test
@@ -294,3 +315,4 @@ From `frontend/`:
 npm run lint
 npm run build
 ```
+

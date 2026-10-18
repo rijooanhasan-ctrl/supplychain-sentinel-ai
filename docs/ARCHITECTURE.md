@@ -200,4 +200,12 @@ The frontend application is structured with strict separation of concerns, zero 
    - **Accessible State Handling:** Every data view handles loading (`aria-live="polite"`), error with actionable retry (`role="alert"`), empty states, and unseeded database guidance (`python -m app.cli seed`).
    - **Responsive Shell:** Layout remains fully usable across mobile (360px) and wide desktop (1280px+) screens, with tables scrolling inside isolated horizontal wrappers rather than overflowing the page body.
 
+---
+
+## 11. Recovery Recommendations & Disruption Simulation (Phases 7 & 8)
+
+The Phase 7 Recovery Recommendation engine (`app/domain/recovery.py`, `app/services/recovery.py`, and `GET /api/recommendations`) evaluates interventions through pure input cloning and deterministic re-evaluation. Pure domain helpers (`add_inbound`, `expedite_inbound`) return fresh, immutable `ComponentEvaluationInput` objects without mutating baseline operational states.
+
+In Phase 8, the interactive disruption simulator will build directly upon this foundation: the simulator will call the exact same pure evaluation functions (`evaluate_component`, `detect_alerts`, `evaluate_component_recovery`) with user-modified operational inputs (such as simulated supplier delays, quantity reductions, or synthetic emergency orders) to compute counterfactual risk and recovery outcomes in real time without creating or writing any database records.
+
 

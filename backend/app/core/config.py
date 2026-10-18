@@ -1,6 +1,7 @@
+from decimal import Decimal
 import json
 from functools import lru_cache
-from typing import List, Union
+from typing import List, Optional, Union
 from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -45,6 +46,10 @@ class Settings(BaseSettings):
     ALERT_QUALITY_REJECTION_THRESHOLD: float = 0.02
     ALERT_DELAY_MIN_LATE_PROBABILITY: float = 0.20
     ALERT_DELAY_MIN_DELIVERIES: int = 10
+
+    # Phase 7: Recovery Recommendations Configuration
+    RECOVERY_TRANSFER_DAYS: int = 2
+    RECOVERY_TRANSFER_COST_PER_UNIT: Optional[Decimal] = None
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -175,6 +180,21 @@ class Settings(BaseSettings):
         if self.ALERT_DELAY_MIN_DELIVERIES < 1:
             raise ValueError(
                 f"ALERT_DELAY_MIN_DELIVERIES must be at least 1, got {self.ALERT_DELAY_MIN_DELIVERIES}"
+            )
+        return self
+
+    @model_validator(mode="after")
+    def validate_recovery_settings(self) -> "Settings":
+        if self.RECOVERY_TRANSFER_DAYS < 0:
+            raise ValueError(
+                f"RECOVERY_TRANSFER_DAYS cannot be negative, got {self.RECOVERY_TRANSFER_DAYS}"
+            )
+        if (
+            self.RECOVERY_TRANSFER_COST_PER_UNIT is not None
+            and self.RECOVERY_TRANSFER_COST_PER_UNIT < Decimal("0")
+        ):
+            raise ValueError(
+                f"RECOVERY_TRANSFER_COST_PER_UNIT cannot be negative, got {self.RECOVERY_TRANSFER_COST_PER_UNIT}"
             )
         return self
 

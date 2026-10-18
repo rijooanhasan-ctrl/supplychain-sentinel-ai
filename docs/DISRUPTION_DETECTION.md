@@ -43,7 +43,11 @@ For each counted open purchase order line feeding a vulnerable component:
 2. **Typical Delay Scenario:** Shifts the expected arrival date later by $\text{round\_half\_up}(\text{avg\_delay\_days\_when\_late})$ days (minimum 1 day).
 3. **Severe Delay Scenario:** Shifts the expected arrival date later by $\lceil \text{p90\_delay\_days\_when\_late} \rceil$ days (minimum 1 day).
 
-The inventory projection engine (`evaluate_component`) is executed independently with these shifted dates using the pure helper `shift_inbound_for_supplier(inputs, supplier_code, days)`. The resulting shortage dates, first-episode duration, unmet demand before next inbound, and total unmet demand across the 30-day horizon are recorded.
+The inventory projection engine (`evaluate_component`) is executed independently with these shifted dates using the pure helper `shift_inbound_for_supplier(inputs, supplier_code, days)`. The resulting shortage dates, first-episode duration, unmet demand before next inbound, and total unmet demand across the planning horizon are recorded.
+
+### Primary Metric vs. Horizon Total
+- **Headline Operational Measure:** Alert summaries and recovery recommendations lead directly with `unmet_before_next_inbound` and the duration of the first shortage window. This represents the immediate operational crisis confronting planners before any scheduled supply arrives.
+- **Horizon Total Label:** Total unmet demand over the full planning horizon is explicitly labeled: *"total over horizon, assuming no further supply; unchanged by delays because unmet demand is not carried forward"*. Because unmet demand is non-accumulating in standard stockout simulations, postponing an inbound delivery widens the first outage window without changing total horizon consumption.
 
 ### Why This Is NOT a Prediction
 > **Crucial Analytical Principle:** The typical and severe delay scenarios are **deterministic stress tests**, NOT probabilistic predictions of a specific shipment's outcome.

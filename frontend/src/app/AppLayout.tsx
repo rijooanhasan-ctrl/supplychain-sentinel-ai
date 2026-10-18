@@ -5,6 +5,7 @@ import { DemoBanner } from '../components/DemoBanner';
 const NAV_ITEMS = [
   { label: 'Overview', to: '/' },
   { label: 'Alerts', to: '/alerts' },
+  { label: 'Recommendations', to: '/recommendations' },
   { label: 'Inventory Risk', to: '/inventory-risk' },
   { label: 'Supplier Risk', to: '/supplier-risk' },
   { label: 'Demand Forecasting', to: '/forecasting' },

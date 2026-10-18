@@ -697,3 +697,97 @@ export const ALERT_TYPE_LABELS: Record<AlertType, string> = {
   compound_risk: 'Compound Disruption',
 };
 
+// =====================================================================
+// Phase 7: Recovery Recommendations Types
+// =====================================================================
+
+export type RecoveryOptionKind =
+  | 'transfer'
+  | 'expedite_existing'
+  | 'alternative_supplier'
+  | 'accept_delay';
+
+export interface RecoveryConfig {
+  transfer_days: number;
+  transfer_cost_per_unit: string | null;
+}
+
+export interface RecoveryOption {
+  id: string;
+  kind: RecoveryOptionKind;
+  description: string;
+  source_code: string | null;
+  source_name: string | null;
+  quantity: number;
+  arrival_date: string | null;
+  arrival_within_time: boolean;
+  incremental_cost: string | null;
+  cost_known: boolean;
+  unit_premium_vs_shortage_supplier: string | null;
+  residual_unmet_before_next_inbound: number;
+  new_shortage_date: string | null;
+  remaining_total_unmet: number;
+  constraints_applied: string[];
+  assumptions: string[];
+  flags: string[];
+  feasible: boolean;
+  infeasible_reason: string | null;
+  impact: AlertImpact | null;
+}
+
+export interface CombinedPlanStep {
+  option_id: string;
+  kind: string;
+  source_code: string;
+  source_name: string;
+  quantity: number;
+  arrival_date: string | null;
+  incremental_cost: string | null;
+  cost_known: boolean;
+}
+
+export interface CombinedPlan {
+  id: string;
+  description: string;
+  steps: CombinedPlanStep[];
+  total_quantity: number;
+  total_known_cost: string | null;
+  unknown_cost_steps: number;
+  residual_unmet_before_next_inbound: number;
+  new_shortage_date: string | null;
+  remaining_total_unmet: number;
+  feasible: boolean;
+}
+
+export interface ComponentRecoveryRecommendation {
+  component_id: number;
+  sku: string;
+  name: string;
+  risk_level: string;
+  baseline_shortage_date: string;
+  baseline_unmet_before_next_inbound: number;
+  need_units: number;
+  baseline_summary: string;
+  options: RecoveryOption[];
+  combined_plan: CombinedPlan | null;
+  recommended_option_id: string;
+  recommended_option_kind: string;
+  reason: string;
+  alternatives_note: string;
+  later_shortage_note: string | null;
+}
+
+export interface RecommendationsResponse {
+  seeded: boolean;
+  as_of: string | null;
+  config: RecoveryConfig;
+  items: ComponentRecoveryRecommendation[];
+  total: number;
+  note: string;
+}
+
+export interface RecommendationsFilterParams {
+  component_id?: number;
+}
+
+

@@ -27,6 +27,8 @@ import type {
   AlertsFilterParams,
   AlertsListResponse,
   AlertDetail,
+  RecommendationsFilterParams,
+  RecommendationsResponse,
 } from './types';
 
 export function getHealth(signal?: AbortSignal): Promise<HealthResponse> {
@@ -245,4 +247,17 @@ export function getAlertDetail(
 ): Promise<AlertDetail> {
   return getJson<AlertDetail>(`/api/alerts/${encodeURIComponent(alertId)}`, { signal });
 }
+
+export function getRecommendations(
+  params?: RecommendationsFilterParams,
+  signal?: AbortSignal
+): Promise<RecommendationsResponse> {
+  return getJson<RecommendationsResponse>('/api/recommendations', {
+    params: {
+      component_id: params?.component_id || undefined,
+    },
+    signal,
+  });
+}
+
 

@@ -696,13 +696,23 @@ def detect_alerts(
             )
 
             alert_id = f"supplier_delay_exposure.{comp.sku}.{sup_code}"
+            def fmt_unmet(val: Optional[float]) -> str:
+                return f"{val:.1f}" if val is not None else "0.0"
+
+            base_unmet_str = fmt_unmet(baseline_res.unmet_before_next_inbound)
+            typ_unmet_str = fmt_unmet(typ_res.unmet_before_next_inbound)
+            sev_unmet_str = fmt_unmet(sev_res.unmet_before_next_inbound)
+
             summary = (
                 f"Supplier {sup_code} ({sup_res.supplier_name}) has an observed historical late delivery frequency of "
                 f"{late_prob*100:.1f}% (historical average delay: {avg_delay:.1f} days, p90: {p90_delay:.1f} days "
                 f"across {n_delivs} deliveries). "
-                f"What-if scenario analysis: a typical delay (+{typical_shift} days) causes first episode to span "
-                f"{typ_ep_days} days with {typ_res.unmet_demand_units:.1f} total unmet units (+{typ_inc_unmet:.1f} incremental vs baseline); "
-                f"a severe delay (+{severe_shift} days) yields {sev_res.unmet_demand_units:.1f} unmet units (+{sev_inc_unmet:.1f} incremental). "
+                f"What-if scenario analysis: first shortage window extends from baseline {base_ep_days} days "
+                f"({base_unmet_str} units unmet before next inbound) to typical (+{typical_shift} days) "
+                f"{typ_ep_days} days ({typ_unmet_str} units unmet before next inbound), "
+                f"and severe (+{severe_shift} days) {sev_ep_days} days ({sev_unmet_str} units unmet before next inbound). "
+                f"Total over horizon, assuming no further supply: {baseline_res.unmet_demand_units:.1f} units "
+                f"(unchanged by delays because unmet demand is not carried forward). "
                 f"Scenarios are what-if cases derived from historical delays, NOT predictions or probabilities of this delivery."
             )
 
