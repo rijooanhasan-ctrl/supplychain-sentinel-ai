@@ -24,6 +24,9 @@ import type {
   SupplierRiskDetailResponse,
   ForecastEvaluationResponse,
   ComponentForecastDetailResponse,
+  AlertsFilterParams,
+  AlertsListResponse,
+  AlertDetail,
 } from './types';
 
 export function getHealth(signal?: AbortSignal): Promise<HealthResponse> {
@@ -218,5 +221,28 @@ export function getComponentForecastDetail(
     params: { days },
     signal,
   });
+}
+
+export function getAlerts(
+  params?: AlertsFilterParams,
+  signal?: AbortSignal
+): Promise<AlertsListResponse> {
+  return getJson<AlertsListResponse>('/api/alerts', {
+    params: {
+      ...params,
+      severity: params?.severity || undefined,
+      type: params?.type || undefined,
+      component_id: params?.component_id || undefined,
+      supplier_id: params?.supplier_id || undefined,
+    },
+    signal,
+  });
+}
+
+export function getAlertDetail(
+  alertId: string,
+  signal?: AbortSignal
+): Promise<AlertDetail> {
+  return getJson<AlertDetail>(`/api/alerts/${encodeURIComponent(alertId)}`, { signal });
 }
 

@@ -97,6 +97,7 @@ Real values computed from `sentinel.db` (as of `2026-10-17`):
    - Penalty: $0.0000$
    - Contribution: $0.15 \times 0.0000 \times 100 = \mathbf{0.0\text{ pts}}$
 
-### Final Score:
 $$\text{risk\_score} = 36.0 + 12.0 + 3.8 + 0.0 = \mathbf{51.8} \implies \textbf{High Risk Band}$$
 Confidence: **High** ($n = 40 \ge 30$). Primary drivers: `on_time` ($36.0$ pts) and `delay` ($12.0$ pts).
+
+**Grace Period Sensitivity:** Under 0 days grace, score is 51.80 (High Risk); under 1 day grace, score is 51.80 (High Risk); under 2 days grace, on-time rate rises to 57.5% (23/40) and score drops to 49.80 (Medium Risk band, crossing the 50.0 threshold).

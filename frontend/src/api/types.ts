@@ -565,3 +565,135 @@ export interface ComponentForecastDetailResponse {
   backtest_last_fold: BacktestPointItem[];
 }
 
+// =====================================================================
+// Disruption Detection and Alerts
+// =====================================================================
+
+export type AlertSeverity = 'critical' | 'high' | 'medium' | 'low' | 'info';
+
+export type AlertType =
+  | 'inventory_shortage'
+  | 'data_quality'
+  | 'supplier_delay_exposure'
+  | 'po_slipped'
+  | 'po_overdue'
+  | 'demand_surge'
+  | 'quality_issue'
+  | 'capacity_constraint'
+  | 'compound_risk';
+
+export interface AlertEvidenceItem {
+  label: string;
+  value: string | number | null;
+  unit?: string | null;
+}
+
+export interface ExposedCustomerOrder {
+  order_number: string;
+  customer_name: string;
+  product_sku: string;
+  product_name: string;
+  quantity: number;
+  due_date: string;
+  priority: 'critical' | 'high' | 'normal' | 'low';
+  component_units_required: number;
+}
+
+export interface AlertImpact {
+  orders_count: number;
+  count_by_priority: Record<string, number>;
+  total_component_units_required: number;
+  exposed_revenue: string;
+  exposed_orders: ExposedCustomerOrder[];
+}
+
+export interface DelayScenarioItem {
+  scenario_name: 'baseline' | 'typical' | 'severe';
+  shift_days: number;
+  expected_date: string | null;
+  shortage_date: string | null;
+  first_episode_start: string | null;
+  first_episode_end: string | null;
+  first_episode_days: number;
+  unmet_before_next_inbound: number | null;
+  total_unmet_demand: number;
+  incremental_total_unmet: number;
+  change_in_shortage_days: number;
+}
+
+export interface AlertListItem {
+  id: string;
+  type: AlertType;
+  severity: AlertSeverity;
+  title: string;
+  summary: string;
+  component_id: number | null;
+  component_sku: string | null;
+  component_name: string | null;
+  supplier_id: number | null;
+  supplier_code: string | null;
+  po_number: string | null;
+  days_until_impact: number | null;
+  affected_orders_count: number | null;
+  exposed_revenue: string | null;
+  related_alert_ids: string[];
+  flags: string[];
+}
+
+export interface AlertDetail extends AlertListItem {
+  detected_on: string;
+  evidence: AlertEvidenceItem[];
+  assumptions: string[];
+  impact: AlertImpact | null;
+  impact_null_reason: string | null;
+  delay_scenarios: DelayScenarioItem[] | null;
+}
+
+export interface AlertSummary {
+  counts_by_severity: Record<AlertSeverity, number>;
+  counts_by_type: Record<AlertType, number>;
+  total_alerts: number;
+}
+
+export interface AlertConfigDto {
+  surge_recent_days: number;
+  surge_baseline_days: number;
+  surge_ratio_medium: number;
+  surge_ratio_high: number;
+  quality_rejection_threshold: number;
+  delay_min_late_probability: number;
+  delay_min_deliveries: number;
+}
+
+export interface AlertsListResponse {
+  seeded: boolean;
+  as_of: string | null;
+  config: AlertConfigDto | null;
+  summary: AlertSummary;
+  items: AlertListItem[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export interface AlertsFilterParams {
+  severity?: AlertSeverity;
+  type?: AlertType;
+  component_id?: number;
+  supplier_id?: number;
+  limit?: number;
+  offset?: number;
+}
+
+export const ALERT_TYPE_LABELS: Record<AlertType, string> = {
+  inventory_shortage: 'Inventory Shortage',
+  data_quality: 'Data Quality',
+  supplier_delay_exposure: 'Supplier Delay Exposure',
+  po_slipped: 'PO Delivery Slipped',
+  po_overdue: 'PO Overdue',
+  demand_surge: 'Demand Surge',
+  quality_issue: 'Quality Issue',
+  capacity_constraint: 'Capacity Constraint',
+  compound_risk: 'Compound Disruption',
+};
+

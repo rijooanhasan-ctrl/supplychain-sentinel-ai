@@ -16,8 +16,8 @@ export default defineConfig({
     },
   },
   resolve: {
-    // Ensures a single React instance is shared across all dependencies (including react-router-dom),
-    // preventing the "Cannot read properties of null (reading 'useCallback')" dual-instance dispatcher error.
+    // Retained as defensive guard against dual-instance React dispatcher errors in Vite dev/bundler resolution,
+    // though vitest and build currently succeed with flat node_modules resolution.
     dedupe: ['react', 'react-dom'],
   },
   test: {

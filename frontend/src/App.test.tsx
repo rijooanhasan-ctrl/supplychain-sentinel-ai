@@ -10,6 +10,7 @@ import { PurchaseOrdersPage } from './pages/PurchaseOrdersPage';
 import { DataSourcesPage } from './pages/DataSourcesPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { InventoryRiskPage } from './pages/InventoryRiskPage';
+import { AlertsPage } from './pages/AlertsPage';
 import { Route, Routes } from 'react-router-dom';
 
 const mockMeta = {
@@ -44,6 +45,7 @@ function renderWithRouter(initialEntry: string) {
         <Routes>
           <Route path="/" element={<AppLayout />}>
             <Route index element={<OverviewPage />} />
+            <Route path="alerts" element={<AlertsPage />} />
             <Route path="inventory" element={<InventoryPage />} />
             <Route path="inventory-risk" element={<InventoryRiskPage />} />
             <Route path="suppliers" element={<SuppliersPage />} />
@@ -138,6 +140,43 @@ describe('App Layout & Routing Shell', () => {
 
     const inventoryLink = screen.getByRole('link', { name: 'Inventory' });
     expect(inventoryLink).toHaveAttribute('aria-current', 'page');
+  });
+
+  it('navigates to /alerts and marks alerts link as active', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+      const urlStr = url.toString();
+      if (urlStr.includes('/api/meta')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => mockMeta,
+        } as Response;
+      }
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          seeded: true,
+          as_of: '2026-10-17',
+          summary: {
+            counts_by_severity: { critical: 0, high: 0, medium: 0, low: 0, info: 0 },
+            counts_by_type: {},
+            total_alerts: 0,
+          },
+          items: [],
+          total: 0,
+          limit: 50,
+          offset: 0,
+        }),
+      } as Response;
+    });
+
+    renderWithRouter('/alerts');
+
+    await waitFor(() => {
+      const alertsLink = screen.getByRole('link', { name: 'Alerts' });
+      expect(alertsLink).toHaveAttribute('aria-current', 'page');
+    });
   });
 
   it('navigates to /inventory-risk and marks inventory-risk link as active', async () => {

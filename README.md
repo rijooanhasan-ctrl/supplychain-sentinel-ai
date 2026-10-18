@@ -27,7 +27,8 @@ SAP/
 │   ├── ARCHITECTURE.md          # Architectural layers, adapter boundaries, and data model decisions
 │   ├── INVENTORY_INTELLIGENCE.md # Inventory risk rules, daily projection math, episodes, and CPU-X7 benchmark
 │   ├── SUPPLIER_RISK.md         # Transparent supplier risk scoring formulas, weights, and SUP-HELIX example
-│   └── FORECASTING.md           # Demand forecast evaluation protocol, models, leakage safeguards, and measured results
+│   ├── FORECASTING.md           # Demand forecast evaluation protocol, models, leakage safeguards, and measured results
+│   └── DISRUPTION_DETECTION.md  # Multi-tier disruption detection, what-if delay scenarios, order exposure, and CPU-X7 worked example
 ├── backend/
 │   ├── .env.example             # Backend environment template
 │   ├── requirements.txt         # Production runtime dependencies (FastAPI, Uvicorn, Pydantic, SQLAlchemy, numpy, scikit-learn)
@@ -192,14 +193,15 @@ npm run dev
 ```
 - Web Application: `http://localhost:5173` (proxies `/api/*` to `http://localhost:8000`)
 - **Core Application Views:**
-  1. `/` (**Overview**): Master entity totals, open purchase order counts, overdue order tracking with explicit definition, upcoming delivery schedule, priority component shortage alerts (`unmet_before_next_inbound`), and supplier risk summary card.
-  2. `/inventory-risk` (**Inventory Risk & Shortage Projections**): Forward-looking stockout risk and daily shortage projection model across manufacturing plant components with filters, pagination, shortage episodes table, and labeled horizon total.
-  3. `/supplier-risk` (**Supplier Risk Scoring**): Transparent weighted delivery performance scoring (on-time rate with 95% Wilson CI, delay percentiles, rejection rate, fill rate), score bands, informational open-order metrics, expandable penalty point contributions, and 12-month delivery breakdown.
-  4. `/forecasting` (**Demand Forecast Evaluation**): Backtesting protocol summary, synthetic-data caveat banner, aggregate error metrics (Lowest WAPE indicator), frozen champion vs. challenger decision rule, per-component performance table, and expandable 14-day projections and backtest fold comparison.
-  5. `/inventory` (**Inventory Levels**): On-hand, reserved, and usable stock (`on_hand - reserved`) per warehouse, filterable by component and warehouse, with text badges for deficit or zero-stock states.
-  6. `/suppliers` (**Supplier Directory**): Global supplier directory with expandable commercial agreement panels showing component unit costs (USD), lead times, minimum order quantities, weekly capacities, and expedite terms.
-  7. `/purchase-orders` (**Purchase Orders**): Inbound replenishment orders filterable by status and supplier, displaying derived timing cells with slipped-vs-promise alerts and expandable fulfillment line items.
-  8. `/data-sources` (**Data Sources & Integration Status**): Backend health metrics, active dataset metadata, unverified connector indicators, and record counts.
+  1. `/` (**Overview**): Master entity totals, open purchase order counts, overdue order tracking with explicit definition, upcoming delivery schedule, active disruption alerts summary (counts by severity and top 5 critical alerts), priority component shortage alerts (`unmet_before_next_inbound`), and supplier risk summary card.
+  2. `/alerts` (**Disruption Detection & Alerts**): Multi-tier disruption detection across 9 alert types, severity and type filters, server-side pagination, expandable detail views with evidence tables, analytical assumptions, empirical what-if delay scenario tables (baseline, typical, severe), downstream customer order exposure (affected orders table and revenue), and compound risk cross-links.
+  3. `/inventory-risk` (**Inventory Risk & Shortage Projections**): Forward-looking stockout risk and daily shortage projection model across manufacturing plant components with filters, pagination, shortage episodes table, and labeled horizon total.
+  4. `/supplier-risk` (**Supplier Risk Scoring**): Transparent weighted delivery performance scoring (on-time rate with 95% Wilson CI, delay percentiles, rejection rate, fill rate), score bands, informational open-order metrics, expandable penalty point contributions, and 12-month delivery breakdown.
+  5. `/forecasting` (**Demand Forecast Evaluation**): Backtesting protocol summary, synthetic-data caveat banner, aggregate error metrics (Lowest WAPE indicator), frozen champion vs. challenger decision rule, per-component performance table, and expandable 14-day projections and backtest fold comparison.
+  6. `/inventory` (**Inventory Levels**): On-hand, reserved, and usable stock (`on_hand - reserved`) per warehouse, filterable by component and warehouse, with text badges for deficit or zero-stock states.
+  7. `/suppliers` (**Supplier Directory**): Global supplier directory with expandable commercial agreement panels showing component unit costs (USD), lead times, minimum order quantities, weekly capacities, and expedite terms.
+  8. `/purchase-orders` (**Purchase Orders**): Inbound replenishment orders filterable by status and supplier, displaying derived timing cells with slipped-vs-promise alerts and expandable fulfillment line items.
+  9. `/data-sources` (**Data Sources & Integration Status**): Backend health metrics, active dataset metadata, unverified connector indicators, and record counts.
 
 ---
 
@@ -217,6 +219,8 @@ All data endpoints return standard JSON envelopes with pagination (`items`, `tot
 | `GET` | `/api/supplier-risk/{supplier_id}` | Comprehensive supplier risk detail, penalties, effective weights, contribution points, 12-month delivery breakdown, open orders, and plain-language explanation |
 | `GET` | `/api/forecasting/evaluation` | Demand forecast evaluation backtest summary across models (`seasonal_naive`, `weekday_average`, `ridge_weekday_trend`), aggregate WAPE/MAE/RMSE/bias, frozen decision rule outcome, and per-component breakdown |
 | `GET` | `/api/forecasting/components/{id}` | Component next-N-day demand forecasts from each model (filter: `days=1..60`, default 14) and last-fold backtest actuals vs predictions |
+| `GET` | `/api/alerts` | Multi-tier disruption alerts and summary counts (filters: `severity`, `type`, `component_id`, `supplier_id`, `limit`, `offset`) |
+| `GET` | `/api/alerts/{alert_id}` | Full disruption alert detail, computed evidence, assumptions, downstream order exposure, and delay scenarios |
 | `GET` | `/api/products` | Finished laptop models (`limit`, `offset`) |
 | `GET` | `/api/products/{id}` | Product detail with BOM lines and component information |
 | `GET` | `/api/components` | Component catalog (filters: `category`, `q`, `is_active`) |
@@ -260,18 +264,25 @@ The backend supports configuration via environment variables or a `.env` file:
 | `FORECAST_STEP_DAYS` | `14` | Rolling origin step stride in days (valid: 7..30) |
 | `FORECAST_MIN_IMPROVEMENT_PCT` | `5.0` | Relative WAPE reduction required to recommend challenger |
 | `FORECAST_MIN_WIN_RATE` | `0.60` | Minimum fraction of component-folds challenger must win |
+| `ALERT_SURGE_RECENT_DAYS` | `14` | Recent demand window for surge detection in days (valid: > 0) |
+| `ALERT_SURGE_BASELINE_DAYS` | `28` | Baseline demand window for surge detection in days (valid: > 0) |
+| `ALERT_SURGE_RATIO_MEDIUM` | `1.25` | Ratio threshold for Medium demand surge alert (valid: > 1.0) |
+| `ALERT_SURGE_RATIO_HIGH` | `1.50` | Ratio threshold for High demand surge alert (valid: > ratio_medium) |
+| `ALERT_QUALITY_REJECTION_THRESHOLD` | `0.02` | Recent 90-day rejection rate threshold for quality alert (valid: 0..1) |
+| `ALERT_DELAY_MIN_LATE_PROBABILITY` | `0.20` | Minimum supplier late delivery probability to trigger delay exposure (valid: 0..1) |
+| `ALERT_DELAY_MIN_DELIVERIES` | `10` | Delivery count threshold below which severity is capped at medium (valid: $\ge 1$) |
 
 ---
 
 ## 7. Running Tests
 
-### Backend Test Suite (130 tests)
+### Backend Test Suite (156 tests)
 From `backend/`:
 ```powershell
 & ".\.venv\Scripts\python.exe" -m pytest tests -v
 ```
 
-### Frontend Test Suite (81 tests)
+### Frontend Test Suite (90 tests)
 From `frontend/`:
 ```powershell
 npm test

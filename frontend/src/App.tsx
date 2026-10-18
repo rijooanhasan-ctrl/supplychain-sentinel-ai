@@ -2,6 +2,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { AppLayout } from './app/AppLayout';
 import { MetaProvider } from './context/MetaContext';
 import { OverviewPage } from './pages/OverviewPage';
+import { AlertsPage } from './pages/AlertsPage';
 import { InventoryRiskPage } from './pages/InventoryRiskPage';
 import { SupplierRiskPage } from './pages/SupplierRiskPage';
 import { ForecastingPage } from './pages/ForecastingPage';
@@ -18,6 +19,7 @@ export function App() {
         <Routes>
           <Route path="/" element={<AppLayout />}>
             <Route index element={<OverviewPage />} />
+            <Route path="alerts" element={<AlertsPage />} />
             <Route path="inventory-risk" element={<InventoryRiskPage />} />
             <Route path="supplier-risk" element={<SupplierRiskPage />} />
             <Route path="forecasting" element={<ForecastingPage />} />

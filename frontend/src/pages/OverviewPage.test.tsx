@@ -523,4 +523,94 @@ describe('OverviewPage', () => {
 
     expect(screen.getByText('Could not load supplier risk summary')).toBeInTheDocument();
   });
+
+  it('renders active disruption alerts section with severity counts and top 5 alerts linking to /alerts', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+      const urlStr = url.toString();
+      if (urlStr.includes('/api/meta')) {
+        return { ok: true, status: 200, json: async () => mockMeta } as Response;
+      }
+      if (urlStr.includes('/api/alerts')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            seeded: true,
+            as_of: '2026-10-17',
+            summary: {
+              counts_by_severity: { critical: 2, high: 1, medium: 3, low: 1, info: 0 },
+              counts_by_type: {},
+              total_alerts: 7,
+            },
+            items: [
+              {
+                id: 'inventory_shortage.CPU-X7',
+                type: 'inventory_shortage',
+                severity: 'critical',
+                title: 'Projected Inventory Shortage for CPU-X7',
+                summary: 'Stock running out on 2026-10-21',
+                component_sku: 'CPU-X7',
+                supplier_code: null,
+                po_number: null,
+                days_until_impact: 4,
+                affected_orders_count: 15,
+                exposed_revenue: '2507110.00',
+                related_alert_ids: [],
+                flags: [],
+              },
+            ],
+            total: 7,
+            limit: 5,
+            offset: 0,
+          }),
+        } as Response;
+      }
+      return { ok: true, status: 200, json: async () => ({ items: [], total: 0 }) } as Response;
+    });
+
+    render(
+      <MetaProvider>
+        <MemoryRouter>
+          <OverviewPage />
+        </MemoryRouter>
+      </MetaProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('overview-alerts-summary-counts')).toBeInTheDocument();
+    });
+
+    expect(screen.getByTestId('overview-alerts-summary-counts')).toHaveTextContent(
+      'Critical 2 · High 1 · Medium 3 · Low 1 · Info 0'
+    );
+    expect(screen.getByTestId('overview-alerts-table')).toBeInTheDocument();
+    expect(screen.getByTestId('view-all-alerts-link')).toHaveAttribute('href', '/alerts');
+  });
+
+  it('handles independent failure of active alerts section without breaking other overview sections', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+      const urlStr = url.toString();
+      if (urlStr.includes('/api/meta')) {
+        return { ok: true, status: 200, json: async () => mockMeta } as Response;
+      }
+      if (urlStr.includes('/api/alerts')) {
+        return { ok: false, status: 500, json: async () => ({ detail: 'Alerts service failed' }) } as Response;
+      }
+      return { ok: true, status: 200, json: async () => ({ items: [], total: 0 }) } as Response;
+    });
+
+    render(
+      <MetaProvider>
+        <MemoryRouter>
+          <OverviewPage />
+        </MemoryRouter>
+      </MetaProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('count-products')).toHaveTextContent('4');
+    });
+
+    expect(screen.getByText('Could not load active alerts')).toBeInTheDocument();
+  });
 });

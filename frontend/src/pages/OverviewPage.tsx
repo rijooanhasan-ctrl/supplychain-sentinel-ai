@@ -1,13 +1,14 @@
 import { useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { getInventoryRisk, getSupplierRisk, listPurchaseOrders } from '../api/endpoints';
+import { getAlerts, getInventoryRisk, getSupplierRisk, listPurchaseOrders } from '../api/endpoints';
 import { useApi } from '../api/useApi';
 import { useMeta } from '../hooks/useMeta';
 import { PageHeader } from '../components/PageHeader';
 import { LoadingView, ErrorView, UnseededView, EmptyView } from '../components/StateViews';
-import { CriticalityBadge, PoStatusBadge, RiskBadge } from '../components/Badge';
+import { AlertSeverityBadge, CriticalityBadge, PoStatusBadge, RiskBadge } from '../components/Badge';
 import { formatInteger, formatDate } from '../lib/format';
 import { expectedDate, isOverdue, isDelayedVsPromise, slippedInfo } from '../lib/dates';
+import { ALERT_TYPE_LABELS } from '../api/types';
 
 export function OverviewPage() {
   const { meta, loading: metaLoading, error: metaError, reload: reloadMeta, asOf } = useMeta();
@@ -69,6 +70,18 @@ export function OverviewPage() {
     error: supplierRiskError,
     reload: reloadSupplierRisk,
   } = useApi(fetchSupplierRiskCall, [fetchSupplierRiskCall]);
+
+  // Fetch top 5 alerts for active disruptions widget
+  const fetchAlertsCall = useCallback(
+    (signal: AbortSignal) => getAlerts({ limit: 5 }, signal),
+    []
+  );
+  const {
+    data: alertsData,
+    loading: alertsLoading,
+    error: alertsError,
+    reload: reloadAlerts,
+  } = useApi(fetchAlertsCall, [fetchAlertsCall]);
 
   const highestScoringSupplier = useMemo(() => {
     if (!supplierRiskData?.items) return null;
@@ -187,6 +200,98 @@ export function OverviewPage() {
               </dd>
               <span className="text-xs text-slate-400 mt-1 block">Plants &amp; regional hubs</span>
             </div>
+          </div>
+        )}
+      </section>
+
+      {/* Active Disruption Alerts Section */}
+      <section aria-labelledby="active-alerts-heading">
+        <div className="flex items-center justify-between mb-3">
+          <h2 id="active-alerts-heading" className="text-sm font-semibold uppercase tracking-wider text-slate-500">
+            Active Disruption Alerts
+          </h2>
+          <Link
+            to="/alerts"
+            className="text-xs font-medium text-blue-600 hover:text-blue-800 hover:underline"
+            data-testid="view-all-alerts-link"
+          >
+            View all alerts &rarr;
+          </Link>
+        </div>
+
+        {alertsLoading && <LoadingView message="Loading active disruption alerts..." testId="overview-alerts-loading" />}
+        {alertsError && (
+          <ErrorView
+            error={alertsError}
+            onRetry={reloadAlerts}
+            title="Could not load active alerts"
+          />
+        )}
+
+        {alertsData && alertsData.summary && !alertsLoading && (
+          <div className="bg-white rounded-lg border border-slate-200 shadow-xs overflow-hidden">
+            <div className="p-4 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
+              <div className="font-medium text-slate-700" data-testid="overview-alerts-summary-counts">
+                Critical <span className="font-bold text-red-700">{alertsData.summary.counts_by_severity?.['critical'] || 0}</span> · High{' '}
+                <span className="font-bold text-amber-700">{alertsData.summary.counts_by_severity?.['high'] || 0}</span> · Medium{' '}
+                <span className="font-bold text-blue-700">{alertsData.summary.counts_by_severity?.['medium'] || 0}</span> · Low{' '}
+                <span className="font-bold text-slate-700">{alertsData.summary.counts_by_severity?.['low'] || 0}</span> · Info{' '}
+                <span className="font-bold text-slate-600">{alertsData.summary.counts_by_severity?.['info'] || 0}</span>
+              </div>
+              <div className="text-slate-500 font-mono">
+                Total: <span className="font-bold text-slate-900">{alertsData.summary.total_alerts || 0}</span>
+              </div>
+            </div>
+
+            {!alertsData.items || alertsData.items.length === 0 ? (
+              <div className="p-6 text-center text-slate-500 text-xs">
+                No active disruption alerts detected.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs" data-testid="overview-alerts-table">
+                  <thead>
+                    <tr className="border-b border-slate-200 text-slate-600 font-semibold bg-slate-50/50">
+                      <th className="py-2.5 px-4">Severity</th>
+                      <th className="py-2.5 px-4">Type</th>
+                      <th className="py-2.5 px-4">Title</th>
+                      <th className="py-2.5 px-4">Subject</th>
+                      <th className="py-2.5 px-4">Runway</th>
+                      <th className="py-2.5 px-4 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {alertsData.items.slice(0, 5).map((alert) => (
+                      <tr key={alert.id} className="hover:bg-slate-50">
+                        <td className="py-2.5 px-4">
+                          <AlertSeverityBadge severity={alert.severity} />
+                        </td>
+                        <td className="py-2.5 px-4 text-slate-700 font-medium">
+                          {ALERT_TYPE_LABELS[alert.type] || alert.type}
+                        </td>
+                        <td className="py-2.5 px-4 font-semibold text-slate-900 max-w-xs truncate" title={alert.title}>
+                          {alert.title}
+                        </td>
+                        <td className="py-2.5 px-4 font-mono text-slate-800">
+                          {alert.component_sku || alert.supplier_code || alert.po_number || '—'}
+                        </td>
+                        <td className="py-2.5 px-4 font-mono text-slate-700">
+                          {alert.days_until_impact !== null ? `${alert.days_until_impact}d` : '—'}
+                        </td>
+                        <td className="py-2.5 px-4 text-right">
+                          <Link
+                            to="/alerts"
+                            className="text-blue-600 hover:text-blue-800 font-medium"
+                          >
+                            Details &rarr;
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
       </section>

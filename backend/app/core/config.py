@@ -37,6 +37,15 @@ class Settings(BaseSettings):
     FORECAST_MIN_IMPROVEMENT_PCT: float = 5.0
     FORECAST_MIN_WIN_RATE: float = 0.60
 
+    # Disruption Alert thresholds
+    ALERT_SURGE_RECENT_DAYS: int = 14
+    ALERT_SURGE_BASELINE_DAYS: int = 28
+    ALERT_SURGE_RATIO_MEDIUM: float = 1.25
+    ALERT_SURGE_RATIO_HIGH: float = 1.5
+    ALERT_QUALITY_REJECTION_THRESHOLD: float = 0.02
+    ALERT_DELAY_MIN_LATE_PROBABILITY: float = 0.20
+    ALERT_DELAY_MIN_DELIVERIES: int = 10
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -133,6 +142,39 @@ class Settings(BaseSettings):
         if not (0.0 <= self.FORECAST_MIN_WIN_RATE <= 1.0):
             raise ValueError(
                 f"FORECAST_MIN_WIN_RATE must be between 0.0 and 1.0, got {self.FORECAST_MIN_WIN_RATE}"
+            )
+        return self
+
+    @model_validator(mode="after")
+    def validate_alert_settings(self) -> "Settings":
+        if self.ALERT_SURGE_RECENT_DAYS <= 0:
+            raise ValueError(
+                f"ALERT_SURGE_RECENT_DAYS must be positive, got {self.ALERT_SURGE_RECENT_DAYS}"
+            )
+        if self.ALERT_SURGE_BASELINE_DAYS <= 0:
+            raise ValueError(
+                f"ALERT_SURGE_BASELINE_DAYS must be positive, got {self.ALERT_SURGE_BASELINE_DAYS}"
+            )
+        if self.ALERT_SURGE_RATIO_MEDIUM <= 1.0:
+            raise ValueError(
+                f"ALERT_SURGE_RATIO_MEDIUM must be greater than 1.0, got {self.ALERT_SURGE_RATIO_MEDIUM}"
+            )
+        if self.ALERT_SURGE_RATIO_HIGH <= self.ALERT_SURGE_RATIO_MEDIUM:
+            raise ValueError(
+                f"ALERT_SURGE_RATIO_HIGH ({self.ALERT_SURGE_RATIO_HIGH}) must be greater than "
+                f"ALERT_SURGE_RATIO_MEDIUM ({self.ALERT_SURGE_RATIO_MEDIUM})"
+            )
+        if not (0.0 < self.ALERT_QUALITY_REJECTION_THRESHOLD <= 1.0):
+            raise ValueError(
+                f"ALERT_QUALITY_REJECTION_THRESHOLD must be in (0, 1.0], got {self.ALERT_QUALITY_REJECTION_THRESHOLD}"
+            )
+        if not (0.0 < self.ALERT_DELAY_MIN_LATE_PROBABILITY <= 1.0):
+            raise ValueError(
+                f"ALERT_DELAY_MIN_LATE_PROBABILITY must be in (0, 1.0], got {self.ALERT_DELAY_MIN_LATE_PROBABILITY}"
+            )
+        if self.ALERT_DELAY_MIN_DELIVERIES < 1:
+            raise ValueError(
+                f"ALERT_DELAY_MIN_DELIVERIES must be at least 1, got {self.ALERT_DELAY_MIN_DELIVERIES}"
             )
         return self
 

@@ -6,7 +6,7 @@ and invokes the pure domain evaluation function.
 
 from collections import defaultdict
 from datetime import date, timedelta
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Sequence
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
@@ -18,6 +18,7 @@ from app.db.models import (
     InventoryLevel,
     PurchaseOrder,
     PurchaseOrderLine,
+    Supplier,
     Warehouse,
 )
 from app.domain.inventory import (
@@ -74,6 +75,119 @@ def build_inventory_risk_config(settings: Settings) -> InventoryRiskConfig:
         high_days=settings.INVENTORY_HIGH_DAYS,
         medium_days=settings.INVENTORY_MEDIUM_DAYS,
     )
+
+
+def build_component_evaluation_inputs(
+    db: Session,
+    as_of: date,
+    components: Sequence[Component],
+    lookback_days: int,
+) -> Dict[int, ComponentEvaluationInput]:
+    """Shared builder for ComponentEvaluationInput objects across components.
+
+    Used by the inventory_risk service, component risk detail, and the alerts service
+    to avoid duplicating database queries or domain transformation logic.
+    """
+    comp_ids = [c.id for c in components]
+    if not comp_ids:
+        return {}
+
+    # Bulk load inventory levels
+    inv_levels = db.scalars(
+        select(InventoryLevel)
+        .options(selectinload(InventoryLevel.warehouse))
+        .where(InventoryLevel.component_id.in_(comp_ids))
+    ).all()
+
+    plant_inv_by_comp: Dict[int, PlantInventoryInput] = {}
+    reg_inv_by_comp: Dict[int, List[RegionalInventoryInput]] = defaultdict(list)
+    for inv in inv_levels:
+        if inv.warehouse.role == "plant":
+            plant_inv_by_comp[inv.component_id] = PlantInventoryInput(
+                on_hand=inv.on_hand,
+                reserved=inv.reserved,
+            )
+        else:
+            reg_inv_by_comp[inv.component_id].append(
+                RegionalInventoryInput(
+                    warehouse_id=inv.warehouse_id,
+                    warehouse_code=inv.warehouse.code,
+                    warehouse_name=inv.warehouse.name,
+                    on_hand=inv.on_hand,
+                    reserved=inv.reserved,
+                )
+            )
+
+    # Bulk load demand records in lookback window [as_of - lookback_days, as_of - 1]
+    window_start = as_of - timedelta(days=lookback_days)
+    window_end = as_of - timedelta(days=1)
+    demand_records = db.scalars(
+        select(DemandRecord).where(
+            DemandRecord.component_id.in_(comp_ids),
+            DemandRecord.date >= window_start,
+            DemandRecord.date <= window_end,
+        )
+    ).all()
+
+    demand_by_comp: Dict[int, List[DemandHistoryRecordInput]] = defaultdict(list)
+    for dr in demand_records:
+        demand_by_comp[dr.component_id].append(
+            DemandHistoryRecordInput(date=dr.date, quantity=float(dr.quantity))
+        )
+
+    # Bulk load active inbound PO lines
+    active_po_lines = db.scalars(
+        select(PurchaseOrderLine)
+        .options(
+            selectinload(PurchaseOrderLine.purchase_order).selectinload(PurchaseOrder.supplier),
+            selectinload(PurchaseOrderLine.warehouse),
+        )
+        .join(PurchaseOrder)
+        .where(
+            PurchaseOrderLine.component_id.in_(comp_ids),
+            PurchaseOrder.status.in_(["open", "in_transit", "partially_received"]),
+        )
+    ).all()
+
+    inbound_by_comp: Dict[int, List[InboundLineInput]] = defaultdict(list)
+    for pol in active_po_lines:
+        sup_code = (
+            pol.purchase_order.supplier.code
+            if (pol.purchase_order and pol.purchase_order.supplier)
+            else None
+        )
+        inbound_by_comp[pol.component_id].append(
+            InboundLineInput(
+                po_id=pol.purchase_order.id,
+                po_number=pol.purchase_order.po_number,
+                po_status=pol.purchase_order.status,
+                warehouse_id=pol.warehouse_id,
+                warehouse_code=pol.warehouse.code,
+                warehouse_name=pol.warehouse.name,
+                warehouse_role=pol.warehouse.role,
+                qty_ordered=pol.qty_ordered,
+                qty_received=pol.qty_received,
+                promised_date=pol.purchase_order.promised_date,
+                latest_estimate_date=pol.purchase_order.latest_estimate_date,
+                supplier_code=sup_code,
+            )
+        )
+
+    result: Dict[int, ComponentEvaluationInput] = {}
+    for comp in components:
+        result[comp.id] = ComponentEvaluationInput(
+            as_of=as_of,
+            component_id=comp.id,
+            sku=comp.sku,
+            name=comp.name,
+            category=comp.category,
+            criticality=comp.criticality,
+            plant_inventory=plant_inv_by_comp.get(comp.id),
+            regional_inventories=reg_inv_by_comp.get(comp.id, []),
+            demand_records=demand_by_comp.get(comp.id, []),
+            inbound_lines=inbound_by_comp.get(comp.id, []),
+        )
+    return result
 
 
 def list_inventory_risk(
@@ -155,84 +269,9 @@ def list_inventory_risk(
             offset=offset,
         )
 
-    comp_ids = [c.id for c in components]
+    comp_inputs = build_component_evaluation_inputs(db, as_of, components, config.lookback_days)
 
-    # 2. Bulk load inventory levels
-    inv_levels = db.scalars(
-        select(InventoryLevel)
-        .options(selectinload(InventoryLevel.warehouse))
-        .where(InventoryLevel.component_id.in_(comp_ids))
-    ).all()
-
-    plant_inv_by_comp: Dict[int, PlantInventoryInput] = {}
-    reg_inv_by_comp: Dict[int, List[RegionalInventoryInput]] = defaultdict(list)
-    for inv in inv_levels:
-        if inv.warehouse.role == "plant":
-            plant_inv_by_comp[inv.component_id] = PlantInventoryInput(
-                on_hand=inv.on_hand,
-                reserved=inv.reserved,
-            )
-        else:
-            reg_inv_by_comp[inv.component_id].append(
-                RegionalInventoryInput(
-                    warehouse_id=inv.warehouse_id,
-                    warehouse_code=inv.warehouse.code,
-                    warehouse_name=inv.warehouse.name,
-                    on_hand=inv.on_hand,
-                    reserved=inv.reserved,
-                )
-            )
-
-    # 3. Bulk load demand records in lookback window [as_of - lookback_days, as_of - 1]
-    window_start = as_of - timedelta(days=config.lookback_days)
-    window_end = as_of - timedelta(days=1)
-    demand_records = db.scalars(
-        select(DemandRecord).where(
-            DemandRecord.component_id.in_(comp_ids),
-            DemandRecord.date >= window_start,
-            DemandRecord.date <= window_end,
-        )
-    ).all()
-
-    demand_by_comp: Dict[int, List[DemandHistoryRecordInput]] = defaultdict(list)
-    for dr in demand_records:
-        demand_by_comp[dr.component_id].append(
-            DemandHistoryRecordInput(date=dr.date, quantity=float(dr.quantity))
-        )
-
-    # 4. Bulk load active inbound PO lines
-    active_po_lines = db.scalars(
-        select(PurchaseOrderLine)
-        .options(
-            selectinload(PurchaseOrderLine.purchase_order),
-            selectinload(PurchaseOrderLine.warehouse),
-        )
-        .join(PurchaseOrder)
-        .where(
-            PurchaseOrderLine.component_id.in_(comp_ids),
-            PurchaseOrder.status.in_(["open", "in_transit", "partially_received"]),
-        )
-    ).all()
-
-    inbound_by_comp: Dict[int, List[InboundLineInput]] = defaultdict(list)
-    for pol in active_po_lines:
-        inbound_by_comp[pol.component_id].append(
-            InboundLineInput(
-                po_id=pol.purchase_order.id,
-                po_number=pol.purchase_order.po_number,
-                po_status=pol.purchase_order.status,
-                warehouse_id=pol.warehouse_id,
-                warehouse_code=pol.warehouse.code,
-                warehouse_name=pol.warehouse.name,
-                warehouse_role=pol.warehouse.role,
-                qty_ordered=pol.qty_ordered,
-                qty_received=pol.qty_received,
-                promised_date=pol.purchase_order.promised_date,
-                latest_estimate_date=pol.purchase_order.latest_estimate_date,
-            )
-        )
-
-    # 5. Evaluate all components
+    # 2. Evaluate all components
     evaluated_results: List[ComponentRiskResult] = []
     summary_counts: Dict[str, int] = {
         "critical": 0,
@@ -244,18 +283,7 @@ def list_inventory_risk(
     }
 
     for comp in components:
-        domain_input = ComponentEvaluationInput(
-            as_of=as_of,
-            component_id=comp.id,
-            sku=comp.sku,
-            name=comp.name,
-            category=comp.category,
-            criticality=comp.criticality,
-            plant_inventory=plant_inv_by_comp.get(comp.id),
-            regional_inventories=reg_inv_by_comp.get(comp.id, []),
-            demand_records=demand_by_comp.get(comp.id, []),
-            inbound_lines=inbound_by_comp.get(comp.id, []),
-        )
+        domain_input = comp_inputs[comp.id]
         result = evaluate_component(domain_input, config)
         evaluated_results.append(result)
         summary_counts[result.risk_level] = summary_counts.get(result.risk_level, 0) + 1
@@ -329,87 +357,8 @@ def get_inventory_risk_detail(
         overdue_inbound_policy=config.overdue_inbound_policy,
     )
 
-    # Load inventory levels for this component
-    inv_levels = db.scalars(
-        select(InventoryLevel)
-        .options(selectinload(InventoryLevel.warehouse))
-        .where(InventoryLevel.component_id == component_id)
-    ).all()
-
-    plant_inv: Optional[PlantInventoryInput] = None
-    reg_invs: List[RegionalInventoryInput] = []
-    for inv in inv_levels:
-        if inv.warehouse.role == "plant":
-            plant_inv = PlantInventoryInput(on_hand=inv.on_hand, reserved=inv.reserved)
-        else:
-            reg_invs.append(
-                RegionalInventoryInput(
-                    warehouse_id=inv.warehouse_id,
-                    warehouse_code=inv.warehouse.code,
-                    warehouse_name=inv.warehouse.name,
-                    on_hand=inv.on_hand,
-                    reserved=inv.reserved,
-                )
-            )
-
-    # Load demand history in window
-    window_start = as_of - timedelta(days=config.lookback_days)
-    window_end = as_of - timedelta(days=1)
-    demand_records = db.scalars(
-        select(DemandRecord).where(
-            DemandRecord.component_id == component_id,
-            DemandRecord.date >= window_start,
-            DemandRecord.date <= window_end,
-        )
-    ).all()
-    demand_inputs = [
-        DemandHistoryRecordInput(date=dr.date, quantity=float(dr.quantity))
-        for dr in demand_records
-    ]
-
-    # Load active inbound PO lines
-    po_lines = db.scalars(
-        select(PurchaseOrderLine)
-        .options(
-            selectinload(PurchaseOrderLine.purchase_order),
-            selectinload(PurchaseOrderLine.warehouse),
-        )
-        .join(PurchaseOrder)
-        .where(
-            PurchaseOrderLine.component_id == component_id,
-            PurchaseOrder.status.in_(["open", "in_transit", "partially_received"]),
-        )
-    ).all()
-
-    inbound_inputs = [
-        InboundLineInput(
-            po_id=pol.purchase_order.id,
-            po_number=pol.purchase_order.po_number,
-            po_status=pol.purchase_order.status,
-            warehouse_id=pol.warehouse_id,
-            warehouse_code=pol.warehouse.code,
-            warehouse_name=pol.warehouse.name,
-            warehouse_role=pol.warehouse.role,
-            qty_ordered=pol.qty_ordered,
-            qty_received=pol.qty_received,
-            promised_date=pol.purchase_order.promised_date,
-            latest_estimate_date=pol.purchase_order.latest_estimate_date,
-        )
-        for pol in po_lines
-    ]
-
-    domain_input = ComponentEvaluationInput(
-        as_of=as_of,
-        component_id=component.id,
-        sku=component.sku,
-        name=component.name,
-        category=component.category,
-        criticality=component.criticality,
-        plant_inventory=plant_inv,
-        regional_inventories=reg_invs,
-        demand_records=demand_inputs,
-        inbound_lines=inbound_inputs,
-    )
+    comp_inputs = build_component_evaluation_inputs(db, as_of, [component], config.lookback_days)
+    domain_input = comp_inputs[component.id]
     result = evaluate_component(domain_input, config)
 
     # Usable stock breakdown

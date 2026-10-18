@@ -129,6 +129,7 @@ class InboundLineInput:
     qty_received: int
     promised_date: date
     latest_estimate_date: Optional[date]
+    supplier_code: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -189,6 +190,7 @@ class InboundSummaryItem:
     expected_date: date
     date_basis: str  # "estimated" | "promised"
     reason: Optional[str] = None
+    supplier_code: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -547,6 +549,7 @@ def evaluate_component(
             latest_estimate_date=line.latest_estimate_date,
             expected_date=expected_d,
             date_basis=basis,
+            supplier_code=line.supplier_code,
         )
 
         if expected_d < as_of:
@@ -968,3 +971,55 @@ def _build_explanation(
         )
 
     return f"{stock_desc} {runout_str} {inbound_desc}"
+
+
+def shift_inbound_for_supplier(
+    inputs: ComponentEvaluationInput, supplier_code: str, days: int
+) -> ComponentEvaluationInput:
+    """Pure domain helper returning a new ComponentEvaluationInput with inbound lines shifted.
+
+    Returns a new inputs object without mutating the original. Lines where supplier_code
+    matches have their promised_date and (if present) latest_estimate_date shifted later
+    by `days`. Lines for other suppliers or with supplier_code=None remain unchanged.
+    """
+    if days == 0:
+        return inputs
+
+    delta = timedelta(days=days)
+    new_inbound: List[InboundLineInput] = []
+    for line in inputs.inbound_lines:
+        if line.supplier_code == supplier_code:
+            new_promised = line.promised_date + delta
+            new_estimate = (line.latest_estimate_date + delta) if line.latest_estimate_date is not None else None
+            new_inbound.append(
+                InboundLineInput(
+                    po_id=line.po_id,
+                    po_number=line.po_number,
+                    po_status=line.po_status,
+                    warehouse_id=line.warehouse_id,
+                    warehouse_code=line.warehouse_code,
+                    warehouse_name=line.warehouse_name,
+                    warehouse_role=line.warehouse_role,
+                    qty_ordered=line.qty_ordered,
+                    qty_received=line.qty_received,
+                    promised_date=new_promised,
+                    latest_estimate_date=new_estimate,
+                    supplier_code=line.supplier_code,
+                )
+            )
+        else:
+            new_inbound.append(line)
+
+    return ComponentEvaluationInput(
+        as_of=inputs.as_of,
+        component_id=inputs.component_id,
+        sku=inputs.sku,
+        name=inputs.name,
+        category=inputs.category,
+        criticality=inputs.criticality,
+        plant_inventory=inputs.plant_inventory,
+        regional_inventories=list(inputs.regional_inventories),
+        demand_records=list(inputs.demand_records),
+        inbound_lines=new_inbound,
+    )
+

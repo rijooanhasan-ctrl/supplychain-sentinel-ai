@@ -3,6 +3,7 @@ from typing import Optional
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.routes.alerts import router as alerts_router
 from app.api.routes.components import router as components_router
 from app.api.routes.customer_orders import router as customer_orders_router
 from app.api.routes.delivery_records import router as delivery_records_router
@@ -82,6 +83,7 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
     app.include_router(customer_orders_router, prefix="/api")
     app.include_router(delivery_records_router, prefix="/api")
     app.include_router(forecasting_router, prefix="/api")
+    app.include_router(alerts_router, prefix="/api")
 
     return app
 

@@ -4,7 +4,8 @@ Loads database entities and delegates all scoring logic to the pure domain layer
 """
 
 from collections import defaultdict
-from typing import Dict, List, Optional
+from datetime import date
+from typing import Dict, List, Optional, Sequence
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
@@ -30,7 +31,7 @@ from app.schemas.supplier_risk import (
 )
 
 
-def _build_supplier_config(settings: Settings) -> SupplierRiskConfig:
+def build_supplier_risk_config(settings: Settings) -> SupplierRiskConfig:
     return SupplierRiskConfig(
         lookback_days=settings.SUPPLIER_RISK_LOOKBACK_DAYS,
         on_time_grace_days=settings.SUPPLIER_RISK_GRACE_DAYS,
@@ -41,6 +42,9 @@ def _build_supplier_config(settings: Settings) -> SupplierRiskConfig:
         band_medium=settings.SUPPLIER_RISK_BAND_MEDIUM,
         band_high=settings.SUPPLIER_RISK_BAND_HIGH,
     )
+
+
+_build_supplier_config = build_supplier_risk_config
 
 
 def _to_list_item(res: SupplierRiskResult) -> SupplierRiskListItem:
@@ -67,6 +71,75 @@ def _to_list_item(res: SupplierRiskResult) -> SupplierRiskListItem:
         open_pos_overdue_count=res.informational_po.open_pos_overdue_count,
         open_remaining_qty=res.informational_po.open_remaining_qty,
     )
+
+
+def compute_all_supplier_risk_results(
+    session: Session,
+    as_of: date,
+    suppliers: Sequence[Supplier],
+    cfg: SupplierRiskConfig,
+) -> Dict[int, SupplierRiskResult]:
+    """Shared evaluation helper returning a map of SupplierRiskResult keyed by supplier_id."""
+    if not suppliers:
+        return {}
+
+    all_deliveries = session.scalars(select(DeliveryRecord)).all()
+    deliv_by_supplier: Dict[int, List[DeliveryInput]] = defaultdict(list)
+    for d in all_deliveries:
+        deliv_by_supplier[d.supplier_id].append(
+            DeliveryInput(
+                id=d.id,
+                supplier_id=d.supplier_id,
+                component_id=d.component_id,
+                purchase_order_id=d.purchase_order_id,
+                promised_date=d.promised_date,
+                actual_date=d.actual_date,
+                qty_ordered=d.qty_ordered,
+                qty_received=d.qty_received,
+                qty_rejected=d.qty_rejected,
+            )
+        )
+
+    open_statuses = ["open", "in_transit", "partially_received"]
+    open_pos = session.scalars(
+        select(PurchaseOrder)
+        .options(selectinload(PurchaseOrder.lines))
+        .where(PurchaseOrder.status.in_(open_statuses))
+    ).all()
+
+    open_by_supplier: Dict[int, List[OpenPoInput]] = defaultdict(list)
+    for po in open_pos:
+        rem_qty = sum(max(0, line.qty_ordered - line.qty_received) for line in po.lines)
+        if rem_qty > 0:
+            open_by_supplier[po.supplier_id].append(
+                OpenPoInput(
+                    po_id=po.id,
+                    po_number=po.po_number,
+                    status=po.status,
+                    promised_date=po.promised_date,
+                    latest_estimate_date=po.latest_estimate_date,
+                    remaining_qty=rem_qty,
+                )
+            )
+
+    results: Dict[int, SupplierRiskResult] = {}
+    for sup in suppliers:
+        s_delivs = deliv_by_supplier.get(sup.id, [])
+        s_open = open_by_supplier.get(sup.id, [])
+        eval_input = SupplierEvaluationInput(
+            as_of=as_of,
+            supplier_id=sup.id,
+            supplier_code=sup.code,
+            supplier_name=sup.name,
+            country=sup.country,
+            deliveries=s_delivs,
+            open_orders=s_open,
+            config=cfg,
+        )
+        res = evaluate_supplier(eval_input)
+        results[sup.id] = res
+
+    return results
 
 
 def evaluate_all_suppliers(
@@ -106,66 +179,11 @@ def evaluate_all_suppliers(
             offset=offset,
         )
 
-    # 2. Bulk load delivery records
-    all_deliveries = session.scalars(select(DeliveryRecord)).all()
-    deliv_by_supplier: Dict[int, List[DeliveryInput]] = defaultdict(list)
-    for d in all_deliveries:
-        deliv_by_supplier[d.supplier_id].append(
-            DeliveryInput(
-                id=d.id,
-                supplier_id=d.supplier_id,
-                component_id=d.component_id,
-                purchase_order_id=d.purchase_order_id,
-                promised_date=d.promised_date,
-                actual_date=d.actual_date,
-                qty_ordered=d.qty_ordered,
-                qty_received=d.qty_received,
-                qty_rejected=d.qty_rejected,
-            )
-        )
-
-    # 3. Bulk load open POs with line quantities
-    open_statuses = ["open", "in_transit", "partially_received"]
-    open_pos = session.scalars(
-        select(PurchaseOrder)
-        .options(selectinload(PurchaseOrder.lines))
-        .where(PurchaseOrder.status.in_(open_statuses))
-    ).all()
-
-    open_by_supplier: Dict[int, List[OpenPoInput]] = defaultdict(list)
-    for po in open_pos:
-        rem_qty = sum(max(0, line.qty_ordered - line.qty_received) for line in po.lines)
-        if rem_qty > 0:
-            open_by_supplier[po.supplier_id].append(
-                OpenPoInput(
-                    po_id=po.id,
-                    po_number=po.po_number,
-                    status=po.status,
-                    promised_date=po.promised_date,
-                    latest_estimate_date=po.latest_estimate_date,
-                    remaining_qty=rem_qty,
-                )
-            )
-
-    # 4. Evaluate all suppliers using pure domain logic
-    all_results: List[SupplierRiskResult] = []
+    # 2. Evaluate suppliers using shared helper
+    results_map = compute_all_supplier_risk_results(session, as_of, suppliers, cfg)
+    all_results = list(results_map.values())
     counts_by_band = {"low": 0, "medium": 0, "high": 0, "unknown": 0}
-
-    for sup in suppliers:
-        s_delivs = deliv_by_supplier.get(sup.id, [])
-        s_open = open_by_supplier.get(sup.id, [])
-        eval_input = SupplierEvaluationInput(
-            as_of=as_of,
-            supplier_id=sup.id,
-            supplier_code=sup.code,
-            supplier_name=sup.name,
-            country=sup.country,
-            deliveries=s_delivs,
-            open_orders=s_open,
-            config=cfg,
-        )
-        res = evaluate_supplier(eval_input)
-        all_results.append(res)
+    for res in all_results:
         counts_by_band[res.risk_band] = counts_by_band.get(res.risk_band, 0) + 1
 
     # 5. Apply filters
