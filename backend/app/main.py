@@ -12,6 +12,7 @@ from app.api.routes.alerts import router as alerts_router
 from app.api.routes.components import router as components_router
 from app.api.routes.customer_orders import router as customer_orders_router
 from app.api.routes.delivery_records import router as delivery_records_router
+from app.api.routes.executive_summary import router as executive_summary_router
 from app.api.routes.forecasting import router as forecasting_router
 from app.api.routes.health import router as health_router
 from app.api.routes.integration_status import router as integration_status_router
@@ -126,6 +127,7 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
     app.include_router(alerts_router, prefix="/api")
     app.include_router(recovery_router, prefix="/api")
     app.include_router(simulation_router, prefix="/api")
+    app.include_router(executive_summary_router, prefix="/api")
 
     return app
 

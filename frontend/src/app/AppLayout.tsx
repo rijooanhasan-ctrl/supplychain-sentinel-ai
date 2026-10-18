@@ -3,6 +3,7 @@ import { NavLink, Outlet } from 'react-router-dom';
 import { DemoBanner } from '../components/DemoBanner';
 
 const NAV_ITEMS = [
+  { label: 'Executive Summary', to: '/executive-summary' },
   { label: 'Overview', to: '/' },
   { label: 'Alerts', to: '/alerts' },
   { label: 'Recommendations', to: '/recommendations' },

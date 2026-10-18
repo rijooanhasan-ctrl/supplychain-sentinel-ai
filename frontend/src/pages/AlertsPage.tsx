@@ -13,6 +13,7 @@ import { PageHeader } from '../components/PageHeader';
 import { LoadingView, ErrorView, EmptyView, UnseededView } from '../components/StateViews';
 import { Pagination } from '../components/Pagination';
 import { AlertSeverityBadge, Badge } from '../components/Badge';
+import { WhyThis } from '../components/WhyThis';
 import { formatInteger, formatNumber, formatUsd } from '../lib/format';
 
 const SEVERITY_OPTIONS: { label: string; value: AlertSeverity | '' }[] = [
@@ -78,9 +79,21 @@ function AlertDetailPanel({
     >
       {/* 1. Summary banner */}
       <section className="bg-white p-4 rounded-lg border border-slate-200 shadow-xs">
-        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
-          Disruption Summary
-        </h4>
+        <div className="flex items-center justify-between mb-2">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+            Disruption Summary
+          </h4>
+          <WhyThis
+            items={[
+              { label: 'Summary', text: detail.summary },
+              ...detail.evidence.map((ev) => ({
+                label: ev.label,
+                text: `${ev.value !== null && ev.value !== undefined ? String(ev.value) : '—'} ${ev.unit || ''}`.trim(),
+              })),
+            ]}
+            dataTestId={`why-this-alert-${alertId}`}
+          />
+        </div>
         <p className="text-sm font-medium text-slate-900 leading-relaxed" data-testid="alert-detail-summary">
           {detail.summary}
         </p>

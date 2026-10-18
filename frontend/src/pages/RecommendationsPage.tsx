@@ -10,6 +10,7 @@ import { useMeta } from '../hooks/useMeta';
 import { PageHeader } from '../components/PageHeader';
 import { LoadingView, ErrorView, EmptyView, UnseededView } from '../components/StateViews';
 import { Badge } from '../components/Badge';
+import { WhyThis } from '../components/WhyThis';
 import { formatInteger, formatNumber, formatUsd } from '../lib/format';
 
 function OptionKindBadge({ kind }: { kind: string }) {
@@ -214,9 +215,18 @@ function ComponentCard({
         </div>
 
         {/* Reason summary banner */}
-        <div className="max-w-xl text-xs bg-blue-50/80 border border-blue-200 p-2.5 rounded-md text-blue-950">
-          <span className="font-bold block text-blue-900 mb-0.5">Recommendation Decision:</span>
-          <span>{rec.reason}</span>
+        <div className="max-w-xl text-xs bg-blue-50/80 border border-blue-200 p-2.5 rounded-md text-blue-950 space-y-1.5">
+          <div className="flex items-center justify-between gap-2">
+            <span className="font-bold text-blue-900">Recommendation Decision:</span>
+            <WhyThis
+              items={[
+                { label: 'Reason', text: rec.reason },
+                { label: 'Alternatives', text: rec.alternatives_note },
+              ]}
+              dataTestId={`why-this-rec-${rec.sku}`}
+            />
+          </div>
+          <p>{rec.reason}</p>
         </div>
       </div>
 

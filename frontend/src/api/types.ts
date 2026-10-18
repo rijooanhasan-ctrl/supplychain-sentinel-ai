@@ -894,5 +894,120 @@ export interface IntegrationStatus {
   disclaimer: string;
 }
 
+export interface WhyItem {
+  label: string;
+  text: string;
+}
+
+export interface TopRiskItem {
+  component_id: number;
+  component_sku: string;
+  component_name: string;
+  severity: string;
+  shortage_date: string | null;
+  days_until_impact: number | null;
+  units_short_before_next_inbound: number;
+  first_shortage_window_days: number;
+  reason: string;
+  related_alert_id: string | null;
+  has_later_shortage: boolean;
+  exposed_orders_count: number;
+  exposed_selling_value: string | null;
+  why: WhyItem[];
+}
+
+export interface RunnerUpOption {
+  id: string;
+  kind: string;
+  description: string;
+  incremental_cost: string | null;
+  cost_known: boolean;
+}
+
+export interface PriorityDecision {
+  component_id: number;
+  component_sku: string;
+  component_name: string;
+  recommended_option_id: string;
+  recommended_option_kind: string;
+  recommended_option_description: string;
+  quantity: number;
+  arrival_date: string | null;
+  incremental_cost: string | null;
+  cost_known: boolean;
+  residual_unmet_before_next_inbound: number;
+  later_shortage_note: string | null;
+  runner_up: RunnerUpOption | null;
+  scope_note: string;
+  why: WhyItem[];
+}
+
+export interface CostComparisonAct {
+  cost: string | null;
+  cost_known: boolean;
+  residual_units_short: number;
+  affected_orders_count: number;
+  selling_value: string | null;
+}
+
+export interface CostComparisonDoNothing {
+  units_short: number;
+  affected_orders_count: number;
+  selling_value: string | null;
+}
+
+export interface CostComparison {
+  act: CostComparisonAct;
+  do_nothing: CostComparisonDoNothing;
+  difference_sentence: string;
+  exposure_disclaimer: string;
+}
+
+export interface ComponentExposureItem {
+  component_id: number;
+  component_sku: string;
+  component_name: string;
+  orders_count: number;
+  selling_value: string | null;
+}
+
+export interface SupplierConfidenceSummary {
+  supplier_id: number;
+  supplier_code: string;
+  supplier_name: string;
+  confidence: string;
+  n_deliveries: number;
+}
+
+export interface DataQualityInfo {
+  dataset_label: string;
+  dataset_source: string;
+  is_live: boolean;
+  components_evaluated: number;
+  components_unknown_risk: number;
+  supplier_confidence_counts: Record<string, number>;
+  top_risk_supplier_confidence: SupplierConfidenceSummary[];
+  priority_component_demand_history_days: number | null;
+  flags: string[];
+  data_quality_note: string;
+}
+
+export interface ExecutiveSummaryResponse {
+  seeded: boolean;
+  as_of: string | null;
+  label: string | null;
+  headline: string;
+  top_risks: TopRiskItem[];
+  priority_decision: PriorityDecision | null;
+  cost_comparison: CostComparison | null;
+  exposure_totals: ComponentExposureItem[];
+  exposure_note: string;
+  data_quality: DataQualityInfo | null;
+  assumptions: string[];
+  why: Record<string, WhyItem[]>;
+  note: string;
+}
+
+
 
 

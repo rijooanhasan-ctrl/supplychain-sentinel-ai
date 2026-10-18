@@ -32,6 +32,7 @@ import type {
   SimulationRequestParams,
   SimulationResponse,
   IntegrationStatus,
+  ExecutiveSummaryResponse,
 } from './types';
 
 export function getHealth(signal?: AbortSignal): Promise<HealthResponse> {
@@ -283,6 +284,12 @@ export function getIntegrationStatus(
   signal?: AbortSignal
 ): Promise<IntegrationStatus> {
   return getJson<IntegrationStatus>('/api/integration-status', { signal });
+}
+
+export function getExecutiveSummary(
+  signal?: AbortSignal
+): Promise<ExecutiveSummaryResponse> {
+  return getJson<ExecutiveSummaryResponse>('/api/executive-summary', { signal });
 }
 
 

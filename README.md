@@ -31,7 +31,8 @@ SAP/
 │   ├── FORECASTING.md           # Demand forecast evaluation protocol, models, leakage safeguards, and measured results
 │   ├── DISRUPTION_DETECTION.md  # Multi-tier disruption detection, what-if delay scenarios, order exposure, and CPU-X7 worked example
 │   ├── RECOMMENDATIONS.md       # Recovery options, constraints, ranking rule, combined plan, and CPU-X7 worked example
-│   └── SIMULATOR.md             # What-If Disruption Simulator: inputs/ranges, scenario calc, assumptions, CPU-X7 worked example
+│   ├── SIMULATOR.md             # What-If Disruption Simulator: inputs/ranges, scenario calc, assumptions, CPU-X7 worked example
+│   └── EXECUTIVE_SUMMARY.md     # Executive Summary: briefing, top risks, act vs do nothing, data quality, worked example
 ├── backend/
 │   ├── .env.example             # Backend environment template
 │   ├── requirements.txt         # Production runtime dependencies (FastAPI, Uvicorn, Pydantic, SQLAlchemy, numpy, scikit-learn)
@@ -53,7 +54,8 @@ SAP/
 │   │   │   ├── __init__.py      # Pydantic response models, UtcDatetime serializer, and envelopes
 │   │   │   ├── inventory_risk.py# Inventory risk & shortage projection schemas
 │   │   │   ├── supplier_risk.py # Supplier risk performance, penalties, and monthly breakdown schemas
-│   │   │   └── forecasting.py   # Forecast evaluation, backtest fold, and candidate projection schemas
+│   │   │   ├── forecasting.py   # Forecast evaluation, backtest fold, and candidate projection schemas
+│   │   │   └── executive_summary.py # Executive summary response schemas and exposure envelopes
 │   │   ├── api/
 │   │   │   ├── __init__.py
 │   │   │   └── routes/
@@ -71,7 +73,8 @@ SAP/
 │   │   │       ├── purchase_orders.py # GET /api/purchase-orders, /api/purchase-orders/{id}
 │   │   │       ├── customer_orders.py # GET /api/customer-orders
 │   │   │       ├── delivery_records.py# GET /api/delivery-records
-│   │   │       └── simulation.py      # GET /api/simulation (what-if scenario simulator)
+│   │   │       ├── simulation.py      # GET /api/simulation (what-if scenario simulator)
+│   │   │       └── executive_summary.py # GET /api/executive-summary
 │   │   ├── domain/              # Pure business logic layer (zero DB/framework imports)
 │   │   │   ├── __init__.py
 │   │   │   ├── inventory.py     # Stock projections, shortage episodes, weekday consumption profile; scale_demand, shift_all_inbound, adjust_plant_on_hand
@@ -79,14 +82,16 @@ SAP/
 │   │   │   ├── forecasting.py   # Pure forecast models (isolated numpy/sklearn), backtesting, decision rule
 │   │   │   ├── alerts.py        # Multi-tier alert generation, delay scenarios, order exposure impact
 │   │   │   ├── recovery.py      # Recovery options, combined plan, recommendation, scope note
-│   │   │   └── simulation.py    # SimulationParams, simulate() — baseline/disrupted/recovered + what_changed
+│   │   │   ├── simulation.py    # SimulationParams, simulate() — baseline/disrupted/recovered + what_changed
+│   │   │   └── executive_summary.py # Pure executive summary builder, cost comparison, top risks, lineage
 │   │   ├── services/
 │   │   │   ├── __init__.py
 │   │   │   ├── ingest.py        # Transactional dataset loader (load_dataset)
 │   │   │   ├── inventory_risk.py# Inventory risk service orchestrating DB queries and domain evaluation
 │   │   │   ├── supplier_risk.py # Supplier risk service querying deliveries and calculating metrics
 │   │   │   ├── forecasting.py   # Demand forecast service with in-process evaluation caching
-│   │   │   └── simulation.py    # run_component_simulation — loads inputs, delegates to domain/simulation.py
+│   │   │   ├── simulation.py    # run_component_simulation — loads inputs, delegates to domain/simulation.py
+│   │   │   └── executive_summary.py # Executive summary aggregation orchestrator
 │   │   └── integrations/
 │   │       ├── __init__.py
 │   │       ├── base.py          # SourceAdapter interface and SourceDataset DTOs
@@ -120,6 +125,8 @@ SAP/
         ├── app/
         │   └── AppLayout.tsx    # Responsive navigation shell (desktop sidebar / mobile bar) and banner
         ├── pages/
+        │   ├── ExecutiveSummaryPage.tsx # Executive summary, top 3 risks, act vs do nothing, data quality
+        │   ├── ExecutiveSummaryPage.test.tsx # Tests for executive summary cards, comparison table, why dialog
         │   ├── OverviewPage.tsx         # Master entity counts, open/overdue POs, inventory risk summary
         │   ├── OverviewPage.test.tsx    # Tests for overview calculations, overdue logic, risk summary
         │   ├── AlertsPage.tsx           # Disruption alerts table with filters, expandable detail, Simulate/Recover links
@@ -140,6 +147,8 @@ SAP/
         │   ├── DataSourcesPage.test.tsx # Tests for data sources, retry, and integration wording
         │   └── NotFoundPage.tsx         # 404 handler for unknown URL paths
         ├── components/
+        │   ├── WhyThis.tsx      # Reusable contextual "Why this?" accordion button
+        │   ├── WhyThis.test.tsx # Tests for WhyThis component
         │   ├── Badge.tsx        # Status, criticality, risk level, and flag text badges
         │   ├── DataTable.tsx    # Semantic, accessible table wrapper with overflow control
         │   ├── DemoBanner.tsx   # Persistent DEMO DATA and as-of date notification banner
@@ -212,17 +221,18 @@ npm run dev
 ```
 - Web Application: `http://localhost:5173` (proxies `/api/*` to `http://localhost:8000`)
 - **Core Application Views:**
-  1. `/` (**Overview**): Master entity totals, open purchase order counts, overdue order tracking with explicit definition, upcoming delivery schedule, active disruption alerts summary (counts by severity and top 5 critical alerts), priority component shortage alerts (`unmet_before_next_inbound`), and supplier risk summary card.
-  2. `/alerts` (**Disruption Detection & Alerts**): Multi-tier disruption detection across 9 alert types, severity and type filters, server-side pagination, expandable detail views with evidence tables, analytical assumptions, empirical what-if delay scenario tables (baseline, typical, severe), downstream customer order exposure (affected orders table and revenue), compound risk cross-links, and **Simulate →** and **Recover →** links on shortage alerts.
-  3. `/recommendations` (**Recovery Recommendations**): Per-component recovery option cards (expedite PO, alternative supplier, transfer, accept delay), ranked by cost/feasibility, with combined-plan view and **Simulate →** link in each card header.
-  4. `/simulator` (**What-If Disruption Simulator**): Interactive scenario analysis: select component, set supplier delay (0–60d), demand multiplier (0.5x–3.0x), stock delta (±10 000), alt-supplier toggle; run baseline/disrupted/recovered comparison; 3-column table with text risk badges; `what_changed` sentences; hand-built accessible SVG 30-day stock balance chart; mandatory upper-bound disclosure. Deep-linked from Alerts and Recommendations pages.
-  5. `/inventory-risk` (**Inventory Risk & Shortage Projections**): Forward-looking stockout risk and daily shortage projection model across manufacturing plant components with filters, pagination, shortage episodes table, and labeled horizon total.
-  6. `/supplier-risk` (**Supplier Risk Scoring**): Transparent weighted delivery performance scoring (on-time rate with 95% Wilson CI, delay percentiles, rejection rate, fill rate), score bands, informational open-order metrics, expandable penalty point contributions, and 12-month delivery breakdown.
-  7. `/forecasting` (**Demand Forecast Evaluation**): Backtesting protocol summary, synthetic-data caveat banner, aggregate error metrics (Lowest WAPE indicator), frozen champion vs. challenger decision rule, per-component performance table, and expandable 14-day projections and backtest fold comparison.
-  8. `/inventory` (**Inventory Levels**): On-hand, reserved, and usable stock (`on_hand - reserved`) per warehouse, filterable by component and warehouse, with text badges for deficit or zero-stock states.
-  9. `/suppliers` (**Supplier Directory**): Global supplier directory with expandable commercial agreement panels showing component unit costs (USD), lead times, minimum order quantities, weekly capacities, and expedite terms.
-  10. `/purchase-orders` (**Purchase Orders**): Inbound replenishment orders filterable by status and supplier, displaying derived timing cells with slipped-vs-promise alerts and expandable fulfillment line items.
-  11. `/data-sources` (**Data Sources & Integration Status**): Backend health metrics, active dataset metadata, unverified connector indicators, and record counts.
+  1. `/executive-summary` (**Executive Summary**): Executive briefing, headline summary badge, top 3 prioritized risk cards with text severity badges, single priority recovery decision, side-by-side cost comparison (Act vs. Do Nothing) with upper-bound framing, contextual "Why this?" accordions, and data quality lineage note. First item in navigation.
+  2. `/` (**Overview**): Master entity totals, open purchase order counts, overdue order tracking with explicit definition, upcoming delivery schedule, active disruption alerts summary (counts by severity and top 5 critical alerts), priority component shortage alerts (`unmet_before_next_inbound`), and supplier risk summary card.
+  3. `/alerts` (**Disruption Detection & Alerts**): Multi-tier disruption detection across 9 alert types, severity and type filters, server-side pagination, expandable detail views with evidence tables, analytical assumptions, empirical what-if delay scenario tables (baseline, typical, severe), downstream customer order exposure (affected orders table and revenue), compound risk cross-links, and **Simulate →** and **Recover →** links on shortage alerts.
+  4. `/recommendations` (**Recovery Recommendations**): Per-component recovery option cards (expedite PO, alternative supplier, transfer, accept delay), ranked by cost/feasibility, with combined-plan view and **Simulate →** link in each card header.
+  5. `/simulator` (**What-If Disruption Simulator**): Interactive scenario analysis: select component, set supplier delay (0–60d), demand multiplier (0.5x–3.0x), stock delta (±10 000), alt-supplier toggle; run baseline/disrupted/recovered comparison; 3-column table with text risk badges; `what_changed` sentences; hand-built accessible SVG 30-day stock balance chart; mandatory upper-bound disclosure. Deep-linked from Alerts and Recommendations pages.
+  6. `/inventory-risk` (**Inventory Risk & Shortage Projections**): Forward-looking stockout risk and daily shortage projection model across manufacturing plant components with filters, pagination, shortage episodes table, and labeled horizon total.
+  7. `/supplier-risk` (**Supplier Risk Scoring**): Transparent weighted delivery performance scoring (on-time rate with 95% Wilson CI, delay percentiles, rejection rate, fill rate), score bands, informational open-order metrics, expandable penalty point contributions, and 12-month delivery breakdown.
+  8. `/forecasting` (**Demand Forecast Evaluation**): Backtesting protocol summary, synthetic-data caveat banner, aggregate error metrics (Lowest WAPE indicator), frozen champion vs. challenger decision rule, per-component performance table, and expandable 14-day projections and backtest fold comparison.
+  9. `/inventory` (**Inventory Levels**): On-hand, reserved, and usable stock (`on_hand - reserved`) per warehouse, filterable by component and warehouse, with text badges for deficit or zero-stock states.
+  10. `/suppliers` (**Supplier Directory**): Global supplier directory with expandable commercial agreement panels showing component unit costs (USD), lead times, minimum order quantities, weekly capacities, and expedite terms.
+  11. `/purchase-orders` (**Purchase Orders**): Inbound replenishment orders filterable by status and supplier, displaying derived timing cells with slipped-vs-promise alerts and expandable fulfillment line items.
+  12. `/data-sources` (**Data Sources & Integration Status**): Backend health metrics, active dataset metadata, unverified connector indicators, and record counts.
 
 ---
 
@@ -232,6 +242,7 @@ All data endpoints return standard JSON envelopes with pagination (`items`, `tot
 
 | Method | Endpoint | Description & Filters |
 | :--- | :--- | :--- |
+| `GET` | `/api/executive-summary` | High-level executive briefing, top 3 risks, priority recovery recommendation, side-by-side cost comparison, transparent "Why this?" reasoning, data quality audit, and analytical assumptions |
 | `GET` | `/api/health` | Health status and data source verification |
 | `GET` | `/api/meta` | Active dataset metadata, seed, as-of date, and entity counts |
 | `GET` | `/api/inventory-risk` | Inventory stockout risk and shortage projection summary (filters: `risk_level`, `category`, `criticality`, `include_inactive`) |

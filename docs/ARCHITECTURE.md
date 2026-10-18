@@ -84,6 +84,11 @@
    - Manages relational models (`models.py`) and connection pooling (`session.py`).
    - Enforces SQLite foreign keys on every connection via `PRAGMA foreign_keys=ON`.
 
+6. **Executive Summary & Decision Tradeoff Layer (Phase 10):**
+   - Implemented in `backend/app/domain/executive_summary.py`, `backend/app/services/executive_summary.py`, and `backend/app/api/routes/executive_summary.py` (`GET /api/executive-summary`).
+   - Synthesizes top disruption risks, priority recovery recommendations, data quality lineage, and an acting vs doing nothing comparative tradeoff table. Reuses results from existing pure domain modules without recalculating shortage or cost formulas. Employs a strict upper-bound framing for exposed order values, completely avoiding ungrounded "savings" or "loss" claims.
+
+
 ---
 
 ## 3. Relational Entity Model

@@ -432,4 +432,68 @@ describe('SimulatorPage', () => {
       expect(screen.getByText(/Database Unseeded/i)).toBeInTheDocument();
     });
   });
+
+  it('renders "Later shortage (not covered)" row and shortage_resolved_for_first_window display', async () => {
+    const customSimResponse: SimulationResponse = {
+      ...mockSimulationResponse,
+      recovered: {
+        ...mockSimulationResponse.recovered!,
+        shortage_resolved_for_first_window: true,
+        unmet_before_next_inbound: 0.0,
+        later_shortage: {
+          date: '2026-11-02',
+          days: 44,
+          units: 4498.0,
+          note: 'Later shortage not covered by this recovery',
+        },
+      },
+    };
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string | URL | Request) => {
+        const urlStr = String(url);
+        if (urlStr.includes('/api/meta')) {
+          return Promise.resolve({
+            ok: true,
+            status: 200,
+            headers: new Headers({ 'content-type': 'application/json' }),
+            json: () => Promise.resolve(mockMeta),
+          } as Response);
+        }
+        if (urlStr.includes('/api/components')) {
+          return Promise.resolve({
+            ok: true,
+            status: 200,
+            headers: new Headers({ 'content-type': 'application/json' }),
+            json: () => Promise.resolve(mockComponents),
+          } as Response);
+        }
+        if (urlStr.includes('/api/simulation')) {
+          return Promise.resolve({
+            ok: true,
+            status: 200,
+            headers: new Headers({ 'content-type': 'application/json' }),
+            json: () => Promise.resolve(customSimResponse),
+          } as Response);
+        }
+        return Promise.reject(new Error(`Unhandled mock for ${urlStr}`));
+      })
+    );
+
+    render(
+      <MetaProvider>
+        <MemoryRouter initialEntries={['/simulator']}>
+          <SimulatorPage />
+        </MemoryRouter>
+      </MetaProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('0.0 units (Resolved)')).toBeInTheDocument();
+      expect(screen.getByText('Later shortage (not covered)')).toBeInTheDocument();
+      expect(screen.getByText(/From 2026-11-02 \(44 days, 4,498\.0 units\)/i)).toBeInTheDocument();
+      expect(screen.getByText('Later shortage not covered by this recovery')).toBeInTheDocument();
+    });
+  });
 });
