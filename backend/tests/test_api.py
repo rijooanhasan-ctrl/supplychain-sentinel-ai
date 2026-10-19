@@ -37,6 +37,7 @@ def test_all_endpoints_return_200_and_envelopes(client_seeded):
     assert meta["label"] == "DEMO DATA"
     assert meta["data_source"] == "demo"
     assert meta["counts"]["products"] >= 4
+    assert meta["message"] == "Dataset active: DEMO DATA (source: demo)"
     assert meta["display_currency"] == "USD"
     assert meta["usd_to_inr_rate"] is None
     assert meta["stored_currency"] == "USD"

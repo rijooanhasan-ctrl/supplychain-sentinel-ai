@@ -91,7 +91,7 @@ export function EmptyView({
 }
 
 export function UnseededView({
-  message = 'Database contains no data. Synthetic demo data must be generated.',
+  message = 'Database contains no data. Seed data or import CSV files first.',
   onRefresh,
   testId = 'unseeded-state',
 }: {

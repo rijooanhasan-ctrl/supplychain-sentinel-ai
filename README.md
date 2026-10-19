@@ -34,12 +34,14 @@ SAP/
 │   ├── DISRUPTION_DETECTION.md  # Multi-tier disruption detection, what-if delay scenarios, order exposure, and CPU-X7 worked example
 │   ├── RECOMMENDATIONS.md       # Recovery options, constraints, ranking rule, combined plan, and CPU-X7 worked example
 │   ├── SIMULATOR.md             # What-If Disruption Simulator: inputs/ranges, scenario calc, assumptions, CPU-X7 worked example
-│   └── EXECUTIVE_SUMMARY.md     # Executive Summary: briefing, top risks, act vs do nothing, data quality, worked example
+│   ├── EXECUTIVE_SUMMARY.md     # Executive Summary: briefing, top risks, act vs do nothing, data quality, worked example
+│   └── KNOWN_LIMITATIONS.md     # Transparent boundary disclosure: synthetic data, baseline models, upper bounds
 ├── backend/
 │   ├── .env.example             # Backend environment template
 │   ├── requirements.txt         # Production runtime dependencies (FastAPI, Uvicorn, Pydantic, SQLAlchemy, numpy, scikit-learn)
 │   ├── requirements-dev.txt     # Development and testing dependencies (pytest, httpx)
 │   ├── scripts/
+│   │   ├── smoke_test.py        # Read-only end-to-end smoke test script (urllib-only)
 │   │   └── verify_dataset_hash.py # Deterministic multi-table SHA-256 verification script
 │   ├── app/
 │   │   ├── __init__.py
@@ -358,15 +360,15 @@ Exact versions installed in the local environment and verified from git reposito
 
 ---
 
-## 8. Running Tests
+## 8. Running Tests & Automated Verification
 
-### Backend Test Suite (239 passing tests)
+### Backend Test Suite (264 passing tests)
 From `backend/`:
 ```powershell
 & ".\.venv\Scripts\python.exe" -m pytest -q
 ```
 
-### Frontend Test Suite (127 passing tests)
+### Frontend Test Suite (133 passing tests)
 From `frontend/`:
 ```powershell
 npm test -- --run
@@ -378,5 +380,22 @@ From `frontend/`:
 npm run lint
 npm run build
 ```
+
+### Automated End-to-End Smoke Test
+Run against the active backend (port 8000) and production preview (port 4173):
+```powershell
+cd backend
+& ".\.venv\Scripts\python.exe" scripts/smoke_test.py --api http://localhost:8000 --web http://localhost:4173
+```
+Validates 53 checks: all API GET endpoints, GET-only enforcement (HTTP 405 on POST), web route shells with SPA fallback, and deterministic demo story assertions.
+
+---
+
+## 9. Documentation & Run Guides
+
+- **[SAP Hackfest Demo Runbook](docs/DEMO_RUNBOOK.md)**: Full end-to-end presentation script, guided demo walkthrough, printable report generation, and troubleshooting.
+- **[Known Limitations & Design Boundaries](docs/KNOWN_LIMITATIONS.md)**: Transparent disclosure of synthetic data, backtest results, single-plant scope, and upper-bound exposure math.
+- **[System Architecture](docs/ARCHITECTURE.md)**: Detailed layer decoupling, adapter boundaries, and Pydantic configuration isolation.
+- **[User-Supplied CSV Data Import](docs/DATA_IMPORT.md)**: Schema definitions, validation rules, and CLI import guide.
 
 

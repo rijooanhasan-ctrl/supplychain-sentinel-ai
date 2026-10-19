@@ -91,3 +91,37 @@ def test_config_currency_validation_errors(monkeypatch):
     with pytest.raises(ValueError, match="USD_TO_INR_RATE must be finite and greater than 0"):
         Settings()
 
+
+def test_test_environment_ignores_backend_env():
+    """Prove that test environment isolates from backend/.env (defaults remain untouched)."""
+    settings = Settings()
+    # In backend/.env, DISPLAY_CURRENCY or USD_TO_INR_RATE might be set, but test settings must remain default
+    assert settings.DISPLAY_CURRENCY == "USD"
+    assert settings.USD_TO_INR_RATE is None
+    assert settings.APP_NAME == "SupplyChain Sentinel AI"
+
+
+def test_normal_start_reads_env_file(tmp_path, monkeypatch):
+    """Prove that normal start reads the specified .env file."""
+    temp_env = tmp_path / "custom.env"
+    temp_env.write_text(
+        "APP_NAME=Production Sentinel\n"
+        "DISPLAY_CURRENCY=INR\n"
+        "USD_TO_INR_RATE=90.25\n",
+        encoding="utf-8",
+    )
+
+    # 1. Via Settings(_env_file=...)
+    s1 = Settings(_env_file=str(temp_env))
+    assert s1.APP_NAME == "Production Sentinel"
+    assert s1.DISPLAY_CURRENCY == "INR"
+    assert s1.USD_TO_INR_RATE == pytest.approx(90.25)
+
+    # 2. Via ENV_FILE environment variable
+    monkeypatch.setenv("ENV_FILE", str(temp_env))
+    s2 = Settings()
+    assert s2.APP_NAME == "Production Sentinel"
+    assert s2.DISPLAY_CURRENCY == "INR"
+    assert s2.USD_TO_INR_RATE == pytest.approx(90.25)
+
+

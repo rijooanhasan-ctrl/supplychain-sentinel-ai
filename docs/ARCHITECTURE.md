@@ -232,3 +232,20 @@ The **Phase 8** What-If Disruption Simulator (`app/domain/simulation.py`, `app/s
 - **Frontend**: `SimulatorPage.tsx` at `/simulator` with controls, presets, 3-column comparison table (text risk badges), `what_changed` sentence list, hand-built accessible SVG line chart (30-day stock balance, solid/dashed/dotted lines), and accessible projection table.
 - **Cross-links**: Inventory shortage alerts and recommendation cards each carry `Simulate →` deep-links to `/simulator?component_id=<id>`.
 - **Order exposure upper-bound disclosure**: The exposed revenue figure is the selling price of potentially affected orders—not a modelled financial loss estimate.
+
+---
+
+## 12. Configuration & Test Environment Isolation Architecture
+
+SupplyChain Sentinel AI utilizes Pydantic Settings (`pydantic-settings`) for strongly typed environment configuration with strict domain bounds validation.
+
+### Clean Test Isolation without Production Test-Detection
+- **Production Standard**: Production configuration code (`backend/app/core/config.py`) contains zero test-detection heuristics (no `sys.modules["pytest"]` checks, no branching on testing frameworks).
+- **Config Mechanism**:
+  - `model_config = SettingsConfigDict(env_file=".env", ...)` establishes `.env` as the default source for local execution.
+  - `Settings.__init__` checks `os.environ.get("ENV_FILE")` at instantiation time. If `ENV_FILE` is set to an empty string `""` or `None`, the local `.env` file is completely ignored.
+  - In `backend/tests/conftest.py`, `os.environ["ENV_FILE"] = ""` is declared prior to test discovery. This ensures all automated tests run in strict hermetic isolation from developer-local `.env` files.
+  - Normal startup or deployment environments can override the target file by setting `ENV_FILE=/path/to/custom.env` or passing `Settings(_env_file=...)`.
+- **Startup Validation**:
+  - `DISPLAY_CURRENCY="INR"` enforces that `USD_TO_INR_RATE` is present, finite, and strictly greater than zero. Missing conversion rates cause an immediate, explicit startup failure with clear diagnostic guidance.
+

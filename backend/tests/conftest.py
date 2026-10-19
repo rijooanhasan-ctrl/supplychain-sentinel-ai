@@ -1,3 +1,7 @@
+import os
+# Ensure test suite runs in complete isolation from any local backend/.env
+os.environ["ENV_FILE"] = ""
+
 import pytest
 from datetime import date
 from sqlalchemy import create_engine

@@ -228,7 +228,7 @@ export function DataSourcesPage() {
                 </button>
               </div>
               <p className="text-sm text-amber-800">
-                {metaApi.data.message || 'Database is not seeded. Synthetic data must be populated.'}
+                {metaApi.data.message || 'Database is not seeded.'}
               </p>
               <div className="space-y-1.5">
                 <p className="text-xs font-medium text-amber-900">Run the following command from the backend directory:</p>

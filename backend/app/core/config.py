@@ -1,7 +1,6 @@
 from decimal import Decimal
 import json
 import os
-import sys
 from functools import lru_cache
 from typing import Any, List, Optional, Union
 from pydantic import field_validator, model_validator
@@ -58,10 +57,16 @@ class Settings(BaseSettings):
     USD_TO_INR_RATE: Optional[Decimal] = None
 
     model_config = SettingsConfigDict(
-        env_file=None if ("pytest" in sys.modules or os.environ.get("APP_ENV") == "testing") else ".env",
+        env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore",
     )
+
+    def __init__(self, *args, **kwargs):
+        if "_env_file" not in kwargs and "ENV_FILE" in os.environ:
+            val = os.environ["ENV_FILE"]
+            kwargs["_env_file"] = val if val else None
+        super().__init__(*args, **kwargs)
 
     @field_validator("DATABASE_URL", mode="after")
     @classmethod
