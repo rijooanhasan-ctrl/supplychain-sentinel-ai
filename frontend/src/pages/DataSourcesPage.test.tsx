@@ -99,8 +99,8 @@ describe('Data Sources & Integration Status Page', () => {
       expect(screen.getByTestId('dataset-meta')).toBeInTheDocument();
     });
 
-    // DEMO DATA badge
-    expect(screen.getByTestId('demo-badge')).toHaveTextContent('DEMO DATA');
+    // DEMO DATA / dynamic dataset label badge
+    expect(screen.getByTestId('demo-badge')).toHaveTextContent('Demo Supply Chain Dataset');
 
     // Health details
     expect(screen.getByTestId('health-version')).toHaveTextContent('0.1.0');

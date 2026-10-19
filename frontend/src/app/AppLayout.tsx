@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { DemoBanner } from '../components/DemoBanner';
+import { GuidedDemoPanel } from '../components/GuidedDemoPanel';
+import { useGuidedDemo } from '../hooks/useGuidedDemo';
 
 const NAV_ITEMS = [
   { label: 'Executive Summary', to: '/executive-summary' },
@@ -19,17 +21,20 @@ const NAV_ITEMS = [
 
 export function AppLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { startDemo } = useGuidedDemo();
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col print:bg-white">
       {/* Top Banner (DEMO DATA & As-Of Date) */}
-      <DemoBanner />
+      <div className="print:hidden">
+        <DemoBanner />
+      </div>
 
       <div className="flex-1 flex flex-col md:flex-row">
         {/* Navigation Sidebar (Desktop) and Top Bar (Mobile) */}
         <aside
           aria-label="Sidebar Navigation"
-          className="w-full md:w-64 bg-white border-b md:border-b-0 md:border-r border-slate-200 shrink-0"
+          className="print:hidden w-full md:w-64 bg-white border-b md:border-b-0 md:border-r border-slate-200 shrink-0"
         >
           {/* Brand Header */}
           <div className="p-4 md:p-5 border-b border-slate-100 flex items-center justify-between">
@@ -86,13 +91,34 @@ export function AppLayout() {
               </NavLink>
             ))}
           </nav>
+
+          {/* Guided Demo Button in Sidebar */}
+          <div className="p-3 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                startDemo();
+              }}
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold rounded-md bg-blue-50 text-blue-800 border border-blue-200 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              data-testid="start-guided-demo"
+            >
+              <span className="w-2 h-2 rounded-full bg-blue-600" aria-hidden="true" />
+              Start guided demo
+            </button>
+          </div>
         </aside>
 
         {/* Main Content Area */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto overflow-x-hidden">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto overflow-x-hidden print:p-0 print:m-0 print:max-w-none">
           <Outlet />
         </main>
       </div>
+
+      {/* Docked Guided Demo Panel */}
+      <GuidedDemoPanel />
     </div>
   );
 }
+
+export default AppLayout;

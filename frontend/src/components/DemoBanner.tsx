@@ -52,10 +52,12 @@ export function DemoBanner() {
           data-testid="demo-badge"
           className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-200 text-amber-900 border border-amber-400"
         >
-          DEMO DATA
+          {meta?.label || 'DEMO DATA'}
         </span>
         <span className="font-medium">
-          Synthetic laptop supply chain simulation &bull; Decision-support only (No live SAP connection)
+          {meta?.data_source === 'file-import'
+            ? 'User-supplied CSV import • Decision-support only (No live SAP connection)'
+            : 'Synthetic laptop supply chain simulation • Decision-support only (No live SAP connection)'}
         </span>
       </div>
       <div className="flex items-center gap-2 text-amber-900 font-mono text-[11px]">

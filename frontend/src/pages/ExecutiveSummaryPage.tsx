@@ -10,9 +10,11 @@ import { CurrencyNotice } from '../components/CurrencyNotice';
 import { Badge } from '../components/Badge';
 import { WhyThis } from '../components/WhyThis';
 import { formatInteger, formatNumber, formatMoney } from '../lib/format';
+import { useGuidedDemo } from '../hooks/useGuidedDemo';
 
 export function ExecutiveSummaryPage() {
   const { meta } = useMeta();
+  const { startDemo } = useGuidedDemo();
   const [dqExpanded, setDqExpanded] = useState(false);
 
   const fetchSummary = useCallback(
@@ -37,10 +39,33 @@ export function ExecutiveSummaryPage() {
   if (data.top_risks.length === 0) {
     return (
       <div className="space-y-6 max-w-7xl mx-auto px-4 py-6">
-        <PageHeader
-          title="Executive Summary"
-          description="Real-time strategic decision support briefing"
-        />
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <PageHeader
+            title="Executive Summary"
+            description="Real-time strategic decision support briefing"
+          />
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={startDemo}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 rounded-md text-xs font-semibold cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+              data-testid="start-guided-demo-btn"
+            >
+              <span className="w-2 h-2 rounded-full bg-blue-600" aria-hidden="true" />
+              Start guided demo
+            </button>
+            <Link
+              to="/report"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-md text-xs font-semibold shadow-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+              data-testid="print-save-pdf-btn"
+            >
+              <svg className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+              </svg>
+              Print / Save as PDF
+            </Link>
+          </div>
+        </div>
         <EmptyView message="No components currently at risk" />
         <div className="p-4 bg-slate-100 rounded-lg text-xs text-slate-600 text-center border border-slate-200">
           Decision support only. No orders are created.
@@ -55,11 +80,34 @@ export function ExecutiveSummaryPage() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto px-4 py-6">
-      {/* Page Header */}
-      <PageHeader
-        title="Executive Summary"
-        description="Operational risk overview, cost of action vs inaction, and data quality lineage"
-      />
+      {/* Page Header & Actions */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <PageHeader
+          title="Executive Summary"
+          description="Operational risk overview, cost of action vs inaction, and data quality lineage"
+        />
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={startDemo}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 rounded-md text-xs font-semibold cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+            data-testid="start-guided-demo-btn"
+          >
+            <span className="w-2 h-2 rounded-full bg-blue-600" aria-hidden="true" />
+            Start guided demo
+          </button>
+          <Link
+            to="/report"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-md text-xs font-semibold shadow-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+            data-testid="print-save-pdf-btn"
+          >
+            <svg className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+            </svg>
+            Print / Save as PDF
+          </Link>
+        </div>
+      </div>
 
       <CurrencyNotice />
 

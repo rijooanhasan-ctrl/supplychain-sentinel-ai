@@ -26,6 +26,8 @@ SAP/
 ├── README.md
 ├── docs/
 │   ├── ARCHITECTURE.md          # Architectural layers, adapter boundaries, and data model decisions
+│   ├── DATA_IMPORT.md           # User-supplied CSV file import schemas, validation rules, and CLI reference
+│   ├── DEMO_RUNBOOK.md          # SAP Hackfest 2026 presentation runbook, production start commands, and guides
 │   ├── INVENTORY_INTELLIGENCE.md # Inventory risk rules, daily projection math, episodes, and CPU-X7 benchmark
 │   ├── SUPPLIER_RISK.md         # Transparent supplier risk scoring formulas, weights, and SUP-HELIX example
 │   ├── FORECASTING.md           # Demand forecast evaluation protocol, models, leakage safeguards, and measured results
@@ -197,6 +199,20 @@ cd "C:\Users\SK MD Rijooan Hasan\Desktop\SAP\backend"
 ```
 *Note: To protect stored data, the CLI refuses to overwrite an existing database without the explicit `--reset` flag.*
 
+### CSV File Import Pipeline (User-Supplied Data)
+In addition to the synthetic generator and static SAP sample fixture, SupplyChain Sentinel AI supports importing custom operational data from CSV files:
+```powershell
+# 1. Export clean CSV templates with sample rows and README
+& ".\.venv\Scripts\python.exe" -m app.cli export-template --path "C:\path\to\my_data"
+
+# 2. Validate CSV files and print coverage report (touches NO database)
+& ".\.venv\Scripts\python.exe" -m app.cli validate-files --path "C:\path\to\my_data" --as-of 2026-10-18
+
+# 3. Seed database from validated CSV files
+& ".\.venv\Scripts\python.exe" -m app.cli seed --source file --path "C:\path\to\my_data" --as-of 2026-10-18 --reset
+```
+See [`docs/DATA_IMPORT.md`](file:///C:/Users/SK%20MD%20Rijooan%20Hasan/Desktop/SAP/docs/DATA_IMPORT.md) for detailed column specifications and validation rules.
+
 > **Deterministic Synthetic Timestamps & Date Logic:**
 > - All timestamps generated for synthetic datasets (such as `DatasetMeta.generated_at` and inventory `as_of_ts`) are deterministic synthetic UTC timestamps derived directly from the reference `as_of` date (`as_of 00:00:00 UTC`), rather than wall-clock times.
 > - **Dataset Snapshot Anchor:** All frontend business date comparisons (evaluating whether a purchase order is "Overdue" or "Due in N days") use the active dataset `meta.as_of` returned by `/api/meta` as "today" rather than the browser wall-clock. Because the demo database is a fixed synthetic snapshot in time, using `meta.as_of` guarantees deterministic schedule calculations across all user sessions and test suites.
@@ -219,20 +235,22 @@ From `frontend/`:
 ```powershell
 npm run dev
 ```
-- Web Application: `http://localhost:5173` (proxies `/api/*` to `http://localhost:8000`)
+- Web Application: `http://localhost:5173` (or production preview `npm run preview -- --port 4173`)
+- **Interactive Guided Demo Mode**: Click **"Start guided demo"** in the sidebar or Executive Summary to launch a docked, keyboard-operable 5-step tour guiding reviewers through Executive Summary, Alerts, Supplier Delays, Recommendations, and What-If Simulation.
 - **Core Application Views:**
-  1. `/executive-summary` (**Executive Summary**): Executive briefing, headline summary badge, top 3 prioritized risk cards with text severity badges, single priority recovery decision, side-by-side cost comparison (Act vs. Do Nothing) with upper-bound framing, contextual "Why this?" accordions, and data quality lineage note. First item in navigation.
-  2. `/` (**Overview**): Master entity totals, open purchase order counts, overdue order tracking with explicit definition, upcoming delivery schedule, active disruption alerts summary (counts by severity and top 5 critical alerts), priority component shortage alerts (`unmet_before_next_inbound`), and supplier risk summary card.
-  3. `/alerts` (**Disruption Detection & Alerts**): Multi-tier disruption detection across 9 alert types, severity and type filters, server-side pagination, expandable detail views with evidence tables, analytical assumptions, empirical what-if delay scenario tables (baseline, typical, severe), downstream customer order exposure (affected orders table and revenue), compound risk cross-links, and **Simulate →** and **Recover →** links on shortage alerts.
-  4. `/recommendations` (**Recovery Recommendations**): Per-component recovery option cards (expedite PO, alternative supplier, transfer, accept delay), ranked by cost/feasibility, with combined-plan view and **Simulate →** link in each card header.
-  5. `/simulator` (**What-If Disruption Simulator**): Interactive scenario analysis: select component, set supplier delay (0–60d), demand multiplier (0.5x–3.0x), stock delta (±10 000), alt-supplier toggle; run baseline/disrupted/recovered comparison; 3-column table with text risk badges; `what_changed` sentences; hand-built accessible SVG 30-day stock balance chart; mandatory upper-bound disclosure. Deep-linked from Alerts and Recommendations pages.
-  6. `/inventory-risk` (**Inventory Risk & Shortage Projections**): Forward-looking stockout risk and daily shortage projection model across manufacturing plant components with filters, pagination, shortage episodes table, and labeled horizon total.
-  7. `/supplier-risk` (**Supplier Risk Scoring**): Transparent weighted delivery performance scoring (on-time rate with 95% Wilson CI, delay percentiles, rejection rate, fill rate), score bands, informational open-order metrics, expandable penalty point contributions, and 12-month delivery breakdown.
-  8. `/forecasting` (**Demand Forecast Evaluation**): Backtesting protocol summary, synthetic-data caveat banner, aggregate error metrics (Lowest WAPE indicator), frozen champion vs. challenger decision rule, per-component performance table, and expandable 14-day projections and backtest fold comparison.
-  9. `/inventory` (**Inventory Levels**): On-hand, reserved, and usable stock (`on_hand - reserved`) per warehouse, filterable by component and warehouse, with text badges for deficit or zero-stock states.
-  10. `/suppliers` (**Supplier Directory**): Global supplier directory with expandable commercial agreement panels showing component unit costs (USD), lead times, minimum order quantities, weekly capacities, and expedite terms.
-  11. `/purchase-orders` (**Purchase Orders**): Inbound replenishment orders filterable by status and supplier, displaying derived timing cells with slipped-vs-promise alerts and expandable fulfillment line items.
-  12. `/data-sources` (**Data Sources & Integration Status**): Backend health metrics, active dataset metadata, unverified connector indicators, and record counts.
+  1. `/executive-summary` (**Executive Summary**): Executive briefing, headline summary badge, top 3 prioritized risk cards with text severity badges, single priority recovery decision, side-by-side cost comparison (Act vs. Do Nothing) with upper-bound framing, contextual "Why this?" accordions, data quality lineage note, and direct access to Guided Demo and Printable Report.
+  2. `/report` (**Printable Executive Decision Report**): Dedicated print-optimized single-column layout formatted for A4 printing/PDF generation via `window.print()` and `@media print`. Hides navigation and interactive elements while preserving risk tables, action plans, upper-bound exposure comparisons, assumptions, and lineage notes.
+  3. `/` (**Overview**): Master entity totals, open purchase order counts, overdue order tracking with explicit definition, upcoming delivery schedule, active disruption alerts summary (counts by severity and top 5 critical alerts), priority component shortage alerts (`unmet_before_next_inbound`), and supplier risk summary card.
+  4. `/alerts` (**Disruption Detection & Alerts**): Multi-tier disruption detection across 9 alert types, severity and type filters, server-side pagination, expandable detail views with evidence tables, analytical assumptions, empirical what-if delay scenario tables (baseline, typical, severe), downstream customer order exposure (affected orders table and revenue), compound risk cross-links, and **Simulate →** and **Recover →** links on shortage alerts.
+  5. `/recommendations` (**Recovery Recommendations**): Per-component recovery option cards (expedite PO, alternative supplier, transfer, accept delay), ranked by cost/feasibility, with combined-plan view and **Simulate →** link in each card header.
+  6. `/simulator` (**What-If Disruption Simulator**): Interactive scenario analysis: select component, set supplier delay (0–60d), demand multiplier (0.5x–3.0x), stock delta (±10 000), alt-supplier toggle; run baseline/disrupted/recovered comparison; 3-column table with text risk badges; `what_changed` sentences; hand-built accessible SVG 30-day stock balance chart; mandatory upper-bound disclosure. Deep-linked from Alerts and Recommendations pages.
+  7. `/inventory-risk` (**Inventory Risk & Shortage Projections**): Forward-looking stockout risk and daily shortage projection model across manufacturing plant components with filters, pagination, shortage episodes table, and labeled horizon total.
+  8. `/supplier-risk` (**Supplier Risk Scoring**): Transparent weighted delivery performance scoring (on-time rate with 95% Wilson CI, delay percentiles, rejection rate, fill rate), score bands, informational open-order metrics, expandable penalty point contributions, and 12-month delivery breakdown.
+  9. `/forecasting` (**Demand Forecast Evaluation**): Backtesting protocol summary, synthetic-data caveat banner, aggregate error metrics (Lowest WAPE indicator), frozen champion vs. challenger decision rule, per-component performance table, and expandable 14-day projections and backtest fold comparison.
+  10. `/inventory` (**Inventory Levels**): On-hand, reserved, and usable stock (`on_hand - reserved`) per warehouse, filterable by component and warehouse, with text badges for deficit or zero-stock states.
+  11. `/suppliers` (**Supplier Directory**): Global supplier directory with expandable commercial agreement panels showing component unit costs (USD), lead times, minimum order quantities, weekly capacities, and expedite terms.
+  12. `/purchase-orders` (**Purchase Orders**): Inbound replenishment orders filterable by status and supplier, displaying derived timing cells with slipped-vs-promise alerts and expandable fulfillment line items.
+  13. `/data-sources` (**Data Sources & Integration Status**): Backend health metrics, active dataset metadata, unverified connector indicators, and record counts.
 
 ---
 

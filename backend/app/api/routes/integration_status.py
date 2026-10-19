@@ -12,7 +12,21 @@ from pydantic import BaseModel, ConfigDict
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.db.models import DatasetMeta
+from app.db.models import (
+    BomLine,
+    Component,
+    CustomerOrder,
+    DatasetMeta,
+    DeliveryRecord,
+    DemandRecord,
+    InventoryLevel,
+    Product,
+    PurchaseOrder,
+    PurchaseOrderLine,
+    Supplier,
+    SupplierComponent,
+    Warehouse,
+)
 from app.db.session import get_db
 from app.integrations.sap_sample_adapter import SAP_DISCLAIMER_TEXT, SapSampleAdapter
 
@@ -57,6 +71,55 @@ def get_integration_status(
     active_source = meta.source if meta and meta.source else "demo"
     label = meta.label if meta and meta.label else "DEMO DATA"
 
+    if active_source == "file-import":
+        # Determine actual stored entity coverage
+        table_checks = [
+            ("warehouses", Warehouse),
+            ("products", Product),
+            ("components", Component),
+            ("bom_lines", BomLine),
+            ("suppliers", Supplier),
+            ("supplier_components", SupplierComponent),
+            ("inventory_levels", InventoryLevel),
+            ("purchase_orders", PurchaseOrder),
+            ("purchase_order_lines", PurchaseOrderLine),
+            ("customer_orders", CustomerOrder),
+            ("demand_records", DemandRecord),
+            ("delivery_records", DeliveryRecord),
+        ]
+        covered: List[str] = []
+        missing: List[str] = []
+        for name, model_cls in table_checks:
+            has_rows = db.scalar(select(model_cls.id).limit(1)) is not None
+            if has_rows:
+                covered.append(name)
+            else:
+                missing.append(name)
+
+        notes: Dict[str, str] = {
+            "connector_type": "User-supplied CSV file import via CLI. Decision support only; not a live connection.",
+        }
+        if "demand_records" in missing:
+            notes["demand_records"] = "no demand_history.csv: demand forecasts and shortage projections will show 'insufficient history'"
+        if "supplier_components" in missing:
+            notes["supplier_components"] = "no supplier_offers.csv: no recovery options"
+        if "delivery_records" in missing:
+            notes["delivery_records"] = "no delivery_history.csv: supplier risk unknown"
+        if any(e in missing for e in ("customer_orders", "bom_lines", "products")):
+            notes["customer_exposure"] = "no customer_orders/bom/products: exposed-orders figures unavailable"
+        if "purchase_orders" in missing:
+            notes["purchase_orders"] = "no purchase_orders.csv: inbound pipeline visibility unavailable"
+
+        return IntegrationStatusResponse(
+            active_source="file-import",
+            is_live=False,
+            label=label,
+            entities_covered=covered,
+            entities_missing=missing,
+            notes=notes,
+            disclaimer=SAP_DISCLAIMER_TEXT,
+        )
+
     if active_source == "sap-style-sample":
         adapter = SapSampleAdapter()
         rep = adapter.get_coverage_report()
@@ -82,3 +145,4 @@ def get_integration_status(
         },
         disclaimer=SAP_DISCLAIMER_TEXT,
     )
+

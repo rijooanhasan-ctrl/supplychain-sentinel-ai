@@ -74,6 +74,7 @@
    - External systems are accessed **only** through a formal adapter interface (`SourceAdapter`).
    - Implementations:
      - `DemoAdapter`: Generates deterministic, synthetic supply chain datasets from `(seed, as_of)` using Python stdlib `random.Random`.
+     - `FileAdapter` (`file_adapter.py`, `csv_schema.py`): Ingests user-supplied CSV datasets offline via stdlib `csv`. Validates schemas, cross-table foreign keys, logic constraints, and PO line groupings before transactional load. Provides entity coverage reports for missing optional feeds.
      - `SapSampleAdapter` (`sap_sample_adapter.py`): Ingests illustrative, static SAP OData fixtures (`sap_style_sample.json`) with zero network calls and `is_live = False`. Provides an entity coverage report detailing covered vs missing dataset records.
      - `sap_mapping.py`: Pure mapping functions transforming illustrative SAP Material, Supplier, Plant, Stock, and Purchase Order structures into domain DTOs.
      - `LiveSapAdapter` (future production connector): Reserved boundary for authenticated SAP BTP / S/4HANA OData integration (see `docs/SAP_INTEGRATION.md`).

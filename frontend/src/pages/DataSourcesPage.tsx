@@ -83,12 +83,12 @@ export function DataSourcesPage() {
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
               Data Sources &amp; Integration Status
             </h1>
-            {isDemo && (
+            {(metaApi.data?.label || isDemo) && (
               <span
                 data-testid="demo-badge"
                 className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-900 border border-amber-300"
               >
-                DEMO DATA
+                {metaApi.data?.label || 'DEMO DATA'}
               </span>
             )}
           </div>
@@ -324,7 +324,11 @@ export function DataSourcesPage() {
                             </th>
                             <td className="px-4 py-3 text-slate-700 font-mono text-xs">
                               {integrationApi.data.active_source}
-                              <span className="ml-2 font-sans font-medium text-slate-600">({integrationApi.data.label})</span>
+                              <span className="ml-2 font-sans font-medium text-slate-600">
+                                ({integrationApi.data.active_source === 'file-import'
+                                  ? 'File import (user-supplied data, not live)'
+                                  : integrationApi.data.label})
+                              </span>
                             </td>
                           </tr>
                           <tr>
@@ -333,7 +337,9 @@ export function DataSourcesPage() {
                             </th>
                             <td className="px-4 py-3 text-slate-700 text-xs">
                               <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-50 text-amber-900 border border-amber-200">
-                                False — Standalone decision support environment
+                                {integrationApi.data.active_source === 'file-import'
+                                  ? 'False — File import (user-supplied data, not live)'
+                                  : 'False — Standalone decision support environment'}
                               </span>
                             </td>
                           </tr>
