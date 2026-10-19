@@ -267,7 +267,11 @@ def build_executive_summary(inputs: ExecutiveSummaryInputs) -> ExecutiveSummary:
                     component_name=alert.component_name or inv_res.name,
                     severity=alert.severity,
                     shortage_date=inv_res.shortage_date,
-                    days_until_impact=alert.days_until_impact if alert.days_until_impact is not None else inv_res.days_until_shortage,
+                    days_until_impact=(
+                        (inv_res.shortage_date - inputs.as_of).days
+                        if inv_res.shortage_date is not None
+                        else (alert.days_until_impact if alert.days_until_impact is not None else inv_res.days_until_shortage)
+                    ),
                     units_short_before_next_inbound=inv_res.unmet_before_next_inbound or 0.0,
                     first_shortage_window_days=win_days,
                     reason=alert.summary or inv_res.risk_reason,
@@ -304,7 +308,7 @@ def build_executive_summary(inputs: ExecutiveSummaryInputs) -> ExecutiveSummary:
                     component_name=c.name,
                     severity=c.risk_level,
                     shortage_date=c.shortage_date,
-                    days_until_impact=c.days_until_shortage,
+                    days_until_impact=(c.shortage_date - inputs.as_of).days if c.shortage_date is not None else c.days_until_shortage,
                     units_short_before_next_inbound=c.unmet_before_next_inbound or 0.0,
                     first_shortage_window_days=win_days,
                     reason=c.risk_reason,

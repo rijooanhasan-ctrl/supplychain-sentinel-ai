@@ -53,6 +53,8 @@
      - `routes/supplier_risk.py` (`/api/supplier-risk`, `/api/supplier-risk/{id}`)
      - `routes/forecasting.py` (`/api/forecasting/evaluation`, `/api/forecasting/components/{id}`)
      - `routes/alerts.py` (`/api/alerts`, `/api/alerts/{alert_id}`)
+      - `routes/globe.py` (`/api/globe`, `POST /api/locations/override`)
+    - **POST Route Allowlist:** Exactly four explicit POST routes are enabled and hardened across the backend (`/api/import/validate`, `/api/import/load`, `/api/import/activate`, `/api/locations/override`), strictly gated by `ENABLE_WEB_IMPORT=1`. All other mutating methods (PUT, PATCH, DELETE) return 405 Method Not Allowed.
 
 2. **Domain Layer (`backend/app/domain/`):**
    - Implemented across four focused pure modules:
@@ -60,6 +62,7 @@
      - `backend/app/domain/supplier_risk.py`: Supplier delivery performance scoring, 95% Wilson score confidence intervals, delay distribution percentiles (nearest-rank p50/p90), penalty transformations, dynamic weight renormalization, and transparent rule-based explanation generation.
      - `backend/app/domain/forecasting.py`: Pure forecast models (`seasonal_naive`, `weekday_average`, `ridge_weekday_trend`), rolling-origin backtest evaluation engine, error metrics (MAE, RMSE, WAPE, Bias, Pooled WAPE, Macro WAPE), and frozen decision-rule logic.
      - `backend/app/domain/alerts.py`: Deterministic multi-tier disruption alert engine across 9 alert types, empirical what-if delay scenario simulation, customer order exposure calculation with exact Decimal revenue arithmetic, compound risk escalation, and deterministic multi-criteria sorting.
+      - `backend/app/domain/geo.py`: Pure geospatial validation (`validate_lat_lon`), Null Island (0,0) protection, ISO 3166-1 alpha-2 country centroid resolution, four-tier location resolution hierarchy, and supply concentration risk calculation.
    - **Pure Functions Only:** Zero side-effects, zero imports from FastAPI, SQLAlchemy, or system clock. Operates strictly over plain, frozen dataclasses.
    - **Strict Dependency Confinement:** `numpy` and `scikit-learn` are permitted and imported **strictly** inside `backend/app/domain/forecasting.py`. No other module in the codebase (API, services, DB, or other domain modules) imports numpy or scikit-learn. Pandas is strictly prohibited.
 
@@ -69,6 +72,7 @@
    - `supplier_risk.py`: Bulk-loads delivery records within lookback windows and open PO lines, invokes `domain/supplier_risk.py`, and maps metrics to API schemas.
    - `forecasting.py`: Extracts component consumption series, runs rolling-origin backtests, and maintains an in-process cache keyed by `(as_of, generated_at, config)`.
    - `alerts.py`: Disruption alerts service bulk-loading component inventory, inbound lines with supplier tags, delivery records, customer orders, and BOM lines; orchestrates pure `detect_alerts` domain detection. All services handle unseeded database states gracefully (`seeded=false`).
+    - `globe.py`: Assembles 3D globe payload combining resolved supplier coordinates, warehouse facilities, open PO routing arcs, concentration polygons, and unresolved entities. Manages atomic, dataset-isolated file persistence for manual location overrides (`backend/data/location_overrides_<dataset_key>.json`).
 
 4. **Integrations Layer (`backend/app/integrations/`):**
    - External systems are accessed **only** through a formal adapter interface (`SourceAdapter`).

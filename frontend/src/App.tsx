@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { AppLayout } from './app/AppLayout';
 import { MetaProvider } from './context/MetaContext';
@@ -18,6 +19,8 @@ import { ReportPage } from './pages/ReportPage';
 import { ImportPage } from './pages/ImportPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
+const GlobePage = lazy(() => import('./pages/GlobePage').then((m) => ({ default: m.GlobePage })));
+
 export function App() {
   return (
     <MetaProvider>
@@ -33,6 +36,20 @@ export function App() {
               <Route path="simulator" element={<SimulatorPage />} />
               <Route path="inventory-risk" element={<InventoryRiskPage />} />
               <Route path="supplier-risk" element={<SupplierRiskPage />} />
+              <Route
+                path="globe"
+                element={
+                  <Suspense
+                    fallback={
+                      <div className="min-h-[calc(100vh-80px)] bg-[#070b14] flex items-center justify-center text-slate-300">
+                        Loading Global Control Tower...
+                      </div>
+                    }
+                  >
+                    <GlobePage />
+                  </Suspense>
+                }
+              />
               <Route path="forecasting" element={<ForecastingPage />} />
               <Route path="inventory" element={<InventoryPage />} />
               <Route path="suppliers" element={<SuppliersPage />} />

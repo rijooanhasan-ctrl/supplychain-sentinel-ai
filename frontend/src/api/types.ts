@@ -1058,6 +1058,126 @@ export interface LoadImportResponse extends ValidateImportResponse {
   active: 'uploaded';
 }
 
+// =====================================================================
+// 3D Supply Chain Globe
+// =====================================================================
 
+export interface GlobeLocation {
+  lat: number | null;
+  lon: number | null;
+  precision: 'exact' | 'manual' | 'country_centroid' | 'unresolved';
+  source: string;
+  country_code?: string | null;
+  label?: string | null;
+}
 
+export interface GlobeSupplier {
+  code: string;
+  id: number;
+  name: string;
+  country: string;
+  location: GlobeLocation | null;
+  risk_band: 'critical' | 'high' | 'medium' | 'low' | 'unknown';
+  risk_score: number;
+  on_time_rate: number;
+  n_deliveries: number;
+  confidence: string;
+  components: { sku: string; name: string }[];
+  open_po_count: number;
+  overdue_po_count: number;
+  slipped_po_count: number;
+  remaining_qty: number;
+}
 
+export interface GlobeWarehouse {
+  code: string;
+  id: number;
+  name: string;
+  role: 'plant' | 'regional';
+  location: GlobeLocation | null;
+  inventory_summary: {
+    components_held: number;
+    total_on_hand: number;
+    zero_usable_components_count: number;
+  };
+}
+
+export interface GlobeRoute {
+  supplier_code: string;
+  warehouse_code: string;
+  po_numbers: string[];
+  open_po_count: number;
+  remaining_qty: number;
+  any_overdue: boolean;
+  any_slipped: boolean;
+  label: string;
+}
+
+export interface GlobeConcentration {
+  country_code: string;
+  country_name: string;
+  supplier_count: number;
+  risk_distribution: Record<string, number>;
+  high_risk_suppliers: string[];
+  single_country_components: string[];
+  open_po_count: number;
+  remaining_qty: number;
+  flagged: boolean;
+  reason: string | null;
+}
+
+export interface GlobeUnresolved {
+  entity_type: 'supplier' | 'warehouse';
+  code: string;
+  name: string;
+  reason: string;
+}
+
+export interface GlobeCoverage {
+  suppliers_total: number;
+  suppliers_mapped: number;
+  suppliers_unresolved: number;
+  warehouses_total: number;
+  warehouses_mapped: number;
+  warehouses_unresolved: number;
+  approximate_count: number;
+}
+
+export interface GlobeResponse {
+  seeded: boolean;
+  as_of: string | null;
+  dataset: {
+    label: string;
+    source: string;
+    active_dataset: string;
+    generated_at: string;
+    is_live: boolean;
+  } | null;
+  suppliers: GlobeSupplier[];
+  warehouses: GlobeWarehouse[];
+  routes: GlobeRoute[];
+  concentration: GlobeConcentration[];
+  unresolved: GlobeUnresolved[];
+  coverage: GlobeCoverage;
+  config: {
+    concentration_min_suppliers: number;
+    concentration_share: number;
+  };
+  notes: string[];
+}
+
+export interface LocationOverrideRequest {
+  entity_type: 'supplier' | 'warehouse';
+  code: string;
+  lat?: number | null;
+  lon?: number | null;
+  note?: string | null;
+  clear?: boolean;
+}
+
+export interface LocationOverrideResponse {
+  status: 'saved' | 'cleared';
+  entity_type: string;
+  code: string;
+  location: GlobeLocation | null;
+}

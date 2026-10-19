@@ -28,6 +28,7 @@ const NAV_SECTIONS: NavSection[] = [
   {
     title: 'Analyse',
     items: [
+      { label: 'Global Map', to: '/globe' },
       { label: 'Inventory Risk', to: '/inventory-risk' },
       { label: 'Supplier Risk', to: '/supplier-risk' },
       { label: 'Demand Forecasting', to: '/forecasting' },

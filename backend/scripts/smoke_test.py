@@ -167,6 +167,7 @@ class SmokeTestRunner:
             "/api/simulation?component_id=1",
             "/api/executive-summary",
             "/api/import/status",
+            "/api/globe",
             # Detail endpoints
             "/api/products/1",
             "/api/components/1",
@@ -222,6 +223,7 @@ class SmokeTestRunner:
             "/data-sources",
             "/import",
             "/report",
+            "/globe",
             "/unknown-route-test-404-spa-fallback",
         ]
 
@@ -366,6 +368,23 @@ class SmokeTestRunner:
             self.record_pass("Generated Sentence: difference_sentence", f"{sent_msg} (currency={disp_curr})")
         else:
             self.record_fail("Generated Sentence: difference_sentence", sent_msg)
+
+        # 8. 3D Globe endpoint validation
+        globe_data = responses.get("/api/globe")
+        if not globe_data or not isinstance(globe_data, dict):
+            self.record_fail("Story: Globe Data", "Response not available")
+        else:
+            suppliers = globe_data.get("suppliers", [])
+            warehouses = globe_data.get("warehouses", [])
+            routes = globe_data.get("routes", [])
+            concentration = globe_data.get("concentration", [])
+            if len(suppliers) > 0 and len(warehouses) > 0:
+                self.record_pass(
+                    "Story: Globe Data",
+                    f"{len(suppliers)} suppliers, {len(warehouses)} warehouses, {len(routes)} routes, {len(concentration)} concentration areas",
+                )
+            else:
+                self.record_fail("Story: Globe Data", "Expected resolved suppliers and warehouses")
 
     def run(self) -> int:
         print("=" * 70)

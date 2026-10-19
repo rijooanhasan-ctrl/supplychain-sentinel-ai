@@ -8,6 +8,8 @@ export interface HeadlineStripProps {
   datasetLabel?: string | null;
   asOf?: string | null;
   loading?: boolean;
+  mostSevereSku?: string | null;
+  soonestSku?: string | null;
 }
 
 export const HeadlineStrip: React.FC<HeadlineStripProps> = ({
@@ -15,10 +17,13 @@ export const HeadlineStrip: React.FC<HeadlineStripProps> = ({
   datasetLabel = 'DEMO DATA',
   asOf = '2026-10-17',
   loading = false,
+  mostSevereSku,
+  soonestSku,
 }) => {
   const { startDemo } = useGuidedDemo();
 
   const isCalm = !headline || headline.toLowerCase().includes('no components currently at risk') || headline.toLowerCase().includes('0 components face shortage');
+  const differ = Boolean(mostSevereSku && soonestSku && mostSevereSku !== soonestSku);
 
   return (
     <section
@@ -36,6 +41,15 @@ export const HeadlineStrip: React.FC<HeadlineStripProps> = ({
             <span className="text-xs text-slate-500 font-medium">
               Snapshot As-Of: <strong className="font-mono text-slate-700">{formatDate(asOf)}</strong>
             </span>
+            {differ && (
+              <span
+                data-testid="most-severe-vs-soonest-badge"
+                className="text-[11px] font-semibold text-amber-900 bg-amber-50 px-2 py-0.5 rounded border border-amber-300"
+                title={`Headline highlights most severe risk (${mostSevereSku}), while KPI tile shows soonest shortage (${soonestSku})`}
+              >
+                Most severe: <strong className="font-mono">{mostSevereSku}</strong> vs Soonest: <strong className="font-mono">{soonestSku}</strong>
+              </span>
+            )}
           </div>
 
           {loading ? (

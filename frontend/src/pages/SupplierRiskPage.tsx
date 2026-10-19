@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useId } from 'react';
+import { Link } from 'react-router-dom';
 import { useApi } from '../api/useApi';
 import { getSupplierRisk, getSupplierRiskDetail } from '../api/endpoints';
 import type {
@@ -487,7 +488,14 @@ export function SupplierRiskPage() {
                                   <span className="text-slate-400 italic">None</span>
                                 )}
                               </td>
-                              <td className="px-4 py-3 text-right">
+                              <td className="px-4 py-3 text-right space-x-2">
+                                <Link
+                                  to={`/globe?supplier=${encodeURIComponent(item.supplier_code)}`}
+                                  className="text-xs font-semibold px-2 py-1 rounded text-blue-700 hover:text-blue-900 hover:bg-blue-50 transition-colors inline-block"
+                                  title={`View ${item.supplier_code} on Global Map`}
+                                >
+                                  View on map
+                                </Link>
                                 <button
                                   type="button"
                                   onClick={() => toggleExpand(item.supplier_id)}

@@ -642,3 +642,42 @@ def test_headline_excludes_low_and_none_risk_shortages():
     assert "3 components face shortage risk;" in summary.headline
     assert "the most urgent is COMP-CRIT" in summary.headline
 
+
+def test_headline_days_until_impact_matches_shortage_date_minus_as_of():
+    """Step 0b fix: When a component has shortage_date (e.g. 2026-10-25) and as_of is 2026-10-18,
+    days until impact must be exactly 7 days, even if an alert on that component has days_until_impact=0
+    (such as an overdue purchase order alert).
+    """
+    as_of = date(2026, 10, 18)
+    shortage_date = date(2026, 10, 25)
+    sku = "CMP-CAM-103"
+
+    # Alert has days_until_impact=0 (e.g. overdue PO alert)
+    alert = _make_dummy_alert(103, sku, "critical", days_until_impact=0)
+    inv_result = _make_dummy_inventory_result(
+        103,
+        sku,
+        "Camera Module 103",
+        risk_level="critical",
+        shortage_date=shortage_date,
+        days_until_shortage=7,
+    )
+
+    inputs = ExecutiveSummaryInputs(
+        as_of=as_of,
+        dataset_label="USER-SUPPLIED DATA",
+        dataset_source="file-import",
+        is_live=False,
+        alerts=[alert],
+        recommendations=[_make_dummy_recommendation(103, sku)],
+        priority_simulation=_make_dummy_simulation(103, sku),
+        inventory_results={103: inv_result},
+        supplier_results={},
+    )
+
+    summary = build_executive_summary(inputs)
+    # Verifies fix: 2026-10-25 minus 2026-10-18 = 7 days, NOT 0 days
+    assert summary.top_risks[0].days_until_impact == 7
+    assert "the most urgent is CMP-CAM-103, short from 2026-10-25 (7 days)." in summary.headline
+
+

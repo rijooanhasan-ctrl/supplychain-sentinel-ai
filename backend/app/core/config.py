@@ -63,6 +63,10 @@ class Settings(BaseSettings):
     IMPORT_MAX_TOTAL_BYTES: int = 26214400
     UPLOAD_DB_PATH: str = "backend/data/uploaded.db"
 
+    # Phase 14: Globe Supply Concentration thresholds
+    GLOBE_CONCENTRATION_MIN_SUPPLIERS: int = 3
+    GLOBE_CONCENTRATION_SHARE: float = 0.40
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -277,6 +281,18 @@ class Settings(BaseSettings):
             )
         if not self.UPLOAD_DB_PATH or not str(self.UPLOAD_DB_PATH).strip():
             raise ValueError("UPLOAD_DB_PATH cannot be empty")
+        return self
+
+    @model_validator(mode="after")
+    def validate_globe_settings(self) -> "Settings":
+        if self.GLOBE_CONCENTRATION_MIN_SUPPLIERS < 1:
+            raise ValueError(
+                f"GLOBE_CONCENTRATION_MIN_SUPPLIERS must be at least 1, got {self.GLOBE_CONCENTRATION_MIN_SUPPLIERS}"
+            )
+        if not (0.0 < self.GLOBE_CONCENTRATION_SHARE <= 1.0):
+            raise ValueError(
+                f"GLOBE_CONCENTRATION_SHARE must be in (0, 1.0], got {self.GLOBE_CONCENTRATION_SHARE}"
+            )
         return self
 
 

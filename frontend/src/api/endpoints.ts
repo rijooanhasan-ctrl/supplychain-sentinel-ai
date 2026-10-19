@@ -324,6 +324,13 @@ export function activateDataset(
   return postJson<ImportStatusResponse>('/api/import/activate', { dataset }, { signal });
 }
 
+export function getGlobe(signal?: AbortSignal): Promise<import('./types').GlobeResponse> {
+  return getJson<import('./types').GlobeResponse>('/api/globe', { signal });
+}
 
-
-
+export function overrideLocation(
+  payload: import('./types').LocationOverrideRequest,
+  signal?: AbortSignal
+): Promise<import('./types').LocationOverrideResponse> {
+  return postJson<import('./types').LocationOverrideResponse>('/api/locations/override', payload, { signal });
+}

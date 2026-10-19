@@ -124,8 +124,8 @@ export const RunwayChart: React.FC<RunwayChartProps> = ({ items, asOf, className
               {/* Graphical Runway SVG */}
               <div className="flex-1 overflow-x-auto min-w-[280px]">
                 <svg
-                  viewBox={`0 0 ${CHART_WIDTH} 32`}
-                  className="w-full h-8"
+                  viewBox={`0 0 ${CHART_WIDTH} 44`}
+                  className="w-full h-11"
                   role="img"
                   aria-label={`${item.sku}: stock lasts ${shortageDays} days${hasGap ? `, gap of ${deliveryDays! - shortageDays} days until delivery` : ''}`}
                 >
@@ -136,7 +136,7 @@ export const RunwayChart: React.FC<RunwayChartProps> = ({ items, asOf, className
                       x1={d * pxPerDay}
                       y1="0"
                       x2={d * pxPerDay}
-                      y2="32"
+                      y2="44"
                       stroke="#cbd5e1"
                       strokeDasharray="2,2"
                       strokeWidth="1"
@@ -146,18 +146,18 @@ export const RunwayChart: React.FC<RunwayChartProps> = ({ items, asOf, className
                   {/* 1. Usable Stock Bar */}
                   <rect
                     x="0"
-                    y="6"
+                    y="16"
                     width={Math.max(2, stockBarWidth)}
-                    height="20"
+                    height="18"
                     fill={palette.fillColor}
                     rx="3"
                   />
                   {/* SVG Pattern overlay */}
                   <rect
                     x="0"
-                    y="6"
+                    y="16"
                     width={Math.max(2, stockBarWidth)}
-                    height="20"
+                    height="18"
                     fill={`url(#${palette.patternId})`}
                     rx="3"
                   />
@@ -166,7 +166,7 @@ export const RunwayChart: React.FC<RunwayChartProps> = ({ items, asOf, className
                   {stockBarWidth > 45 && (
                     <text
                       x="8"
-                      y="19"
+                      y="29"
                       fill="#ffffff"
                       fontSize="9"
                       fontWeight="bold"
@@ -181,9 +181,9 @@ export const RunwayChart: React.FC<RunwayChartProps> = ({ items, asOf, className
                     <g>
                       <rect
                         x={stockBarWidth}
-                        y="8"
+                        y="18"
                         width={gapWidth}
-                        height="16"
+                        height="14"
                         fill="#fee2e2"
                         stroke="#dc2626"
                         strokeWidth="1"
@@ -191,21 +191,22 @@ export const RunwayChart: React.FC<RunwayChartProps> = ({ items, asOf, className
                       />
                       <rect
                         x={stockBarWidth}
-                        y="8"
+                        y="18"
                         width={gapWidth}
-                        height="16"
+                        height="14"
                         fill="url(#pattern-runway-gap)"
                       />
-                      {gapWidth > 60 && (
+                      {gapWidth > 80 && (
                         <text
                           x={stockBarWidth + 6}
-                          y="19"
+                          y="29"
                           fill="#991b1b"
-                          fontSize="9"
+                          fontSize="8.5"
                           fontWeight="bold"
                           fontFamily="monospace"
                         >
                           gap {deliveryDays! - shortageDays}d ({item.unmet_before_next_inbound ?? 0}u)
+                          <title>Supply gap: {deliveryDays! - shortageDays} days ({item.unmet_before_next_inbound ?? 0} units unmet)</title>
                         </text>
                       )}
                     </g>
@@ -216,9 +217,9 @@ export const RunwayChart: React.FC<RunwayChartProps> = ({ items, asOf, className
                     <g>
                       <rect
                         x={stockBarWidth}
-                        y="8"
+                        y="18"
                         width={unscheduledGapWidth}
-                        height="16"
+                        height="14"
                         fill="#fef2f2"
                         stroke="#b91c1c"
                         strokeWidth="1"
@@ -226,44 +227,46 @@ export const RunwayChart: React.FC<RunwayChartProps> = ({ items, asOf, className
                       />
                       <rect
                         x={stockBarWidth}
-                        y="8"
+                        y="18"
                         width={unscheduledGapWidth}
-                        height="16"
+                        height="14"
                         fill="url(#pattern-unscheduled-gap)"
                       />
                       <text
                         x={stockBarWidth + 6}
-                        y="19"
+                        y="29"
                         fill="#b91c1c"
-                        fontSize="9"
+                        fontSize="8.5"
                         fontStyle="italic"
                         fontWeight="bold"
                         fontFamily="sans-serif"
                       >
                         no delivery scheduled
+                        <title>No purchase orders currently scheduled for this component</title>
                       </text>
                     </g>
                   )}
 
-                  {/* 4. Delivery Marker Triangle */}
+                  {/* 4. Delivery Marker Triangle (Positioned strictly above the bar) */}
                   {deliveryDays != null && (
                     <g
                       transform={`translate(${clampedDeliveryDays * pxPerDay}, 16)`}
                       className="cursor-help"
                     >
-                      {/* Triangle marker */}
+                      <title>{`Replenishment: ${item.next_replenishment!.po_number} arriving ${formatDate(item.next_replenishment!.date)} (${item.next_replenishment!.qty} units)`}</title>
+                      {/* Triangle marker pointing down to bar */}
                       <polygon
-                        points="-6,-10 6,-10 0,2"
+                        points="-5,-6 5,-6 0,0"
                         fill="#1d4ed8"
                         stroke="#ffffff"
-                        strokeWidth="1.5"
+                        strokeWidth="1.2"
                       />
-                      {/* Date tick text */}
+                      {/* Date tick text placed cleanly above the bar */}
                       <text
                         x="0"
-                        y="14"
+                        y="-8"
                         fill="#1e3a8a"
-                        fontSize="8.5"
+                        fontSize="8"
                         fontWeight="bold"
                         fontFamily="monospace"
                         textAnchor="middle"
@@ -277,9 +280,9 @@ export const RunwayChart: React.FC<RunwayChartProps> = ({ items, asOf, className
                   {(shortageDays > MAX_DAYS || (deliveryDays ?? 0) > MAX_DAYS) && (
                     <text
                       x={CHART_WIDTH - 2}
-                      y="19"
+                      y="29"
                       fill="#64748b"
-                      fontSize="9"
+                      fontSize="8.5"
                       fontWeight="bold"
                       fontFamily="monospace"
                       textAnchor="end"

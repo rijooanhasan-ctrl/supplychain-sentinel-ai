@@ -15,6 +15,7 @@ from app.api.routes.data_import import resolve_upload_db_path, router as import_
 from app.api.routes.delivery_records import router as delivery_records_router
 from app.api.routes.executive_summary import router as executive_summary_router
 from app.api.routes.forecasting import router as forecasting_router
+from app.api.routes.globe import router as globe_router
 from app.api.routes.health import router as health_router
 from app.api.routes.integration_status import router as integration_status_router
 from app.api.routes.inventory import router as inventory_router
@@ -153,6 +154,7 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
     app.include_router(simulation_router, prefix="/api")
     app.include_router(executive_summary_router, prefix="/api")
     app.include_router(import_router, prefix="/api")
+    app.include_router(globe_router, prefix="/api")
 
     return app
 

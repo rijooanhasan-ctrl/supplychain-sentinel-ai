@@ -48,6 +48,7 @@ def test_no_write_endpoints_under_api():
         ("POST", "/api/import/validate"),
         ("POST", "/api/import/load"),
         ("POST", "/api/import/activate"),
+        ("POST", "/api/locations/override"),
     }
     non_get_methods = {"POST", "PUT", "PATCH", "DELETE"}
     found_write_endpoints = set()

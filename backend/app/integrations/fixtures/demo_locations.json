@@ -1,0 +1,83 @@
+{
+  "suppliers": {
+    "SUP-HELIX": {
+      "lat": 24.78,
+      "lon": 121.00,
+      "city": "Hsinchu",
+      "country_code": "TW",
+      "source": "Illustrative demo location"
+    },
+    "SUP-NEXUS": {
+      "lat": 37.26,
+      "lon": 127.02,
+      "city": "Suwon",
+      "country_code": "KR",
+      "source": "Illustrative demo location"
+    },
+    "SUP-VOLT": {
+      "lat": 34.69,
+      "lon": 135.50,
+      "city": "Osaka",
+      "country_code": "JP",
+      "source": "Illustrative demo location"
+    },
+    "SUP-LUMEN": {
+      "lat": 37.76,
+      "lon": 126.78,
+      "city": "Paju",
+      "country_code": "KR",
+      "source": "Illustrative demo location"
+    },
+    "SUP-CORE": {
+      "lat": 37.33,
+      "lon": -121.89,
+      "city": "San Jose",
+      "country_code": "US",
+      "source": "Illustrative demo location"
+    },
+    "SUP-FLASH": {
+      "lat": 1.35,
+      "lon": 103.82,
+      "city": "Singapore",
+      "country_code": "SG",
+      "source": "Illustrative demo location"
+    },
+    "SUP-CIRCUIT": {
+      "lat": 21.18,
+      "lon": 106.07,
+      "city": "Bac Ninh",
+      "country_code": "VN",
+      "source": "Illustrative demo location"
+    },
+    "SUP-METALS": {
+      "lat": 48.78,
+      "lon": 9.18,
+      "city": "Stuttgart",
+      "country_code": "DE",
+      "source": "Illustrative demo location"
+    }
+  },
+  "warehouses": {
+    "WH-PLANT": {
+      "lat": 30.27,
+      "lon": -97.74,
+      "city": "Austin",
+      "country_code": "US",
+      "source": "Illustrative demo location"
+    },
+    "WH-REG-EAST": {
+      "lat": 39.96,
+      "lon": -83.00,
+      "city": "Columbus",
+      "country_code": "US",
+      "source": "Illustrative demo location"
+    },
+    "WH-REG-WEST": {
+      "lat": 39.53,
+      "lon": -119.81,
+      "city": "Reno",
+      "country_code": "US",
+      "source": "Illustrative demo location"
+    }
+  }
+}

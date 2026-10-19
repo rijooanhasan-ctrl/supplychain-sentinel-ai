@@ -184,6 +184,8 @@ export function OverviewPage() {
         datasetLabel={meta?.label}
         asOf={asOf || undefined}
         loading={execLoading}
+        mostSevereSku={execData?.top_risks?.[0]?.component_sku}
+        soonestSku={earliestShortage?.sku}
       />
 
       {/* 2. Four KPI Tiles */}

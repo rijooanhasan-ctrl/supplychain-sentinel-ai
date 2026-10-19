@@ -226,6 +226,12 @@ export function ExecutiveSummaryPage() {
                   />
                   <div className="flex items-center gap-3 text-xs font-semibold">
                     <Link
+                      to={`/globe?component=${encodeURIComponent(risk.component_sku)}`}
+                      className="text-slate-600 hover:text-slate-900 hover:underline"
+                    >
+                      View on map
+                    </Link>
+                    <Link
                       to="/alerts"
                       className="text-slate-600 hover:text-slate-900 hover:underline"
                     >
@@ -512,9 +518,17 @@ export function ExecutiveSummaryPage() {
                     </span>
                     <ul className="list-disc list-inside space-y-0.5 text-slate-700">
                       {dq.top_risk_supplier_confidence.map((s) => (
-                        <li key={s.supplier_id}>
-                          <span className="font-semibold">{s.supplier_code}</span> ({s.supplier_name}):{' '}
-                          <span className="capitalize">{s.confidence}</span> confidence ({s.n_deliveries} deliveries)
+                        <li key={s.supplier_id} className="flex items-center justify-between gap-2">
+                          <div>
+                            <span className="font-semibold">{s.supplier_code}</span> ({s.supplier_name}):{' '}
+                            <span className="capitalize">{s.confidence}</span> confidence ({s.n_deliveries} deliveries)
+                          </div>
+                          <Link
+                            to={`/globe?supplier=${encodeURIComponent(s.supplier_code)}`}
+                            className="text-blue-600 hover:text-blue-800 hover:underline text-[11px] font-semibold shrink-0"
+                          >
+                            View on map &rarr;
+                          </Link>
                         </li>
                       ))}
                     </ul>

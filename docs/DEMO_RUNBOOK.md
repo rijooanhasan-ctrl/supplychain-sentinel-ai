@@ -239,3 +239,23 @@ $env:DATABASE_URL="sqlite:///./sentinel.db"
 | **Database Unseeded warning in UI** | Database file was wiped or created without seeding. | Run `python -m app.cli seed --source demo --seed 42 --as-of 2026-10-17 --reset` |
 | **Backend fails at startup with Currency Error** | `DISPLAY_CURRENCY=INR` without a conversion rate. | Add `USD_TO_INR_RATE=83.50` to `backend\.env` |
 | **Frontend cannot reach Backend (Network Error)** | Backend uvicorn server not running on port 8000. | Start backend: `& ".\.venv\Scripts\python.exe" -m uvicorn app.main:app --port 8000` |
+
+---
+
+## Act V: Global Map & Geopolitical Concentration (3D Control Tower)
+
+1. **Navigate to Global Map**:
+   - In the sidebar under **Analyse**, click **Global Map** (`/globe`).
+   - Highlight the dark aerospace control tower visualization rendered with Three.js.
+   - Point out that all assets (NASA night lights, elevation bumps, Natural Earth polygons) are **100% offline bundled (< 2.5 MB)** with zero CDN requests or external API calls.
+2. **Inspect Concentrated Geopolitical Risks**:
+   - Toggle **Supplier Risk Concentration** layer in the left sidebar.
+   - Notice highlighted nations (e.g., Germany, Taiwan) hosting critical chipmakers.
+   - Click a flagged country polygon to view active vendor counts, total purchase order units, and concentration rationale.
+3. **Inspect Supplier & Route Nodes**:
+   - Click a high-risk supplier node (pulsing amber/red).
+   - View the detail inspection panel: assessed risk band, on-time rate, and immediately impacted laptop components (e.g., `CMP-MICRO`).
+   - Click **Simulate ->** directly from the panel to jump straight into What-If disruption analysis for that component.
+4. **Demonstrate WebGL Fallback**:
+   - Use the top view switcher to toggle **Locations List**.
+   - Show how Sentinel AI ensures strict accessibility by presenting all facilities, coordinates, and purchase order pipelines in a structured, sortable table.

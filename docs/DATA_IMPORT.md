@@ -161,3 +161,12 @@ Loads the validated dataset into the configured SQLite database:
 & ".\.venv\Scripts\python.exe" -m app.cli seed --source file --path "C:\path\to\my_data" --as-of 2026-10-18 --reset
 ```
 *Note: Without `--reset`, existing database tables will not be overwritten.*
+
+---
+
+## 6. Geographic Location Resolution for Imported Data
+When custom datasets are uploaded:
+1. **Automated Country Centroids:** If `suppliers.csv` includes standard 2-letter ISO country codes (e.g. `US`, `DE`, `TW`, `VN`), facilities are automatically mapped to public-domain ISO-3166 country centroids.
+2. **Needs Location Queue:** Any vendor or facility without valid coordinates or recognized country code appears in the **Needs Location** queue on the Global Map (`/globe`).
+3. **Manual Override & Click-to-Place:** When `ENABLE_WEB_IMPORT=true`, operators can set coordinates via standard country selection, manual latitude/longitude entry, or interactive click-to-place on the 3D globe.
+4. **Dataset Isolation:** Location overrides are keyed directly to the imported dataset's signature (`backend/data/location_overrides_<dataset_key>.json`). Switching back to demo data automatically restores demo fixtures without cross-contamination.

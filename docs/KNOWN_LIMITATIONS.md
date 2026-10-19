@@ -77,10 +77,11 @@ This document transparently records the architectural boundaries, analytical ass
 
 ## 11. Read-Only API Enforcement & Explicit POST Allowlist
 - **Strictly Controlled Write Surface**: All analytical and reporting endpoints under `/api/*` are strictly GET-only.
-- **POST Allowlist**: Exactly three POST endpoints are permitted when `ENABLE_WEB_IMPORT=true`:
+- **POST Allowlist**: Exactly four POST endpoints are permitted when `ENABLE_WEB_IMPORT=true`:
   - `POST /api/import/validate` (stateless in-memory validation; touches no DB)
   - `POST /api/import/load` (loads validated data into separate `uploaded.db`)
   - `POST /api/import/activate` (switches active dataset in-memory)
+  - `POST /api/locations/override` (persists manual location overrides into dataset-isolated JSON; does not modify DB schema or SQLite tables)
 - **405 Method Not Allowed**: Any POST, PUT, PATCH, or DELETE to any other API endpoint is strictly rejected with HTTP 405 by the server framework.
 
 ---
@@ -88,3 +89,10 @@ This document transparently records the architectural boundaries, analytical ass
 ## 12. Production Build Recommendation for Presentations
 - **Stale Dev Server Behavior**: During development, Vite's development server (`npm run dev`) occasionally served cached bundle states after rapid dependency updates or browser state restores. The root cause in local developer environments was never conclusively demonstrated.
 - **Production Standard**: All presentations and demonstrations must be run using the optimized production preview build (`npm run build` and `npm run preview -- --port 4173`), which guarantees deterministic asset loading.
+
+---
+
+## 13. Geospatial Globe & Location Resolution Limitations
+- **Geodesic Estimation**: Route arcs represent modeled commercial purchase order connections between vendors and receiving warehouses, not real-time ship/flight AIS radar or GPS telemetry.
+- **Centroid Approximations**: When street-level facility coordinates are omitted in vendor master data, entities are positioned at the geographic centroid of their ISO 3166-1 country.
+- **WebGL Hardware Acceleration**: 3D globe visualization requires WebGL hardware acceleration in the client browser. When WebGL is unavailable, the application automatically provides an accessible tabular fallback view.

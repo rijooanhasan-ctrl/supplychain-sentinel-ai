@@ -36,6 +36,7 @@ SAP/
 │   ├── SIMULATOR.md             # What-If Disruption Simulator: inputs/ranges, scenario calc, assumptions, CPU-X7 worked example
 │   ├── EXECUTIVE_SUMMARY.md     # Executive Summary: briefing, top risks, act vs do nothing, data quality, worked example
 │   ├── UI_GUIDE.md              # Frontend design system, accessible chart architecture, and runway guide
+│   ├── GLOBE.md                 # 3D Interactive Supply-Chain Globe, location resolution, and offline control tower
 │   └── KNOWN_LIMITATIONS.md     # Transparent boundary disclosure: synthetic data, baseline models, upper bounds
 ├── backend/
 │   ├── .env.example             # Backend environment template
@@ -150,6 +151,8 @@ SAP/
         │   ├── PurchaseOrdersPage.test.tsx # Tests for status filter, timing, line remaining qty
         │   ├── DataSourcesPage.tsx      # System health, integration status, and record counts
         │   ├── DataSourcesPage.test.tsx # Tests for data sources, retry, and integration wording
+        │   ├── GlobePage.tsx            # 3D Interactive Supply-Chain Globe control tower & WebGL fallback
+        │   ├── GlobePage.test.tsx       # Tests for 3D globe layers, concentration, filters, overrides, and XSS
         │   └── NotFoundPage.tsx         # 404 handler for unknown URL paths
         ├── components/
         │   ├── WhyThis.tsx      # Reusable contextual "Why this?" accordion button
