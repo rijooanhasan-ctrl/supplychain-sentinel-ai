@@ -37,7 +37,9 @@ export function DemoBanner() {
     );
   }
 
-  if (!isDemo && !meta?.seeded) {
+  const isUploaded = meta?.active_dataset === 'uploaded';
+
+  if (!isDemo && !isUploaded && !meta?.seeded) {
     return null;
   }
 
@@ -52,10 +54,12 @@ export function DemoBanner() {
           data-testid="demo-badge"
           className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-200 text-amber-900 border border-amber-400"
         >
-          {meta?.label || 'DEMO DATA'}
+          {meta?.label || (isUploaded ? 'USER-SUPPLIED DATA (file import)' : 'DEMO DATA')}
         </span>
         <span className="font-medium">
-          {meta?.data_source === 'file-import'
+          {isUploaded
+            ? 'Uploaded dataset • Decision-support only (No live SAP connection)'
+            : meta?.data_source === 'file-import'
             ? 'User-supplied CSV import • Decision-support only (No live SAP connection)'
             : 'Synthetic laptop supply chain simulation • Decision-support only (No live SAP connection)'}
         </span>

@@ -17,6 +17,7 @@ const NAV_ITEMS = [
   { label: 'Suppliers', to: '/suppliers' },
   { label: 'Purchase Orders', to: '/purchase-orders' },
   { label: 'Data Sources', to: '/data-sources' },
+  { label: 'Import Data', to: '/import' },
 ];
 
 export function AppLayout() {

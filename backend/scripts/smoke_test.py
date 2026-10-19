@@ -166,6 +166,7 @@ class SmokeTestRunner:
             "/api/recommendations",
             "/api/simulation?component_id=1",
             "/api/executive-summary",
+            "/api/import/status",
             # Detail endpoints
             "/api/products/1",
             "/api/components/1",
@@ -195,7 +196,7 @@ class SmokeTestRunner:
         for ep in post_endpoints:
             url = f"{self.api_base}{ep}"
             status, reason = self.http_post(url)
-            name = f"POST {ep} (GET-only enforcement)"
+            name = f"POST {ep} (non-import POST rejected with 405)"
             if status == 405:
                 self.record_pass(name, "HTTP 405 Method Not Allowed as expected")
             else:
@@ -219,6 +220,7 @@ class SmokeTestRunner:
             "/suppliers",
             "/purchase-orders",
             "/data-sources",
+            "/import",
             "/report",
             "/unknown-route-test-404-spa-fallback",
         ]

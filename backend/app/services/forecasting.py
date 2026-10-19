@@ -37,6 +37,7 @@ def _get_eval_config(settings: Settings) -> ForecastEvalConfig:
 def get_forecast_evaluation_service(
     session: Session,
     settings: Optional[Settings] = None,
+    dataset_name: Optional[str] = None,
 ) -> Tuple[bool, Optional[ForecastEvaluationReport]]:
     """Evaluates demand forecasting models across all components using rolling-origin backtesting.
 
@@ -51,8 +52,10 @@ def get_forecast_evaluation_service(
 
     as_of = meta.as_of
     generated_at_str = str(meta.generated_at) if meta.generated_at else ""
+    active_name = dataset_name or session.info.get("active_dataset") or "demo"
     config = _get_eval_config(settings)
     cache_key = (
+        active_name,
         as_of,
         generated_at_str,
         config.min_train_days,

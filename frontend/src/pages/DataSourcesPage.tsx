@@ -433,6 +433,27 @@ export function DataSourcesPage() {
                   </table>
                 </div>
               </section>
+
+              {/* Section 5: Web Data Import */}
+              <section
+                aria-labelledby="import-heading"
+                className="bg-white border border-slate-200 rounded-lg p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+              >
+                <div>
+                  <h2 id="import-heading" className="text-base font-semibold text-slate-900">
+                    5. User-Supplied CSV Data Import
+                  </h2>
+                  <p className="text-xs text-slate-600 mt-1">
+                    Upload and validate custom supply chain datasets safely stored in a separate database.
+                  </p>
+                </div>
+                <a
+                  href="/import"
+                  className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-bold shrink-0 shadow-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  Import Data &rarr;
+                </a>
+              </section>
             </>
           )}
         </>

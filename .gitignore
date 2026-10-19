@@ -52,6 +52,7 @@ pnpm-debug.log*
 *.db
 *.sqlite
 *.sqlite3
+backend/data/
 
 # Environment Variables
 .env

@@ -56,6 +56,13 @@ class Settings(BaseSettings):
     DISPLAY_CURRENCY: str = "USD"
     USD_TO_INR_RATE: Optional[Decimal] = None
 
+    # Phase 13: Web CSV Import Settings
+    ENABLE_WEB_IMPORT: bool = False
+    IMPORT_MAX_FILE_BYTES: int = 5242880
+    IMPORT_MAX_FILES: int = 11
+    IMPORT_MAX_TOTAL_BYTES: int = 26214400
+    UPLOAD_DB_PATH: str = "backend/data/uploaded.db"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -252,6 +259,24 @@ class Settings(BaseSettings):
                 raise ValueError(
                     f"USD_TO_INR_RATE must be finite and greater than 0, got {self.USD_TO_INR_RATE}"
                 )
+        return self
+
+    @model_validator(mode="after")
+    def validate_import_settings(self) -> "Settings":
+        if self.IMPORT_MAX_FILE_BYTES <= 0:
+            raise ValueError(
+                f"IMPORT_MAX_FILE_BYTES must be positive, got {self.IMPORT_MAX_FILE_BYTES}"
+            )
+        if self.IMPORT_MAX_FILES <= 0:
+            raise ValueError(
+                f"IMPORT_MAX_FILES must be positive, got {self.IMPORT_MAX_FILES}"
+            )
+        if self.IMPORT_MAX_TOTAL_BYTES <= 0:
+            raise ValueError(
+                f"IMPORT_MAX_TOTAL_BYTES must be positive, got {self.IMPORT_MAX_TOTAL_BYTES}"
+            )
+        if not self.UPLOAD_DB_PATH or not str(self.UPLOAD_DB_PATH).strip():
+            raise ValueError("UPLOAD_DB_PATH cannot be empty")
         return self
 
 

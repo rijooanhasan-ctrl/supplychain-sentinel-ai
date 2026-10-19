@@ -161,7 +161,34 @@ Click **"Start guided demo"** on the Executive Summary page (or in the navigatio
 
 ## 8. Importing User-Supplied CSV Data
 
-Sentinel AI allows evaluating custom supply chain datasets via the command-line interface.
+Sentinel AI supports importing custom datasets via both the **Web Interface** (`/import`) and the **Command-Line Interface** (`app.cli`).
+
+> [!IMPORTANT]
+> **Hackfest Presentation Notice**: The formal demonstration should always be presented using the **default DEMO DATASET** (deterministic seed 42, as-of `2026-10-17`) so that all specific scenario facts (CPU-X7 stockout, SUP-HELIX delay history, SUP-NEXUS recommendation) align precisely with the presentation narrative. Use web upload to show audience-driven what-if analysis and custom data capabilities.
+
+### Method A: Web UI Upload (`/import`)
+
+1. **Enable Web Import**:
+   Ensure `ENABLE_WEB_IMPORT=true` is set in `backend\.env` and the backend is running.
+2. **Open the Import Page**:
+   In your browser, navigate to `http://localhost:4173/import` (or click **Import Data** in the top navigation).
+3. **Select Sample Data**:
+   Drag and drop the 11 CSV files from `docs\sample_data\` (or your custom data folder) into the dropzone.
+4. **Set As-Of Snapshot Date**:
+   Set the snapshot date to `2026-10-18` (history ends the day before).
+5. **Validate**:
+   Click **Validate**. Sentinel AI transmits the files over JSON, executes comprehensive schema and cross-table referential integrity validation in a temporary sandbox, and returns a coverage and validation summary. **No database is touched.**
+6. **Load into Isolated Database**:
+   Click **Load this dataset**. After confirming the replacement modal, the dataset is loaded atomically into `backend\data\uploaded.db`. The top banner immediately updates to display `Uploaded dataset` with the label `USER-SUPPLIED DATA (file import)`.
+7. **Explore Custom Analytics**:
+   Navigate through Executive Summary, Inventory Risk, Alerts, and Recommendations to review findings derived from the uploaded dataset.
+8. **Return to Demo Data**:
+   - At any time, return to `/import` and click **"View demo data"** in the Active Dataset panel.
+   - Alternatively, restarting the backend service will automatically reset the active dataset back to `demo`. The underlying `backend\sentinel.db` remains 100% untouched throughout the entire process.
+
+---
+
+### Method B: CLI Import (Offline / Scripted)
 
 ### Step 1: Export CSV Template Files
 ```powershell

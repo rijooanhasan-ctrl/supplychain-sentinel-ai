@@ -1,4 +1,4 @@
-import { getJson } from './http';
+import { getJson, postJson } from './http';
 import type {
   Component,
   ComponentDetail,
@@ -33,6 +33,9 @@ import type {
   SimulationResponse,
   IntegrationStatus,
   ExecutiveSummaryResponse,
+  ImportStatusResponse,
+  ValidateImportResponse,
+  LoadImportResponse,
 } from './types';
 
 export function getHealth(signal?: AbortSignal): Promise<HealthResponse> {
@@ -290,6 +293,35 @@ export function getExecutiveSummary(
   signal?: AbortSignal
 ): Promise<ExecutiveSummaryResponse> {
   return getJson<ExecutiveSummaryResponse>('/api/executive-summary', { signal });
+}
+
+export function getImportStatus(signal?: AbortSignal): Promise<ImportStatusResponse> {
+  return getJson<ImportStatusResponse>('/api/import/status', { signal });
+}
+
+export function getImportTemplates(signal?: AbortSignal): Promise<Record<string, string>> {
+  return getJson<Record<string, string>>('/api/import/template', { signal });
+}
+
+export function validateImport(
+  body: { as_of: string; files: Record<string, string> },
+  signal?: AbortSignal
+): Promise<ValidateImportResponse> {
+  return postJson<ValidateImportResponse>('/api/import/validate', body, { signal });
+}
+
+export function loadImport(
+  body: { as_of: string; files: Record<string, string>; replace_uploaded?: boolean },
+  signal?: AbortSignal
+): Promise<LoadImportResponse> {
+  return postJson<LoadImportResponse>('/api/import/load', body, { signal });
+}
+
+export function activateDataset(
+  dataset: 'demo' | 'uploaded',
+  signal?: AbortSignal
+): Promise<ImportStatusResponse> {
+  return postJson<ImportStatusResponse>('/api/import/activate', { dataset }, { signal });
 }
 
 

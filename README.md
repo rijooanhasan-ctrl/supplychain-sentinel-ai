@@ -330,6 +330,11 @@ The backend supports configuration via environment variables or a `.env` file:
 | `RECOVERY_TRANSFER_COST_PER_UNIT` | `null` | Optional assumed cost per unit for inter-warehouse transfers in USD (valid: $\ge 0$ or null) |
 | `DISPLAY_CURRENCY` | `"USD"` | Target display currency for monetary values (`"USD"` or `"INR"`, default: `"USD"`). All stored data and calculations stay in USD. |
 | `USD_TO_INR_RATE` | `null` | Exchange rate used strictly for display conversion if `DISPLAY_CURRENCY="INR"` (e.g. `83.50`). Must be finite and $> 0$ when INR is selected. |
+| `ENABLE_WEB_IMPORT` | `false` | Enable web upload of CSV datasets via `/import` (default: `false`, returns 403 when disabled). |
+| `IMPORT_MAX_FILE_BYTES` | `5242880` | Maximum allowed size in bytes per uploaded CSV file (default: 5 MB). |
+| `IMPORT_MAX_FILES` | `11` | Maximum allowed CSV files in a single import request (default: 11). |
+| `IMPORT_MAX_TOTAL_BYTES` | `26214400` | Maximum allowed total payload size across all CSV files (default: 25 MB). |
+| `UPLOAD_DB_PATH` | `backend/data/uploaded.db` | Destination SQLite database file for user-supplied data (kept strictly isolated from `sentinel.db`). |
 
 ### Currency Display Layer & Presentation
 
@@ -362,13 +367,13 @@ Exact versions installed in the local environment and verified from git reposito
 
 ## 8. Running Tests & Automated Verification
 
-### Backend Test Suite (264 passing tests)
+### Backend Test Suite (275 passing tests)
 From `backend/`:
 ```powershell
 & ".\.venv\Scripts\python.exe" -m pytest -q
 ```
 
-### Frontend Test Suite (133 passing tests)
+### Frontend Test Suite (142 passing tests)
 From `frontend/`:
 ```powershell
 npm test -- --run
@@ -387,7 +392,7 @@ Run against the active backend (port 8000) and production preview (port 4173):
 cd backend
 & ".\.venv\Scripts\python.exe" scripts/smoke_test.py --api http://localhost:8000 --web http://localhost:4173
 ```
-Validates 53 checks: all API GET endpoints, GET-only enforcement (HTTP 405 on POST), web route shells with SPA fallback, and deterministic demo story assertions.
+Validates 54 checks: all API GET endpoints, `/api/import/status`, GET-only enforcement (HTTP 405 on non-import POSTs), web route shells (including `/import`), and deterministic demo story assertions.
 
 ---
 

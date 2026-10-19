@@ -104,3 +104,56 @@ export async function getJson<T>(path: string, options: RequestOptions = {}): Pr
   const data: T = await response.json();
   return data;
 }
+
+export async function postJson<T>(
+  path: string,
+  body: unknown,
+  options: { signal?: AbortSignal } = {}
+): Promise<T> {
+  const { signal } = options;
+
+  let response: Response;
+  try {
+    response = await fetch(path, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+      signal,
+    });
+  } catch (err: unknown) {
+    if (
+      (err instanceof Error && err.name === 'AbortError') ||
+      (typeof DOMException !== 'undefined' && err instanceof DOMException && err.name === 'AbortError')
+    ) {
+      throw err;
+    }
+    const message = err instanceof Error ? err.message : 'Network request failed';
+    throw new NetworkError(`Server unreachable: ${message}`, { cause: err });
+  }
+
+  if (!response.ok) {
+    let errorData: unknown = null;
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      try {
+        errorData = await response.json();
+      } catch {
+        errorData = null;
+      }
+    } else {
+      try {
+        errorData = await response.text();
+      } catch {
+        errorData = null;
+      }
+    }
+
+    const message = normalizeErrorMessage(response.status, response.statusText, errorData);
+    throw new ApiError(response.status, message, errorData);
+  }
+
+  const data: T = await response.json();
+  return data;
+}

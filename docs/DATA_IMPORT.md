@@ -6,18 +6,53 @@ This document details the file formats, schemas, validation rules, coverage impl
 
 ---
 
-## 1. High-Level Principles & Limitations
+## 1. High-Level Principles & Architecture
 
-- **Offline & CLI Only**: Import is strictly performed via the command-line interface (`app.cli`). There is **no web upload endpoint** and **no write API** (`POST`/`PUT`/`DELETE`).
+- **Dual-Mode Import (Web UI & CLI)**:
+  - **Web UI (`/import`)**: In-browser CSV upload using `File.text()` over JSON payloads (`POST /api/import/validate`, `POST /api/import/load`). Uploaded data is stored **strictly** in a separate SQLite database (`backend/data/uploaded.db`).
+  - **CLI (`app.cli`)**: Offline validation and database seeding for developer workflows.
+- **Strict Isolation & Zero Write to Demo Data**: `backend/sentinel.db` is strictly read-only and is never written, updated, or deleted by web import operations.
 - **Zero Live Connections**: SupplyChain Sentinel AI never touches live ERP systems or creates purchase orders.
-- **Transactional & All-or-Nothing**: All CSV files and cross-table references are validated upfront. If any error is found (capped at 50 reported errors), nothing is loaded into the database.
+- **Transactional & All-or-Nothing**: All CSV files and cross-table references are validated upfront. If any error is found (capped at 50 reported errors), nothing is loaded into the database. On load, atomic replacement ensures existing uploaded data remains intact if an import fails.
+- **In-Memory Active Dataset**: The active dataset (`demo` vs `uploaded`) is held in application process state (`app.state`). Backend restarts **always** revert to the default `demo` dataset. Choice is never persisted.
 - **Currency Standard**: All monetary values (`selling_price`, `unit_price`, `unit_cost`) **must be provided in US Dollars (USD)**. Currency display conversions (such as INR) are applied dynamically by the presentation layer.
 - **Reference As-Of Date**: Importing user files requires an explicit `--as-of YYYY-MM-DD` cutoff date. Demand history records should end the day before this date.
 - **Incomplete Feeds & "Unknown" Status**: When optional files are omitted, features degrade gracefully into "unknown" or "insufficient history" states rather than crashing or inventing numbers.
 
 ---
 
-## 2. File Specifications & Columns
+## 2. Web Upload Flow (`/import`)
+
+### Configuration & Feature Flag
+Web upload is controlled via configuration in `backend/.env`:
+- `ENABLE_WEB_IMPORT=true` (default: `false` for maximum security; returns 403 when disabled)
+- `IMPORT_MAX_FILE_BYTES=5242880` (5 MB per file limit)
+- `IMPORT_MAX_FILES=11` (maximum 11 accepted CSV files)
+- `IMPORT_MAX_TOTAL_BYTES=26214400` (25 MB total request payload limit)
+- `UPLOAD_DB_PATH=backend/data/uploaded.db` (destination database file)
+
+### Web Upload Workflow
+1. **Access**: Navigate to the **Import Data** page (`/import`), accessible from the top navigation bar or the Data Sources page.
+2. **File Selection**: Drag and drop or browse for up to 11 CSV files. Client-side validation checks extension and file size limits before transmission.
+3. **Template Download**: Click **Download template files** to fetch clean CSV templates populated with fictional sample records.
+4. **Validation (`POST /api/import/validate`)**:
+   - Sends file contents as JSON (no `multipart/form-data`).
+   - Server writes files to an isolated temporary directory.
+   - Executes `FileAdapter` validation and cross-referencing.
+   - Cleans up temporary directory in a `finally` block without touching any database.
+   - Returns validation status, error log (up to 50 items with file and line number), warnings, and entity coverage report.
+5. **Loading (`POST /api/import/load`)**:
+   - Enabled only after successful validation.
+   - Re-validates server-side; builds new dataset into a temporary database file before atomically replacing `backend/data/uploaded.db`.
+   - Automatically switches active dataset to `uploaded`.
+   - Updates global application metadata and page views to reflect `USER-SUPPLIED DATA (file import)`.
+6. **Switching & Returning to Demo Data**:
+   - The Active Dataset panel allows instant switching between **View demo data** and **View uploaded data** via `POST /api/import/activate`.
+   - Restarting the backend service automatically restores the active dataset to `demo`.
+
+---
+
+## 3. File Specifications & Columns
 
 Import datasets are placed in a folder containing up to 11 UTF-8 encoded CSV files with standard header rows.
 
@@ -83,7 +118,7 @@ If an optional file is omitted, the system continues to operate but flags the om
 
 ---
 
-## 3. Validation Rules
+## 4. Validation Rules
 
 All validation occurs before database interaction:
 1. **Header & Required Files**: Required files must exist; all expected column headers must match exactly.
@@ -103,7 +138,7 @@ All validation occurs before database interaction:
 
 ---
 
-## 4. CLI Commands
+## 5. CLI Commands
 
 From the `backend` directory (using the virtual environment):
 

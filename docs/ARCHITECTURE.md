@@ -249,3 +249,27 @@ SupplyChain Sentinel AI utilizes Pydantic Settings (`pydantic-settings`) for str
 - **Startup Validation**:
   - `DISPLAY_CURRENCY="INR"` enforces that `USD_TO_INR_RATE` is present, finite, and strictly greater than zero. Missing conversion rates cause an immediate, explicit startup failure with clear diagnostic guidance.
 
+---
+
+## 13. Dynamic Dataset Architecture & Web Upload (Phase 13)
+
+Phase 13 introduces in-browser upload of user-supplied CSV files into a completely isolated SQLite database (`backend/data/uploaded.db`) without touching the primary demo database (`backend/sentinel.db`).
+
+### In-Memory Active Dataset Holder (`app.state`)
+- The FastAPI application maintains an in-process active dataset indicator on `app.state.active_dataset`, which is either `"demo"` or `"uploaded"`.
+- **Transient State**: On every application startup, `app.state.active_dataset` defaults to `"demo"`. The selection is intentionally never persisted to disk or environment variables, guaranteeing that a server restart always returns to clean demo data.
+- **Dynamic Database Session Resolution**:
+  The request-scoped database dependency `get_db` dynamically inspects `request.app.state.active_dataset`:
+  - If `"demo"`, it dispenses a session connected to the configured `DATABASE_URL` (`sentinel.db`).
+  - If `"uploaded"`, it dispenses a session connected to `UPLOAD_DB_PATH` (`backend/data/uploaded.db`).
+- **Atomic Loading**:
+  When `POST /api/import/load` is executed, the dataset is loaded into a temporary SQLite database file and atomically renamed/swapped into `UPLOAD_DB_PATH`. If validation or ingestion fails at any stage, the prior `uploaded.db` file remains completely untouched.
+- **Cache Isolation**:
+  In-memory computational caches (such as the rolling-origin forecasting evaluation cache) are keyed using composite tuples that include the active dataset name (`"demo"` or `"uploaded"`) and the dataset metadata `generated_at` timestamp. Switching datasets or uploading a new file never leaks cached analytical results across datasets.
+- **Strict Route Write Surface Allowlist**:
+  The route-audit security boundary strictly enforces that only three endpoints are allowed to accept `POST` requests:
+  - `POST /api/import/validate` (stateless in-memory validation in temporary directory)
+  - `POST /api/import/load` (atomic build into `uploaded.db`)
+  - `POST /api/import/activate` (in-memory state toggle)
+  All other analytical, transactional, and reporting endpoints under `/api/*` remain strictly `GET`-only.
+

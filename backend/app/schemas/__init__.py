@@ -43,6 +43,7 @@ class DatasetMetaResponse(BaseModel):
     display_currency: str = "USD"
     usd_to_inr_rate: Optional[str] = None
     stored_currency: str = "USD"
+    active_dataset: str = "demo"
 
 
 class WarehouseResponse(BaseModel):

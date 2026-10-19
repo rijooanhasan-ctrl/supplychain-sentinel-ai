@@ -15,6 +15,7 @@ import { PurchaseOrdersPage } from './pages/PurchaseOrdersPage';
 import { DataSourcesPage } from './pages/DataSourcesPage';
 import { SimulatorPage } from './pages/SimulatorPage';
 import { ReportPage } from './pages/ReportPage';
+import { ImportPage } from './pages/ImportPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
 export function App() {
@@ -37,6 +38,7 @@ export function App() {
               <Route path="suppliers" element={<SuppliersPage />} />
               <Route path="purchase-orders" element={<PurchaseOrdersPage />} />
               <Route path="data-sources" element={<DataSourcesPage />} />
+              <Route path="import" element={<ImportPage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
           </Routes>

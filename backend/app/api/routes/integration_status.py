@@ -7,7 +7,7 @@ Zero live SAP connection claims.
 from __future__ import annotations
 
 from typing import Any, Dict, List
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -43,6 +43,7 @@ class IntegrationStatusResponse(BaseModel):
     entities_missing: List[str]
     notes: Dict[str, str]
     disclaimer: str
+    active_dataset: str = "demo"
 
 
 ALL_STANDARD_ENTITIES = [
@@ -63,9 +64,11 @@ ALL_STANDARD_ENTITIES = [
 
 @router.get("/integration-status", response_model=IntegrationStatusResponse)
 def get_integration_status(
+    request: Request,
     db: Session = Depends(get_db),
 ) -> IntegrationStatusResponse:
     """Return the active data connector status, entity coverage, and mandatory SAP connectivity disclaimer."""
+    active_dataset = getattr(getattr(request, "app", None), "state", None) and getattr(request.app.state, "active_dataset", "demo") or "demo"
     meta = db.scalar(select(DatasetMeta).order_by(DatasetMeta.id.desc()).limit(1))
 
     active_source = meta.source if meta and meta.source else "demo"
@@ -118,6 +121,7 @@ def get_integration_status(
             entities_missing=missing,
             notes=notes,
             disclaimer=SAP_DISCLAIMER_TEXT,
+            active_dataset=active_dataset,
         )
 
     if active_source == "sap-style-sample":
@@ -131,6 +135,7 @@ def get_integration_status(
             entities_missing=rep["entities_missing"],
             notes=rep.get("notes", {}),
             disclaimer=SAP_DISCLAIMER_TEXT,
+            active_dataset=active_dataset,
         )
 
     # Demo source: full synthetic coverage
@@ -144,5 +149,6 @@ def get_integration_status(
             "connector_type": "Synthetic internal demo generator with fully simulated supply chain entities."
         },
         disclaimer=SAP_DISCLAIMER_TEXT,
+        active_dataset=active_dataset,
     )
 

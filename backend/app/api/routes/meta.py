@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -26,9 +26,11 @@ router = APIRouter(tags=["Metadata"])
 
 @router.get("/meta", response_model=DatasetMetaResponse)
 def get_metadata(
+    request: Request,
     db: Session = Depends(get_db),
     settings: Settings = Depends(get_settings),
 ) -> DatasetMetaResponse:
+    active_dataset = getattr(getattr(request, "app", None), "state", None) and getattr(request.app.state, "active_dataset", "demo") or "demo"
     meta = db.scalar(select(DatasetMeta).order_by(DatasetMeta.id.desc()).limit(1))
 
     if meta is None:
@@ -58,6 +60,7 @@ def get_metadata(
             display_currency=settings.DISPLAY_CURRENCY,
             usd_to_inr_rate=str(settings.USD_TO_INR_RATE) if settings.USD_TO_INR_RATE is not None else None,
             stored_currency="USD",
+            active_dataset=active_dataset,
         )
 
     # Collect actual row counts
@@ -89,4 +92,5 @@ def get_metadata(
         display_currency=settings.DISPLAY_CURRENCY,
         usd_to_inr_rate=str(settings.USD_TO_INR_RATE) if settings.USD_TO_INR_RATE is not None else None,
         stored_currency="USD",
+        active_dataset=active_dataset,
     )

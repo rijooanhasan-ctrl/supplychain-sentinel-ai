@@ -11,6 +11,7 @@ from starlette.responses import JSONResponse
 from app.api.routes.alerts import router as alerts_router
 from app.api.routes.components import router as components_router
 from app.api.routes.customer_orders import router as customer_orders_router
+from app.api.routes.data_import import resolve_upload_db_path, router as import_router
 from app.api.routes.delivery_records import router as delivery_records_router
 from app.api.routes.executive_summary import router as executive_summary_router
 from app.api.routes.forecasting import router as forecasting_router
@@ -72,16 +73,39 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
         lifespan=app_lifespan,
     )
 
+    # Initialize active dataset state (always defaults to demo on startup; not persisted)
+    app.state.active_dataset = "demo"
+    app.state.uploaded_engine = None
+    app.state.uploaded_session_factory = None
+
     # Bind active settings to FastAPI dependency injection
     app.dependency_overrides[get_settings] = lambda: settings
 
-    # Bind active DB session factory
+    # Bind active DB session factory resolving the engine from active dataset holder
     def get_scoped_db():
+        active = getattr(app.state, "active_dataset", "demo")
+        if active == "uploaded":
+            if getattr(app.state, "uploaded_session_factory", None) is None:
+                upload_path = resolve_upload_db_path(settings)
+                if upload_path.exists():
+                    eng, sf = create_engine_and_sessionmaker(f"sqlite:///{upload_path.as_posix()}")
+                    app.state.uploaded_engine = eng
+                    app.state.uploaded_session_factory = sf
+            if getattr(app.state, "uploaded_session_factory", None) is not None:
+                db = app.state.uploaded_session_factory()
+                db.info["active_dataset"] = "uploaded"
+                try:
+                    yield db
+                finally:
+                    db.close()
+                return
+
         if hasattr(app.state, "session_factory"):
             db = app.state.session_factory()
         else:
             engine, sf = create_engine_and_sessionmaker(settings.DATABASE_URL)
             db = sf()
+        db.info["active_dataset"] = "demo"
         try:
             yield db
         finally:
@@ -128,6 +152,7 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
     app.include_router(recovery_router, prefix="/api")
     app.include_router(simulation_router, prefix="/api")
     app.include_router(executive_summary_router, prefix="/api")
+    app.include_router(import_router, prefix="/api")
 
     return app
 

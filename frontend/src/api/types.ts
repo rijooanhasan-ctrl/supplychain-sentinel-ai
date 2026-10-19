@@ -24,6 +24,7 @@ export interface DatasetMetaResponse {
   display_currency?: string;
   usd_to_inr_rate?: string | null;
   stored_currency?: string;
+  active_dataset?: 'demo' | 'uploaded' | string;
 }
 
 export interface HealthResponse {
@@ -1009,6 +1010,52 @@ export interface ExecutiveSummaryResponse {
   assumptions: string[];
   why: Record<string, WhyItem[]>;
   note: string;
+}
+
+export interface ImportLimits {
+  max_file_bytes: number;
+  max_files: number;
+  max_total_bytes: number;
+}
+
+export interface AcceptedFile {
+  name: string;
+  required: boolean;
+}
+
+export interface ImportStatusResponse {
+  enabled: boolean;
+  active: 'demo' | 'uploaded';
+  uploaded_available: boolean;
+  limits: ImportLimits;
+  accepted_files: AcceptedFile[];
+}
+
+export interface ValidationErrorItem {
+  file: string;
+  line?: number | null;
+  message: string;
+}
+
+export interface ImportCoverage {
+  entities_covered: string[];
+  missing: string[];
+  consequences: Record<string, string>;
+  entities_missing?: string[];
+}
+
+export interface ValidateImportResponse {
+  valid: boolean;
+  errors: ValidationErrorItem[];
+  warnings: string[];
+  coverage: ImportCoverage;
+  row_counts: Record<string, number>;
+  as_of: string;
+  label: string;
+}
+
+export interface LoadImportResponse extends ValidateImportResponse {
+  active: 'uploaded';
 }
 
 

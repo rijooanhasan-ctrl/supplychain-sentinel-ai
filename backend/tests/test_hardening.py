@@ -41,16 +41,30 @@ def test_settings_cors_origins_wildcard_rejected():
 
 
 def test_no_write_endpoints_under_api():
-    """Ensure all /api endpoints are strictly read-only (GET, HEAD, OPTIONS)."""
+    """Ensure all /api endpoints are strictly GET-only except explicit allowlist:
+    exactly POST /api/import/validate, /api/import/load, /api/import/activate."""
     app = create_app()
-    disallowed_methods = {"POST", "PUT", "PATCH", "DELETE"}
+    allowed_write_endpoints = {
+        ("POST", "/api/import/validate"),
+        ("POST", "/api/import/load"),
+        ("POST", "/api/import/activate"),
+    }
+    non_get_methods = {"POST", "PUT", "PATCH", "DELETE"}
+    found_write_endpoints = set()
 
-    for route in app.routes:
-        path = getattr(route, "path", "")
-        methods = getattr(route, "methods", set())
+    openapi_paths = app.openapi().get("paths", {})
+    for path, methods_dict in openapi_paths.items():
         if path.startswith("/api"):
-            intersect = methods.intersection(disallowed_methods)
-            assert not intersect, f"Endpoint '{path}' allows disallowed write method(s): {intersect}"
+            for m in methods_dict.keys():
+                method_upper = m.upper()
+                if method_upper in non_get_methods:
+                    pair = (method_upper, path)
+                    assert pair in allowed_write_endpoints, f"Endpoint '{method_upper} {path}' is not allowlisted"
+                    found_write_endpoints.add(pair)
+
+    assert found_write_endpoints == allowed_write_endpoints, (
+        f"Expected exactly {allowed_write_endpoints}, but found {found_write_endpoints}"
+    )
 
 
 def test_unhandled_500_error_body_no_stacktrace():

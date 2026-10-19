@@ -221,4 +221,41 @@ describe('Guided Demo Mode & Dynamic Labels', () => {
     expect(screen.getByTestId('demo-badge')).toHaveTextContent('USER-SUPPLIED DATA (file import)');
     expect(screen.getByText(/User-supplied CSV import/i)).toBeInTheDocument();
   });
+
+  it('renders "Uploaded dataset" in DemoBanner when active_dataset is uploaded', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string) => {
+        if (url.includes('/api/meta')) {
+          return Promise.resolve({
+            ok: true,
+            status: 200,
+            json: () =>
+              Promise.resolve({
+                seeded: true,
+                data_source: 'file-import',
+                label: 'USER-SUPPLIED DATA (file import)',
+                as_of: '2026-10-18',
+                active_dataset: 'uploaded',
+              }),
+          } as Response);
+        }
+        return Promise.reject(new Error('not handled'));
+      })
+    );
+
+    render(
+      <MetaProvider>
+        <DemoBanner />
+      </MetaProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('demo-badge')).toBeInTheDocument();
+    });
+
+    expect(screen.getByTestId('demo-badge')).toHaveTextContent('USER-SUPPLIED DATA (file import)');
+    expect(screen.getByText(/Uploaded dataset/i)).toBeInTheDocument();
+    expect(screen.queryByText(/\bdemo\b/i)).not.toBeInTheDocument();
+  });
 });

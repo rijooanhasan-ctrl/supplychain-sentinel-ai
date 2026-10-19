@@ -62,9 +62,11 @@ This document transparently records the architectural boundaries, analytical ass
 
 ---
 
-## 9. CSV Ingestion is Command-Line Only
-- **Zero Web Uploads**: For security and architectural simplicity, CSV datasets cannot be uploaded via the web interface.
-- **CLI Workflow**: Custom data must be imported using `python -m app.cli validate-files` and `python -m app.cli seed --source file`.
+## 9. Web CSV Upload Boundaries & Limitations
+- **Local-Only & No Authentication**: The web upload pipeline (`/import`) is designed for local evaluation and demonstration. It does not include authentication, authorization, or multi-tenant user account isolation.
+- **Single Uploaded Dataset**: The system maintains at most one uploaded dataset (`backend\data\uploaded.db`). Each subsequent dataset load completely replaces the previous uploaded dataset in an atomic operation.
+- **Transient Active Selection**: The toggle between `demo` and `uploaded` is stored strictly in application process memory (`app.state`). Restarting the backend automatically reverts to the default `demo` dataset; the user's dataset selection is intentionally not persisted.
+- **Zero Live Writes to Demo DB**: Web uploads are written exclusively to `backend\data\uploaded.db`. The primary demonstration database `backend\sentinel.db` is strictly protected and never written to by upload operations.
 
 ---
 
@@ -73,9 +75,13 @@ This document transparently records the architectural boundaries, analytical ass
 
 ---
 
-## 11. Read-Only API Enforcement
-- **GET-Only Architecture**: All `/api/*` endpoints are strictly read-only.
-- **405 Method Not Allowed**: Any POST, PUT, PATCH, or DELETE requests are rejected with HTTP 405 by the server framework, preventing accidental state modification.
+## 11. Read-Only API Enforcement & Explicit POST Allowlist
+- **Strictly Controlled Write Surface**: All analytical and reporting endpoints under `/api/*` are strictly GET-only.
+- **POST Allowlist**: Exactly three POST endpoints are permitted when `ENABLE_WEB_IMPORT=true`:
+  - `POST /api/import/validate` (stateless in-memory validation; touches no DB)
+  - `POST /api/import/load` (loads validated data into separate `uploaded.db`)
+  - `POST /api/import/activate` (switches active dataset in-memory)
+- **405 Method Not Allowed**: Any POST, PUT, PATCH, or DELETE to any other API endpoint is strictly rejected with HTTP 405 by the server framework.
 
 ---
 
