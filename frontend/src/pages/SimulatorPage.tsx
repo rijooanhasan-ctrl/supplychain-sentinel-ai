@@ -8,6 +8,7 @@ import { LoadingView, ErrorView, EmptyView, UnseededView } from '../components/S
 import { CurrencyNotice } from '../components/CurrencyNotice';
 import { Badge } from '../components/Badge';
 import { formatInteger, formatNumber, formatMoney } from '../lib/format';
+import { PAGE_SUBTITLES } from '../constants/pageSubtitles';
 
 function RiskBadge({ level }: { level: string }) {
   const norm = level.toLowerCase();
@@ -249,7 +250,7 @@ export function SimulatorPage() {
       <div className="space-y-6">
         <PageHeader
           title="What-If Disruption Simulator"
-          description="Interactive scenario analysis for supplier delays, demand surges, and inventory shocks."
+          description={PAGE_SUBTITLES.simulator}
         />
         <UnseededView />
       </div>
@@ -260,7 +261,7 @@ export function SimulatorPage() {
     <div className="space-y-6" data-testid="simulator-page">
       <PageHeader
         title="What-If Disruption Simulator"
-        description="Simulate the upstream and downstream effects of supplier delays, demand spikes, and inventory shifts in real time."
+        description={PAGE_SUBTITLES.simulator}
       />
 
       <CurrencyNotice meta={meta} />

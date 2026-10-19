@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { getInventoryRisk, getInventoryRiskDetail, listComponents } from '../api/endpoints';
 import type {
   Component,
@@ -13,6 +14,9 @@ import { LoadingView, ErrorView, EmptyView, UnseededView } from '../components/S
 import { Pagination } from '../components/Pagination';
 import { CriticalityBadge, RiskBadge } from '../components/Badge';
 import { formatDate, formatInteger } from '../lib/format';
+import { InfoTip } from '../components/ui/InfoTip';
+import { GLOSSARY } from '../constants/glossary';
+import { PAGE_SUBTITLES } from '../constants/pageSubtitles';
 
 const RISK_LEVEL_OPTIONS: { label: string; value: RiskLevel | '' }[] = [
   { label: 'All Risk Levels', value: '' },
@@ -427,17 +431,25 @@ function ComponentRiskDetailPanel({ componentId }: { componentId: number }) {
   );
 }
 
+const VALID_RISK_LEVELS: readonly string[] = ['critical', 'high', 'medium', 'low', 'none', 'unknown'];
+
 export function InventoryRiskPage() {
   const { meta, reload: reloadMeta } = useMeta();
-
-  // Filters state
-  const [selectedRiskLevel, setSelectedRiskLevel] = useState<RiskLevel | ''>('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [selectedCriticality, setSelectedCriticality] = useState<ComponentCriticality | ''>('');
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Pagination state
   const [limit, setLimit] = useState<number>(50);
   const [offset, setOffset] = useState<number>(0);
+
+  // Read risk_level directly from URL search params as source of truth
+  const rawRisk = searchParams.get('risk_level');
+  const selectedRiskLevel: RiskLevel | '' = rawRisk && VALID_RISK_LEVELS.includes(rawRisk)
+    ? (rawRisk as RiskLevel)
+    : '';
+
+  // Other filters state
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedCriticality, setSelectedCriticality] = useState<ComponentCriticality | ''>('');
 
   // Expanded component rows
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
@@ -472,8 +484,16 @@ export function InventoryRiskPage() {
   const { data, loading, error, reload } = useApi(fetchRisk, [fetchRisk]);
 
   const handleRiskChange = (val: string) => {
-    setSelectedRiskLevel(val as RiskLevel | '');
     setOffset(0);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (val) {
+        next.set('risk_level', val);
+      } else {
+        next.delete('risk_level');
+      }
+      return next;
+    });
   };
 
   const handleCategoryChange = (val: string) => {
@@ -508,7 +528,7 @@ export function InventoryRiskPage() {
       <div className="space-y-6">
         <PageHeader
           title="Inventory Risk & Shortage Projections"
-          description="Forward-looking stockout risk and shortage projection model across manufacturing plant components."
+          description={PAGE_SUBTITLES.inventory_risk}
         />
         <UnseededView message={meta.message} onRefresh={reloadMeta} />
       </div>
@@ -521,7 +541,7 @@ export function InventoryRiskPage() {
     <div className="space-y-6" data-testid="inventory-risk-page">
       <PageHeader
         title="Inventory Risk & Shortage Projections"
-        description="Predictive inventory intelligence modeling component runout dates and shortage timing. Evaluated against plant usable stock and confirmed inbound delivery schedules."
+        description={PAGE_SUBTITLES.inventory_risk}
       />
 
       {/* Model Heuristic Baseline Note Banner */}
@@ -603,10 +623,14 @@ export function InventoryRiskPage() {
           <button
             type="button"
             onClick={() => {
-              setSelectedRiskLevel('');
               setSelectedCategory('');
               setSelectedCriticality('');
               setOffset(0);
+              setSearchParams((prev) => {
+                const next = new URLSearchParams(prev);
+                next.delete('risk_level');
+                return next;
+              });
             }}
             className="text-xs text-blue-600 hover:text-blue-800 underline font-semibold ml-auto"
           >
@@ -645,11 +669,20 @@ export function InventoryRiskPage() {
                       <tr>
                         <th scope="col" className="px-4 py-3 text-left">Component</th>
                         <th scope="col" className="px-4 py-3 text-left">Criticality</th>
-                        <th scope="col" className="px-4 py-3 text-right">Plant Usable</th>
+                        <th scope="col" className="px-4 py-3 text-right">
+                          <span>Plant Usable</span>
+                          <InfoTip term={GLOSSARY.usable_stock.term} description={GLOSSARY.usable_stock.definition} />
+                        </th>
                         <th scope="col" className="px-4 py-3 text-right">Daily Demand</th>
-                        <th scope="col" className="px-4 py-3 text-right">Coverage Days</th>
+                        <th scope="col" className="px-4 py-3 text-right">
+                          <span>Coverage Days</span>
+                          <InfoTip term={GLOSSARY.runway.term} description={GLOSSARY.runway.definition} />
+                        </th>
                         <th scope="col" className="px-4 py-3 text-left">Next Replenishment</th>
-                        <th scope="col" className="px-4 py-3 text-left">Predicted Shortage</th>
+                        <th scope="col" className="px-4 py-3 text-left">
+                          <span>Predicted Shortage</span>
+                          <InfoTip term={GLOSSARY.shortage_date.term} description={GLOSSARY.shortage_date.definition} />
+                        </th>
                         <th scope="col" className="px-4 py-3 text-left">Risk Level</th>
                         <th scope="col" className="px-4 py-3 text-left">Governing Reason</th>
                         <th scope="col" className="px-4 py-3 text-right">Actions</th>

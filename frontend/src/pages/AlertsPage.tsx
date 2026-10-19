@@ -16,6 +16,7 @@ import { AlertSeverityBadge, Badge } from '../components/Badge';
 import { WhyThis } from '../components/WhyThis';
 import { CurrencyNotice } from '../components/CurrencyNotice';
 import { formatInteger, formatNumber, formatMoney } from '../lib/format';
+import { PAGE_SUBTITLES } from '../constants/pageSubtitles';
 
 const SEVERITY_OPTIONS: { label: string; value: AlertSeverity | '' }[] = [
   { label: 'All Severities', value: '' },
@@ -366,7 +367,7 @@ export function AlertsPage() {
       <div className="space-y-6">
         <PageHeader
           title="Disruption Detection & Alerts"
-          description="Real-time multi-tier disruption monitoring, delay what-if exposure, and order exposure tracking."
+          description={PAGE_SUBTITLES.alerts}
         />
         <UnseededView />
       </div>
@@ -377,7 +378,7 @@ export function AlertsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Disruption Detection & Alerts"
-        description="Stateless predictive disruption detection across inventory runway, supplier reliability, purchase orders, and demand surges."
+        description={PAGE_SUBTITLES.alerts}
       />
 
       <CurrencyNotice />

@@ -9,6 +9,7 @@ import { useApi } from '../api/useApi';
 import { PageHeader } from '../components/PageHeader';
 import { LoadingView, ErrorView, EmptyView, UnseededView } from '../components/StateViews';
 import { formatDate, formatNumber } from '../lib/format';
+import { PAGE_SUBTITLES } from '../constants/pageSubtitles';
 
 export function ForecastingPage() {
   const fetcher = useCallback((signal: AbortSignal) => getForecastEvaluation(signal), []);
@@ -35,7 +36,7 @@ export function ForecastingPage() {
       <div className="space-y-6">
         <PageHeader
           title="Demand Forecasting"
-          description="Evaluation of baseline, production, and challenger forecasting models on historical component demand."
+          description={PAGE_SUBTITLES.forecasting}
         />
         <UnseededView />
       </div>
@@ -55,7 +56,7 @@ export function ForecastingPage() {
     <div className="space-y-6">
       <PageHeader
         title="Demand Forecasting"
-        description="Backtest evaluation of time-series models on historical component demand. Governs model selection for production inventory risk."
+        description={PAGE_SUBTITLES.forecasting}
       />
 
       {/* Permanent Synthetic Data Caveat Banner */}

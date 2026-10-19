@@ -13,6 +13,7 @@ import { Badge } from '../components/Badge';
 import { WhyThis } from '../components/WhyThis';
 import { CurrencyNotice } from '../components/CurrencyNotice';
 import { formatInteger, formatNumber, formatMoney } from '../lib/format';
+import { PAGE_SUBTITLES } from '../constants/pageSubtitles';
 
 function OptionKindBadge({ kind }: { kind: string }) {
   switch (kind) {
@@ -477,7 +478,7 @@ export function RecommendationsPage() {
       <div className="space-y-6">
         <PageHeader
           title="Recovery Recommendations"
-          description="Prescriptive decision support for projected inventory shortages."
+          description={PAGE_SUBTITLES.recommendations}
         />
         <UnseededView />
       </div>
@@ -488,7 +489,7 @@ export function RecommendationsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Recovery Recommendations"
-        description="Prescriptive decision-support interventions (transfers, expedite, alternate suppliers) evaluated against real agreements."
+        description={PAGE_SUBTITLES.recommendations}
       />
 
       <CurrencyNotice />

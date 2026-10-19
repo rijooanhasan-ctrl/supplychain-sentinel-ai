@@ -12,6 +12,8 @@ import { WhyThis } from '../components/WhyThis';
 import { formatInteger, formatNumber, formatMoney } from '../lib/format';
 import { useGuidedDemo } from '../hooks/useGuidedDemo';
 
+import { PAGE_SUBTITLES } from '../constants/pageSubtitles';
+
 export function ExecutiveSummaryPage() {
   const { meta } = useMeta();
   const { startDemo } = useGuidedDemo();
@@ -42,7 +44,7 @@ export function ExecutiveSummaryPage() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <PageHeader
             title="Executive Summary"
-            description="Real-time strategic decision support briefing"
+            description={PAGE_SUBTITLES.executive_summary}
           />
           <div className="flex items-center gap-2">
             <button
@@ -84,7 +86,7 @@ export function ExecutiveSummaryPage() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <PageHeader
           title="Executive Summary"
-          description="Operational risk overview, cost of action vs inaction, and data quality lineage"
+          description={PAGE_SUBTITLES.executive_summary}
         />
         <div className="flex items-center gap-2">
           <button

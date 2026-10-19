@@ -1,5 +1,6 @@
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { MemoryRouter } from 'react-router-dom';
 import { MetaProvider } from '../context/MetaContext';
 import { InventoryRiskPage } from './InventoryRiskPage';
 import type {
@@ -259,9 +260,11 @@ describe('InventoryRiskPage', () => {
     });
 
     render(
-      <MetaProvider>
-        <InventoryRiskPage />
-      </MetaProvider>
+      <MemoryRouter>
+        <MetaProvider>
+          <InventoryRiskPage />
+        </MetaProvider>
+      </MemoryRouter>
     );
 
     await waitFor(() => {
@@ -324,9 +327,11 @@ describe('InventoryRiskPage', () => {
     });
 
     render(
-      <MetaProvider>
-        <InventoryRiskPage />
-      </MetaProvider>
+      <MemoryRouter>
+        <MetaProvider>
+          <InventoryRiskPage />
+        </MetaProvider>
+      </MemoryRouter>
     );
 
     await waitFor(() => {
@@ -366,9 +371,11 @@ describe('InventoryRiskPage', () => {
     });
 
     render(
-      <MetaProvider>
-        <InventoryRiskPage />
-      </MetaProvider>
+      <MemoryRouter>
+        <MetaProvider>
+          <InventoryRiskPage />
+        </MetaProvider>
+      </MemoryRouter>
     );
 
     await waitFor(() => {
@@ -426,9 +433,11 @@ describe('InventoryRiskPage', () => {
     });
 
     render(
-      <MetaProvider>
-        <InventoryRiskPage />
-      </MetaProvider>
+      <MemoryRouter>
+        <MetaProvider>
+          <InventoryRiskPage />
+        </MetaProvider>
+      </MemoryRouter>
     );
 
     await waitFor(() => {
@@ -458,14 +467,50 @@ describe('InventoryRiskPage', () => {
     });
 
     render(
-      <MetaProvider>
-        <InventoryRiskPage />
-      </MetaProvider>
+      <MemoryRouter>
+        <MetaProvider>
+          <InventoryRiskPage />
+        </MetaProvider>
+      </MemoryRouter>
     );
 
     await waitFor(() => {
       expect(screen.getByTestId('unseeded-state')).toBeInTheDocument();
       expect(screen.getByText('Database not seeded.')).toBeInTheDocument();
     });
+  });
+
+  it('reads risk_level from URL query param and filters automatically', async () => {
+    let capturedUrl = '';
+
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+      const urlStr = url.toString();
+      if (urlStr.includes('/api/meta')) {
+        return { ok: true, status: 200, json: async () => mockMeta } as Response;
+      }
+      if (urlStr.includes('/api/components')) {
+        return { ok: true, status: 200, json: async () => ({ items: [] }) } as Response;
+      }
+      if (urlStr.includes('/api/inventory-risk')) {
+        capturedUrl = urlStr;
+        return { ok: true, status: 200, json: async () => mockRiskList } as Response;
+      }
+      return { ok: true, status: 200, json: async () => ({ items: [] }) } as Response;
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/inventory-risk?risk_level=critical']}>
+        <MetaProvider>
+          <InventoryRiskPage />
+        </MetaProvider>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(capturedUrl).toContain('risk_level=critical');
+    });
+
+    const riskSelect = screen.getByLabelText(/risk level:/i) as HTMLSelectElement;
+    expect(riskSelect.value).toBe('critical');
   });
 });

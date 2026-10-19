@@ -10,6 +10,7 @@ import { PageHeader } from '../components/PageHeader';
 import { Pagination } from '../components/Pagination';
 import { LoadingView, ErrorView, EmptyView, UnseededView } from '../components/StateViews';
 import { formatInteger } from '../lib/format';
+import { PAGE_SUBTITLES } from '../constants/pageSubtitles';
 
 const BAND_OPTIONS: { value: SupplierRiskBand | ''; label: string }[] = [
   { value: '', label: 'All Bands' },
@@ -271,7 +272,7 @@ export function SupplierRiskPage() {
       <div className="space-y-6">
         <PageHeader
           title="Supplier Risk Scoring"
-          description="Empirical reliability scoring based on historical delivery records and order fulfillment."
+          description={PAGE_SUBTITLES.supplier_risk}
         />
         <UnseededView />
       </div>
@@ -282,7 +283,7 @@ export function SupplierRiskPage() {
     <div className="space-y-6">
       <PageHeader
         title="Supplier Risk Scoring"
-        description="Empirical reliability scoring based on historical delivery records and order fulfillment."
+        description={PAGE_SUBTITLES.supplier_risk}
       />
 
       {/* Transparent formula notice banner */}

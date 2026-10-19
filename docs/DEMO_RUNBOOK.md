@@ -128,7 +128,12 @@ All 53 checks validate HTTP 200 on all API endpoints, GET-only enforcement (POST
 
 ## 7. Guided Demo Flow (Hackfest Presentation Steps)
 
-Click **"Start guided demo"** on the Executive Summary page (or in the navigation sidebar) to launch the docked interactive tour.
+### Step 0: Opening — Visual Operational Overview (`/`)
+- **First Impression**: The application opens directly on the visual **Overview** landing page (`/`).
+- **20-Second Runway Chart Narration Guide**:
+  > *"Here on the landing page, our 30-day Component Shortage Runway instantly isolates our highest-risk parts. Look at CPU-X7: the solid bar shows only 4 days of usable stock remaining before a complete line stockout on October 21st. The red hatched interval highlights the critical 8-day supply deficit until our delayed purchase order arrives on October 29th. In one glance, our planners see both the impending stockout and the gap to the incoming shipment, and can click directly into the Simulator to test recovery actions."*
+- **Key Indicators**: Point out the 4 KPI tiles (Components at Risk, Soonest Shortage, Late Deliveries, Open Alerts) and the Supplier On-Time Reliability ranking ordered worst-first.
+- Click **"Start guided demo"** on the page or in the sidebar to launch the docked interactive tour.
 
 ### Step 1: Executive Summary (`/executive-summary`)
 - **Headline**: "9 components face shortage risk; the most urgent is CPU-X7, short from 2026-10-21 (4 days)."

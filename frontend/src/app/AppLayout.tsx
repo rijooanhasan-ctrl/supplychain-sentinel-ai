@@ -4,20 +4,45 @@ import { DemoBanner } from '../components/DemoBanner';
 import { GuidedDemoPanel } from '../components/GuidedDemoPanel';
 import { useGuidedDemo } from '../hooks/useGuidedDemo';
 
-const NAV_ITEMS = [
-  { label: 'Executive Summary', to: '/executive-summary' },
-  { label: 'Overview', to: '/' },
-  { label: 'Alerts', to: '/alerts' },
-  { label: 'Recommendations', to: '/recommendations' },
-  { label: 'Simulator', to: '/simulator' },
-  { label: 'Inventory Risk', to: '/inventory-risk' },
-  { label: 'Supplier Risk', to: '/supplier-risk' },
-  { label: 'Demand Forecasting', to: '/forecasting' },
-  { label: 'Inventory', to: '/inventory' },
-  { label: 'Suppliers', to: '/suppliers' },
-  { label: 'Purchase Orders', to: '/purchase-orders' },
-  { label: 'Data Sources', to: '/data-sources' },
-  { label: 'Import Data', to: '/import' },
+interface NavSection {
+  title: string;
+  items: { label: string; to: string }[];
+}
+
+const NAV_SECTIONS: NavSection[] = [
+  {
+    title: 'Start here',
+    items: [
+      { label: 'Overview', to: '/' },
+      { label: 'Executive Summary', to: '/executive-summary' },
+    ],
+  },
+  {
+    title: 'Act',
+    items: [
+      { label: 'Alerts', to: '/alerts' },
+      { label: 'Recommendations', to: '/recommendations' },
+      { label: 'Simulator', to: '/simulator' },
+    ],
+  },
+  {
+    title: 'Analyse',
+    items: [
+      { label: 'Inventory Risk', to: '/inventory-risk' },
+      { label: 'Supplier Risk', to: '/supplier-risk' },
+      { label: 'Demand Forecasting', to: '/forecasting' },
+    ],
+  },
+  {
+    title: 'Data',
+    items: [
+      { label: 'Inventory', to: '/inventory' },
+      { label: 'Suppliers', to: '/suppliers' },
+      { label: 'Purchase Orders', to: '/purchase-orders' },
+      { label: 'Data Sources', to: '/data-sources' },
+      { label: 'Import Data', to: '/import' },
+    ],
+  },
 ];
 
 export function AppLayout() {
@@ -48,7 +73,7 @@ export function AppLayout() {
                   AI
                 </span>
               </div>
-              <p className="text-xs text-slate-500 mt-0.5">Resilient Supply Chain</p>
+              <p className="text-xs text-slate-600 mt-0.5">Resilient Supply Chain</p>
             </div>
 
             {/* Mobile menu toggle */}
@@ -69,27 +94,34 @@ export function AppLayout() {
             </button>
           </div>
 
-          {/* Navigation Links */}
+          {/* Navigation Links grouped by section */}
           <nav
             aria-label="Main Navigation"
-            className={`${mobileMenuOpen ? 'block' : 'hidden'} md:block p-3 space-y-1`}
+            className={`${mobileMenuOpen ? 'block' : 'hidden'} md:block p-3 space-y-3`}
           >
-            {NAV_ITEMS.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.to === '/'}
-                onClick={() => setMobileMenuOpen(false)}
-                className={({ isActive }) =>
-                  `flex items-center px-3 py-2 text-sm rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 ${
-                    isActive
-                      ? 'bg-blue-50 text-blue-900 font-semibold border-l-4 border-blue-600'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-medium'
-                  }`
-                }
-              >
-                {item.label}
-              </NavLink>
+            {NAV_SECTIONS.map((section) => (
+              <div key={section.title} className="space-y-1">
+                <div className="px-3 pt-1 pb-0.5 text-[11px] font-bold uppercase tracking-wider text-slate-600">
+                  {section.title}
+                </div>
+                {section.items.map((item) => (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    end={item.to === '/'}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={({ isActive }) =>
+                      `flex items-center px-3 py-1.5 text-sm rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 ${
+                        isActive
+                          ? 'bg-blue-50 text-blue-900 font-semibold border-l-4 border-blue-600'
+                          : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100 font-medium'
+                      }`
+                    }
+                  >
+                    {item.label}
+                  </NavLink>
+                ))}
+              </div>
             ))}
           </nav>
 
