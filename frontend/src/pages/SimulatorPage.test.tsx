@@ -496,4 +496,70 @@ describe('SimulatorPage', () => {
       expect(screen.getByText('Later shortage not covered by this recovery')).toBeInTheDocument();
     });
   });
+
+  it('displays INR notice and formats exposed revenue and recovery cost in ₹ without $ when display_currency is INR', async () => {
+    const inrMeta = {
+      ...mockMeta,
+      display_currency: 'INR',
+      usd_to_inr_rate: '83.50',
+    };
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string | URL | Request) => {
+        const urlStr = String(url);
+        if (urlStr.includes('/api/meta')) {
+          return Promise.resolve({
+            ok: true,
+            status: 200,
+            headers: new Headers({ 'content-type': 'application/json' }),
+            json: () => Promise.resolve(inrMeta),
+          } as Response);
+        }
+        if (urlStr.includes('/api/components')) {
+          return Promise.resolve({
+            ok: true,
+            status: 200,
+            headers: new Headers({ 'content-type': 'application/json' }),
+            json: () => Promise.resolve(mockComponents),
+          } as Response);
+        }
+        if (urlStr.includes('/api/simulation')) {
+          return Promise.resolve({
+            ok: true,
+            status: 200,
+            headers: new Headers({ 'content-type': 'application/json' }),
+            json: () => Promise.resolve(mockSimulationResponse),
+          } as Response);
+        }
+        return Promise.reject(new Error(`Unhandled mock for ${urlStr}`));
+      })
+    );
+
+    render(
+      <MetaProvider>
+        <MemoryRouter initialEntries={['/simulator']}>
+          <SimulatorPage />
+        </MemoryRouter>
+      </MetaProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('currency-notice')).toBeInTheDocument();
+    });
+
+    expect(screen.getByTestId('currency-notice')).toHaveTextContent(
+      'Amounts are stored in USD and shown in INR at a configured rate of 1 USD = ₹83.50'
+    );
+
+    // Baseline selling value: 125000.00 * 83.50 = 1,04,37,500.00 -> ₹1,04,37,500.00
+    expect(screen.getByText('₹1,04,37,500.00')).toBeInTheDocument();
+    // Disrupted selling value: 300000.00 * 83.50 = 2,50,50,000.00 -> ₹2,50,50,000.00
+    expect(screen.getByText('₹2,50,50,000.00')).toBeInTheDocument();
+    // Cost: 297360.00 * 83.50 = 2,48,29,560.00 -> ₹2,48,29,560.00
+    expect(screen.getByText(/₹2,48,29,560\.00/)).toBeInTheDocument();
+
+    const table = screen.getByTestId('comparison-table');
+    expect(table).not.toHaveTextContent('$');
+  });
 });

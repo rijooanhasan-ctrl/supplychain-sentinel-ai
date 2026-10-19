@@ -1,8 +1,24 @@
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
+import { MetaProvider } from '../context/MetaContext';
 import { ExecutiveSummaryPage } from './ExecutiveSummaryPage';
-import type { ExecutiveSummaryResponse } from '../api/types';
+import type { ExecutiveSummaryResponse, DatasetMetaResponse } from '../api/types';
+
+const mockMeta: DatasetMetaResponse = {
+  seeded: true,
+  data_source: 'demo',
+  label: 'DEMO DATA',
+  seed: 42,
+  as_of: '2026-10-17',
+  generator_version: '1.0.0',
+  generated_at: '2026-10-17T12:00:00+00:00',
+  counts: { purchase_orders: 22 },
+  message: 'Demo dataset active.',
+  display_currency: 'USD',
+  usd_to_inr_rate: null,
+  stored_currency: 'USD',
+};
 
 const mockSummaryResponse: ExecutiveSummaryResponse = {
   seeded: true,
@@ -147,20 +163,49 @@ const mockSummaryResponse: ExecutiveSummaryResponse = {
 };
 
 describe('ExecutiveSummaryPage', () => {
-  beforeEach(() => {
+  function setupFetchMock(
+    summaryResult: unknown = mockSummaryResponse,
+    metaResult: unknown = mockMeta,
+    failSummary = false
+  ) {
     vi.stubGlobal(
       'fetch',
       vi.fn((url: string) => {
-        if (url.includes('/api/executive-summary')) {
+        const urlStr = url.toString();
+        if (urlStr.includes('/api/meta')) {
           return Promise.resolve({
             ok: true,
             status: 200,
-            json: () => Promise.resolve(mockSummaryResponse),
+            json: () => Promise.resolve(metaResult),
+          });
+        }
+        if (urlStr.includes('/api/executive-summary')) {
+          if (failSummary) {
+            return Promise.reject(new Error('Network error loading summary'));
+          }
+          return Promise.resolve({
+            ok: true,
+            status: 200,
+            json: () => Promise.resolve(summaryResult),
           });
         }
         return Promise.reject(new Error(`Unhandled URL: ${url}`));
       })
     );
+  }
+
+  function renderPage() {
+    return render(
+      <MetaProvider>
+        <MemoryRouter>
+          <ExecutiveSummaryPage />
+        </MemoryRouter>
+      </MetaProvider>
+    );
+  }
+
+  beforeEach(() => {
+    setupFetchMock();
   });
 
   afterEach(() => {
@@ -168,11 +213,7 @@ describe('ExecutiveSummaryPage', () => {
   });
 
   it('renders headline, DEMO DATA label, 3 top risk cards with text badges', async () => {
-    render(
-      <MemoryRouter>
-        <ExecutiveSummaryPage />
-      </MemoryRouter>
-    );
+    renderPage();
 
     await waitFor(() => {
       expect(screen.getByTestId('executive-headline-text')).toHaveTextContent(
@@ -194,11 +235,7 @@ describe('ExecutiveSummaryPage', () => {
   });
 
   it('renders recommended action card with text "Recommended" and fixes first shortage window sentence', async () => {
-    render(
-      <MemoryRouter>
-        <ExecutiveSummaryPage />
-      </MemoryRouter>
-    );
+    renderPage();
 
     await waitFor(() => {
       expect(screen.getByTestId('recommended-action-card')).toBeInTheDocument();
@@ -211,11 +248,7 @@ describe('ExecutiveSummaryPage', () => {
   });
 
   it('renders cost comparison table and verifies upper-bound wording is present and "savings" is absent', async () => {
-    render(
-      <MemoryRouter>
-        <ExecutiveSummaryPage />
-      </MemoryRouter>
-    );
+    renderPage();
 
     await waitFor(() => {
       expect(screen.getByTestId('cost-comparison-table')).toBeInTheDocument();
@@ -260,22 +293,9 @@ describe('ExecutiveSummaryPage', () => {
       },
     };
 
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(() =>
-        Promise.resolve({
-          ok: true,
-          status: 200,
-          json: () => Promise.resolve(unknownCostResponse),
-        })
-      )
-    );
+    setupFetchMock(unknownCostResponse);
 
-    render(
-      <MemoryRouter>
-        <ExecutiveSummaryPage />
-      </MemoryRouter>
-    );
+    renderPage();
 
     await waitFor(() => {
       expect(screen.getByTestId('decision-cost')).toHaveTextContent('Unknown');
@@ -283,11 +303,7 @@ describe('ExecutiveSummaryPage', () => {
   });
 
   it('toggles data quality details with aria-expanded', async () => {
-    render(
-      <MemoryRouter>
-        <ExecutiveSummaryPage />
-      </MemoryRouter>
-    );
+    renderPage();
 
     await waitFor(() => {
       expect(screen.getByTestId('data-quality-note')).toHaveTextContent(
@@ -310,16 +326,9 @@ describe('ExecutiveSummaryPage', () => {
   });
 
   it('handles error state with Retry button', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(() => Promise.reject(new Error('Network error loading summary')))
-    );
+    setupFetchMock(mockSummaryResponse, mockMeta, true);
 
-    render(
-      <MemoryRouter>
-        <ExecutiveSummaryPage />
-      </MemoryRouter>
-    );
+    renderPage();
 
     await waitFor(() => {
       expect(screen.getByText(/Failed to load/i)).toBeInTheDocument();
@@ -330,22 +339,9 @@ describe('ExecutiveSummaryPage', () => {
   });
 
   it('handles unseeded state properly', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(() =>
-        Promise.resolve({
-          ok: true,
-          status: 200,
-          json: () => Promise.resolve({ seeded: false }),
-        })
-      )
-    );
+    setupFetchMock({ seeded: false }, { ...mockMeta, seeded: false });
 
-    render(
-      <MemoryRouter>
-        <ExecutiveSummaryPage />
-      </MemoryRouter>
-    );
+    renderPage();
 
     await waitFor(() => {
       expect(screen.getByText(/Database Unseeded/i)).toBeInTheDocument();
@@ -361,25 +357,45 @@ describe('ExecutiveSummaryPage', () => {
       cost_comparison: null,
     };
 
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(() =>
-        Promise.resolve({
-          ok: true,
-          status: 200,
-          json: () => Promise.resolve(emptyResponse),
-        })
-      )
-    );
+    setupFetchMock(emptyResponse);
 
-    render(
-      <MemoryRouter>
-        <ExecutiveSummaryPage />
-      </MemoryRouter>
-    );
+    renderPage();
 
     await waitFor(() => {
       expect(screen.getByText('No components currently at risk')).toBeInTheDocument();
     });
+  });
+
+  it('displays INR notice and formats amounts in ₹ without $ when display_currency is INR', async () => {
+    const inrMeta: DatasetMetaResponse = {
+      ...mockMeta,
+      display_currency: 'INR',
+      usd_to_inr_rate: '83.50',
+    };
+
+    const inrSummaryResponse: ExecutiveSummaryResponse = {
+      ...mockSummaryResponse,
+      cost_comparison: {
+        ...mockSummaryResponse.cost_comparison!,
+        difference_sentence:
+          'Acting costs ₹71,43,425.00; exposed order value in the first shortage window falls from ₹20,93,43,685.00 to ₹14,27,16,196.00 (upper bound, not a loss). Upper bound of exposure: production lead time and stock allocation to orders are unknown, so these orders are potentially exposed, not predicted to be late. Exposed revenue is the selling value of those orders, not an estimate of loss.',
+      },
+    };
+
+    setupFetchMock(inrSummaryResponse, inrMeta);
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('currency-notice')).toBeInTheDocument();
+    });
+
+    expect(screen.getByTestId('currency-notice')).toHaveTextContent(
+      'Amounts are stored in USD and shown in INR at a configured rate of 1 USD = ₹83.50'
+    );
+    expect(screen.getByTestId('decision-cost')).toHaveTextContent('₹71,43,425.00');
+    expect(screen.getByTestId('decision-cost')).not.toHaveTextContent('$');
+    expect(screen.getByTestId('difference-sentence-box')).toHaveTextContent('₹71,43,425.00');
+    expect(screen.getByTestId('difference-sentence-box')).not.toHaveTextContent('$');
   });
 });

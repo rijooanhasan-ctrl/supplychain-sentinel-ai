@@ -149,3 +149,11 @@ The flagship disruption scenario in the demo dataset centers on component **`CPU
   - High: 5 orders
   - Normal: 0 orders
   - Low: 2 orders
+
+### Currency Display Presentation (INR Mode)
+- Stored records, underlying calculations, and raw API responses maintain customer order selling prices in USD.
+- When `DISPLAY_CURRENCY="INR"` and a valid `USD_TO_INR_RATE` (e.g. `83.50`) are configured:
+  - Stored USD exposed revenue: `$2,507,110.00`
+  - Displayed INR exposed revenue: `$2,507,110.00` × `83.50` = `₹20,93,43,685.00`
+- Presented with the mandatory upper-bound exposure notice and currency conversion disclaimer (*1 USD = ₹83.50*).
+

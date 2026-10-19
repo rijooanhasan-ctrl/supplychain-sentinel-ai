@@ -1,7 +1,7 @@
 from decimal import Decimal
 import json
 from functools import lru_cache
-from typing import List, Optional, Union
+from typing import Any, List, Optional, Union
 from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -50,6 +50,10 @@ class Settings(BaseSettings):
     # Phase 7: Recovery Recommendations Configuration
     RECOVERY_TRANSFER_DAYS: int = 2
     RECOVERY_TRANSFER_COST_PER_UNIT: Optional[Decimal] = None
+
+    # Currency display configuration
+    DISPLAY_CURRENCY: str = "USD"
+    USD_TO_INR_RATE: Optional[Decimal] = None
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -212,6 +216,35 @@ class Settings(BaseSettings):
             raise ValueError(
                 f"RECOVERY_TRANSFER_COST_PER_UNIT cannot be negative, got {self.RECOVERY_TRANSFER_COST_PER_UNIT}"
             )
+        return self
+
+    @field_validator("DISPLAY_CURRENCY", mode="before")
+    @classmethod
+    def normalize_display_currency(cls, v: Any) -> Any:
+        if isinstance(v, str):
+            v_clean = v.strip().upper()
+            if v_clean in ("USD", "INR"):
+                return v_clean
+        return v
+
+    @model_validator(mode="after")
+    def validate_currency_settings(self) -> "Settings":
+        if self.DISPLAY_CURRENCY not in ("USD", "INR"):
+            raise ValueError(
+                f"DISPLAY_CURRENCY must be 'USD' or 'INR', got '{self.DISPLAY_CURRENCY}'"
+            )
+        if self.DISPLAY_CURRENCY == "INR":
+            if self.USD_TO_INR_RATE is None:
+                raise ValueError("USD_TO_INR_RATE must be configured when DISPLAY_CURRENCY is 'INR'")
+            if not self.USD_TO_INR_RATE.is_finite() or self.USD_TO_INR_RATE <= Decimal("0"):
+                raise ValueError(
+                    f"USD_TO_INR_RATE must be finite and greater than 0, got {self.USD_TO_INR_RATE}"
+                )
+        elif self.USD_TO_INR_RATE is not None:
+            if not self.USD_TO_INR_RATE.is_finite() or self.USD_TO_INR_RATE <= Decimal("0"):
+                raise ValueError(
+                    f"USD_TO_INR_RATE must be finite and greater than 0, got {self.USD_TO_INR_RATE}"
+                )
         return self
 
 

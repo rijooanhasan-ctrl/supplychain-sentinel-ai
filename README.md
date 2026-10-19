@@ -308,6 +308,17 @@ The backend supports configuration via environment variables or a `.env` file:
 | `ALERT_DELAY_MIN_DELIVERIES` | `10` | Delivery count threshold below which severity is capped at medium (valid: $\ge 1$) |
 | `RECOVERY_TRANSFER_DAYS` | `2` | Assumed calendar days required for inter-warehouse transfers (valid: $\ge 0$) |
 | `RECOVERY_TRANSFER_COST_PER_UNIT` | `null` | Optional assumed cost per unit for inter-warehouse transfers in USD (valid: $\ge 0$ or null) |
+| `DISPLAY_CURRENCY` | `"USD"` | Target display currency for monetary values (`"USD"` or `"INR"`, default: `"USD"`). All stored data and calculations stay in USD. |
+| `USD_TO_INR_RATE` | `null` | Exchange rate used strictly for display conversion if `DISPLAY_CURRENCY="INR"` (e.g. `83.50`). Must be finite and $> 0$ when INR is selected. |
+
+### Currency Display Layer & Presentation
+
+- **Stored Data & Calculations**: All underlying database models, seed records, domain calculations, and API numeric money fields remain strictly in USD (e.g. `85550.00`).
+- **Display Layer Conversion**: When `DISPLAY_CURRENCY="INR"` and a valid `USD_TO_INR_RATE` (e.g. `83.50`) are configured, the presentation layer renders monetary amounts in INR using Indian number grouping (`en-IN`) and the `₹` symbol (e.g. `₹71,43,425.00`), alongside an explicit notice: *"Amounts are stored in USD and shown in INR at a configured rate of 1 USD = ₹83.50 (assumption, not a live exchange rate)"*.
+- **Decimal Safety**: All conversions utilize Decimal in Python (`ROUND_HALF_UP`) and BigInt integer mantissa arithmetic in TypeScript (`src/lib/format.ts`) to eliminate floating-point drift.
+- **Worked Conversion Example**:
+  - Incremental recovery cost: `$85,550.00` × `83.50` = `₹71,43,425.00`
+  - Exposed order selling value: `$2,507,110.00` × `83.50` = `₹20,93,43,685.00`
 
 ---
 
@@ -331,16 +342,16 @@ Exact versions installed in the local environment and verified from git reposito
 
 ## 8. Running Tests
 
-### Backend Test Suite (191 passing tests)
+### Backend Test Suite (239 passing tests)
 From `backend/`:
 ```powershell
-& ".\.venv\Scripts\python.exe" -m pytest tests -q
+& ".\.venv\Scripts\python.exe" -m pytest -q
 ```
 
-### Frontend Test Suite (103 passing tests)
+### Frontend Test Suite (127 passing tests)
 From `frontend/`:
 ```powershell
-npm test
+npm test -- --run
 ```
 
 ### Frontend Linting & Production Build
@@ -349,4 +360,5 @@ From `frontend/`:
 npm run lint
 npm run build
 ```
+
 

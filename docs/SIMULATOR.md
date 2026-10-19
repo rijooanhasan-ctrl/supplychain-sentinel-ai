@@ -110,6 +110,13 @@ When `shortage_date is None`, exposure defaults to 0 orders / $0.00.
 
 **What changed**: The 7-day delay pushed the next inbound past the shortage window, extending it from 3 ? 10 days. Recovery via alt-supplier order eliminates the shortage.
 
+### Currency Display Presentation (INR Mode)
+All scenario evaluations and exposed revenue computations are performed strictly in USD. When `DISPLAY_CURRENCY="INR"` and a valid `USD_TO_INR_RATE` (e.g. `83.50`) are configured:
+- Baseline Selling Value: `$125,000.00` × `83.50` = `₹1,04,37,500.00`
+- Disrupted Selling Value: `$300,000.00` × `83.50` = `₹2,50,50,000.00`
+- Recovery Action Incremental Cost (e.g. `$297,360.00`): `$297,360.00` × `83.50` = `₹2,48,29,560.00`
+- Presented with the currency notice banner: *"Amounts are stored in USD and shown in INR at a configured rate of 1 USD = ₹83.50 (assumption, not a live exchange rate)"*.
+
 ---
 
 ## Frontend Controls

@@ -55,6 +55,9 @@ def get_metadata(
                 "delivery_records": 0,
             },
             message="Database is not seeded with demo data yet.",
+            display_currency=settings.DISPLAY_CURRENCY,
+            usd_to_inr_rate=str(settings.USD_TO_INR_RATE) if settings.USD_TO_INR_RATE is not None else None,
+            stored_currency="USD",
         )
 
     # Collect actual row counts
@@ -83,4 +86,7 @@ def get_metadata(
         generated_at=meta.generated_at,
         counts=counts,
         message="Demo dataset active.",
+        display_currency=settings.DISPLAY_CURRENCY,
+        usd_to_inr_rate=str(settings.USD_TO_INR_RATE) if settings.USD_TO_INR_RATE is not None else None,
+        stored_currency="USD",
     )

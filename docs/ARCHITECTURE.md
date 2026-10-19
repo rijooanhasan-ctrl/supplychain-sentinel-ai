@@ -88,6 +88,13 @@
    - Implemented in `backend/app/domain/executive_summary.py`, `backend/app/services/executive_summary.py`, and `backend/app/api/routes/executive_summary.py` (`GET /api/executive-summary`).
    - Synthesizes top disruption risks, priority recovery recommendations, data quality lineage, and an acting vs doing nothing comparative tradeoff table. Reuses results from existing pure domain modules without recalculating shortage or cost formulas. Employs a strict upper-bound framing for exposed order values, completely avoiding ungrounded "savings" or "loss" claims.
 
+7. **Currency Display Presentation Layer:**
+   - **Ground Truth Invariance**: Stored database records, seed generation, domain calculations, and API numeric fields remain strictly in USD.
+   - **Configured Conversion Boundary**: The conversion to INR is isolated to the display layer via configuration (`DISPLAY_CURRENCY` and `USD_TO_INR_RATE`), surfaced additively via `GET /api/meta`.
+   - **Decimal-Safe Math**: Zero floating-point arithmetic. Python utilizes `Decimal` with `ROUND_HALF_UP` and Indian digit grouping (`app/domain/money_format.py`); TypeScript utilizes string-based BigInt integer mantissa arithmetic (`frontend/src/lib/format.ts`).
+   - **Worked Example**:
+     - `$85,550.00` × `83.50` = `₹71,43,425.00`
+     - `$2,507,110.00` × `83.50` = `₹20,93,43,685.00`
 
 ---
 

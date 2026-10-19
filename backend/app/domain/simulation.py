@@ -44,6 +44,7 @@ from app.domain.recovery import (
     SupplierOfferInput,
     evaluate_component_recovery,
 )
+from app.domain.money_format import format_money
 
 
 SIMULATION_ASSUMPTIONS = [
@@ -194,6 +195,8 @@ def _build_scenario_result(
     recovery_note: Optional[str] = None,
     target_cutoff: Optional[datetime.date] = None,
     is_recovered: bool = False,
+    display_currency: str = "USD",
+    usd_to_inr_rate: Optional[Decimal] = None,
 ) -> ScenarioResult:
     """Build a ScenarioResult from evaluation and order exposure impact.
 
@@ -322,10 +325,11 @@ def _build_scenario_result(
         high = impact.count_by_priority.get("high", 0)
         norm = impact.count_by_priority.get("normal", 0)
         low = impact.count_by_priority.get("low", 0)
+        formatted_rev = format_money(impact.exposed_revenue, display_currency, usd_to_inr_rate)
         exp_sum = (
             f"{impact.orders_count} customer orders potentially exposed: "
             f"{crit} critical, {high} high, {norm} normal, {low} low priority. "
-            f"Upper bound selling value: ${impact.exposed_revenue:,.2f}."
+            f"Upper bound selling value: {formatted_rev}."
         )
     else:
         exp_sum = "No customer orders exposed within the planning horizon."
@@ -499,7 +503,12 @@ def simulate(
         bom_by_product=bom_by_product,
         products_by_id=products_by_id,
     )
-    baseline_scenario = _build_scenario_result(baseline_res, baseline_impact)
+    baseline_scenario = _build_scenario_result(
+        baseline_res,
+        baseline_impact,
+        display_currency=rec_cfg.display_currency,
+        usd_to_inr_rate=rec_cfg.usd_to_inr_rate,
+    )
 
     # -------------------------------------------------------------------------
     # 2. DISRUPTED SCENARIO (Apply params to baseline inputs)
@@ -528,7 +537,12 @@ def simulate(
         bom_by_product=bom_by_product,
         products_by_id=products_by_id,
     )
-    disrupted_scenario = _build_scenario_result(disrupted_res, disrupted_impact)
+    disrupted_scenario = _build_scenario_result(
+        disrupted_res,
+        disrupted_impact,
+        display_currency=rec_cfg.display_currency,
+        usd_to_inr_rate=rec_cfg.usd_to_inr_rate,
+    )
 
     # Determine target cutoff window from disrupted scenario
     target_cutoff: Optional[datetime.date] = None
@@ -554,6 +568,8 @@ def simulate(
             recovery_note="No recovery action needed: no shortage projected in the disrupted scenario.",
             target_cutoff=target_cutoff,
             is_recovered=True,
+            display_currency=rec_cfg.display_currency,
+            usd_to_inr_rate=rec_cfg.usd_to_inr_rate,
         )
     else:
         # Prepare supplier offers based on alt_supplier_available parameter
@@ -729,6 +745,8 @@ def simulate(
                 recovery_note=rec.reason,
                 target_cutoff=target_cutoff,
                 is_recovered=True,
+                display_currency=rec_cfg.display_currency,
+                usd_to_inr_rate=rec_cfg.usd_to_inr_rate,
             )
 
     what_changed = _build_what_changed(

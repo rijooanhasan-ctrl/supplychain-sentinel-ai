@@ -464,4 +464,48 @@ describe('AlertsPage', () => {
       ).toBeInTheDocument();
     });
   });
+
+  it('displays INR notice and formats amounts in ₹ without $ when display_currency is INR', async () => {
+    const inrMeta = {
+      ...mockMeta,
+      display_currency: 'INR',
+      usd_to_inr_rate: '83.50',
+    };
+
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+      const urlStr = url.toString();
+      if (urlStr.includes('/api/meta')) {
+        return { ok: true, status: 200, json: async () => inrMeta } as Response;
+      }
+      if (urlStr.includes('/api/alerts/inventory_shortage.CPU-X7')) {
+        return { ok: true, status: 200, json: async () => mockDetailCpu } as Response;
+      }
+      if (urlStr.includes('/api/alerts')) {
+        return { ok: true, status: 200, json: async () => mockAlertsResponse } as Response;
+      }
+      return { ok: false, status: 404 } as Response;
+    });
+
+    render(
+      <MetaProvider>
+        <MemoryRouter>
+          <AlertsPage />
+        </MemoryRouter>
+      </MetaProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('currency-notice')).toBeInTheDocument();
+    });
+
+    expect(screen.getByTestId('currency-notice')).toHaveTextContent(
+      'Amounts are stored in USD and shown in INR at a configured rate of 1 USD = ₹83.50'
+    );
+
+    // 2507110.00 * 83.50 = 209,343,685.00 INR -> ₹20,93,43,685.00
+    await waitFor(() => {
+      expect(screen.getAllByText('₹20,93,43,685.00').length).toBeGreaterThan(0);
+    });
+    expect(screen.queryByText('$2,507,110.00')).not.toBeInTheDocument();
+  });
 });

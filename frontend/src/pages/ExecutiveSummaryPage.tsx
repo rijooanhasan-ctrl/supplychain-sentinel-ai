@@ -5,11 +5,14 @@ import type { ExecutiveSummaryResponse } from '../api/types';
 import { useApi } from '../api/useApi';
 import { PageHeader } from '../components/PageHeader';
 import { LoadingView, ErrorView, EmptyView, UnseededView } from '../components/StateViews';
+import { useMeta } from '../hooks/useMeta';
+import { CurrencyNotice } from '../components/CurrencyNotice';
 import { Badge } from '../components/Badge';
 import { WhyThis } from '../components/WhyThis';
-import { formatInteger, formatNumber, formatUsd } from '../lib/format';
+import { formatInteger, formatNumber, formatMoney } from '../lib/format';
 
 export function ExecutiveSummaryPage() {
+  const { meta } = useMeta();
   const [dqExpanded, setDqExpanded] = useState(false);
 
   const fetchSummary = useCallback(
@@ -57,6 +60,8 @@ export function ExecutiveSummaryPage() {
         title="Executive Summary"
         description="Operational risk overview, cost of action vs inaction, and data quality lineage"
       />
+
+      <CurrencyNotice />
 
       {/* 1. Headline Sentence + DEMO DATA label */}
       <section
@@ -249,7 +254,7 @@ export function ExecutiveSummaryPage() {
               >
                 {!pd.cost_known || pd.incremental_cost === null
                   ? 'Unknown'
-                  : formatUsd(pd.incremental_cost)}
+                  : formatMoney(pd.incremental_cost, meta)}
               </span>
             </div>
             <div className="p-3 bg-slate-50 rounded border border-slate-200">
@@ -312,7 +317,7 @@ export function ExecutiveSummaryPage() {
                   <td className="py-3 px-4 text-right font-bold text-slate-900 bg-blue-50/20">
                     {!cc.act.cost_known || cc.act.cost === null
                       ? 'Unknown'
-                      : formatUsd(cc.act.cost)}
+                      : formatMoney(cc.act.cost, meta)}
                   </td>
                   <td className="py-3 px-4 text-right text-slate-400 bg-slate-50/40 font-sans">
                     —
@@ -345,10 +350,10 @@ export function ExecutiveSummaryPage() {
                     Selling Value of Affected Orders
                   </td>
                   <td className="py-3 px-4 text-right font-bold text-slate-900 bg-blue-50/20">
-                    {cc.act.selling_value !== null ? formatUsd(cc.act.selling_value) : '—'}
+                    {cc.act.selling_value !== null ? formatMoney(cc.act.selling_value, meta) : '—'}
                   </td>
                   <td className="py-3 px-4 text-right font-bold text-slate-900 bg-slate-50/40">
-                    {cc.do_nothing.selling_value !== null ? formatUsd(cc.do_nothing.selling_value) : '—'}
+                    {cc.do_nothing.selling_value !== null ? formatMoney(cc.do_nothing.selling_value, meta) : '—'}
                   </td>
                 </tr>
               </tbody>

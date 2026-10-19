@@ -45,6 +45,8 @@ def build_recovery_config(settings: Settings) -> RecoveryConfig:
     return RecoveryConfig(
         transfer_days=settings.RECOVERY_TRANSFER_DAYS,
         transfer_cost_per_unit=settings.RECOVERY_TRANSFER_COST_PER_UNIT,
+        display_currency=settings.DISPLAY_CURRENCY,
+        usd_to_inr_rate=settings.USD_TO_INR_RATE,
     )
 
 

@@ -382,4 +382,37 @@ describe('RecommendationsPage Component', () => {
 
     expect(screen.getByRole('button', { name: /retry/i })).toBeInTheDocument();
   });
+
+  it('displays INR notice and formats amounts in ₹ without $ when display_currency is INR', async () => {
+    const inrMeta = {
+      ...mockMeta,
+      display_currency: 'INR',
+      usd_to_inr_rate: '83.50',
+    };
+
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+      const urlStr = url.toString();
+      if (urlStr.includes('/api/meta')) {
+        return { ok: true, status: 200, json: async () => inrMeta } as Response;
+      }
+      return {
+        ok: true,
+        status: 200,
+        json: async () => mockRecommendationsResponse,
+      } as Response;
+    });
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('currency-notice')).toBeInTheDocument();
+    });
+
+    expect(screen.getByTestId('currency-notice')).toHaveTextContent(
+      'Amounts are stored in USD and shown in INR at a configured rate of 1 USD = ₹83.50'
+    );
+    // 85550.00 * 83.50 = 7143425.00 INR -> ₹71,43,425.00
+    expect(screen.getByText('₹71,43,425.00')).toBeInTheDocument();
+    expect(screen.queryByText('$85,550.00')).not.toBeInTheDocument();
+  });
 });

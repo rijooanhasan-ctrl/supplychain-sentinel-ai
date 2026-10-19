@@ -132,4 +132,91 @@ describe('SuppliersPage', () => {
     fireEvent.click(toggleBtn);
     expect(toggleBtn).toHaveAttribute('aria-expanded', 'false');
   });
+
+  it('displays INR notice, changes header to Unit Cost (INR), and formats offer unit costs in ₹ without $ when display_currency is INR', async () => {
+    const inrMeta = {
+      ...mockMeta,
+      display_currency: 'INR',
+      usd_to_inr_rate: '83.50',
+    };
+
+    const suppliers: Supplier[] = [
+      { id: 1, code: 'SUP-01', name: 'Apex Silicon Global', country: 'United States' },
+    ];
+
+    const supplierDetail: SupplierDetail = {
+      ...suppliers[0],
+      offers: [
+        {
+          id: 101,
+          component_id: 1,
+          component_sku: 'CPU-X7',
+          component_name: 'NovaCore X7',
+          unit_cost: '250.00',
+          lead_time_days: 14,
+          min_order_qty: 100,
+          max_weekly_capacity: 5000,
+          is_preferred: true,
+          expedite_available: false,
+          expedite_lead_time_days: null,
+          expedite_cost_premium_pct: null,
+        },
+      ],
+    };
+
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+      const urlStr = url.toString();
+      if (urlStr.includes('/api/meta')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => inrMeta,
+        } as Response;
+      }
+      if (urlStr.includes('/api/suppliers/1')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => supplierDetail,
+        } as Response;
+      }
+      if (urlStr.includes('/api/suppliers')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({ items: suppliers, total: 1, limit: 50, offset: 0 }),
+        } as Response;
+      }
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ items: [], total: 0 }),
+      } as Response;
+    });
+
+    render(
+      <MetaProvider>
+        <SuppliersPage />
+      </MetaProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('currency-notice')).toBeInTheDocument();
+    });
+
+    expect(screen.getByTestId('currency-notice')).toHaveTextContent(
+      'Amounts are stored in USD and shown in INR at a configured rate of 1 USD = ₹83.50'
+    );
+
+    const toggleBtn = screen.getByTestId('toggle-supplier-1');
+    fireEvent.click(toggleBtn);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('offers-table-1')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('Unit Cost (INR)')).toBeInTheDocument();
+    expect(screen.getByText('₹20,875.00')).toBeInTheDocument();
+    expect(screen.queryByText('$250.00')).not.toBeInTheDocument();
+  });
 });

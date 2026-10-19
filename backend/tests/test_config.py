@@ -15,6 +15,8 @@ def test_config_defaults_load_correctly():
     assert settings.INVENTORY_CRITICAL_DAYS == 7
     assert settings.INVENTORY_HIGH_DAYS == 14
     assert settings.INVENTORY_MEDIUM_DAYS == 30
+    assert settings.DISPLAY_CURRENCY == "USD"
+    assert settings.USD_TO_INR_RATE is None
 
 
 def test_config_overrides_via_env_vars(monkeypatch):
@@ -57,5 +59,35 @@ def test_config_inventory_validation_rejects_invalid_values(monkeypatch):
     monkeypatch.setenv("INVENTORY_CRITICAL_DAYS", "15")
     monkeypatch.setenv("INVENTORY_HIGH_DAYS", "10")
     with pytest.raises(ValueError, match="Invalid inventory threshold ordering"):
+        Settings()
+
+
+def test_config_currency_settings_valid(monkeypatch):
+    monkeypatch.setenv("DISPLAY_CURRENCY", "INR")
+    monkeypatch.setenv("USD_TO_INR_RATE", "83.5")
+    s = Settings()
+    assert s.DISPLAY_CURRENCY == "INR"
+    assert s.USD_TO_INR_RATE == pytest.approx(83.5)
+
+
+def test_config_currency_validation_errors(monkeypatch):
+    # Invalid currency name
+    monkeypatch.setenv("DISPLAY_CURRENCY", "EUR")
+    with pytest.raises(ValueError, match="DISPLAY_CURRENCY must be 'USD' or 'INR'"):
+        Settings()
+
+    # INR without rate
+    monkeypatch.setenv("DISPLAY_CURRENCY", "INR")
+    monkeypatch.delenv("USD_TO_INR_RATE", raising=False)
+    with pytest.raises(ValueError, match="USD_TO_INR_RATE must be configured"):
+        Settings()
+
+    # INR with non-positive rate
+    monkeypatch.setenv("USD_TO_INR_RATE", "0")
+    with pytest.raises(ValueError, match="USD_TO_INR_RATE must be finite and greater than 0"):
+        Settings()
+
+    monkeypatch.setenv("USD_TO_INR_RATE", "-5.5")
+    with pytest.raises(ValueError, match="USD_TO_INR_RATE must be finite and greater than 0"):
         Settings()
 

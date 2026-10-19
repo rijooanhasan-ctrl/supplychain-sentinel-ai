@@ -11,7 +11,8 @@ import { PageHeader } from '../components/PageHeader';
 import { LoadingView, ErrorView, EmptyView, UnseededView } from '../components/StateViews';
 import { Badge } from '../components/Badge';
 import { WhyThis } from '../components/WhyThis';
-import { formatInteger, formatNumber, formatUsd } from '../lib/format';
+import { CurrencyNotice } from '../components/CurrencyNotice';
+import { formatInteger, formatNumber, formatMoney } from '../lib/format';
 
 function OptionKindBadge({ kind }: { kind: string }) {
   switch (kind) {
@@ -35,6 +36,7 @@ function OptionDetailExpansion({
   option: RecoveryOption;
   optionIndex: number;
 }) {
+  const { meta } = useMeta();
   return (
     <div
       id={`option-expansion-${option.id}-${optionIndex}`}
@@ -102,7 +104,7 @@ function OptionDetailExpansion({
           <div className="font-semibold text-slate-900 flex items-center justify-between">
             <span>Customer Orders Potentially Exposed ({option.impact.orders_count} orders)</span>
             <span className="font-mono text-slate-800 font-bold">
-              Selling Value: {formatUsd(option.impact.exposed_revenue)}
+              Selling Value: {formatMoney(option.impact.exposed_revenue, meta)}
             </span>
           </div>
           <p className="text-[11px] text-slate-500 italic">
@@ -168,6 +170,7 @@ function ComponentCard({
 }: {
   rec: ComponentRecoveryRecommendation;
 }) {
+  const { meta } = useMeta();
   const [expandedOptionId, setExpandedOptionId] = useState<string | null>(null);
 
   const toggleExpand = (id: string) => {
@@ -304,7 +307,7 @@ function ComponentCard({
                         </span>
                       ) : (
                         <span className="font-semibold text-slate-900">
-                          {formatUsd(opt.incremental_cost)}
+                          {formatMoney(opt.incremental_cost, meta)}
                         </span>
                       )}
                     </td>
@@ -373,7 +376,7 @@ function ComponentCard({
               <span className="font-bold">{formatInteger(rec.combined_plan.total_quantity)}</span> · Known Cost:{' '}
               <span className="font-bold">
                 {rec.combined_plan.total_known_cost !== null
-                  ? formatUsd(rec.combined_plan.total_known_cost)
+                  ? formatMoney(rec.combined_plan.total_known_cost, meta)
                   : 'Contains Unknown Costs'}
               </span> · Final Residual:{' '}
               <span className="font-bold">
@@ -410,7 +413,7 @@ function ComponentCard({
                     <td className="py-1.5 px-3 text-slate-700">{st.arrival_date || '—'}</td>
                     <td className="py-1.5 px-3 text-right">
                       {st.cost_known && st.incremental_cost !== null
-                        ? formatUsd(st.incremental_cost)
+                        ? formatMoney(st.incremental_cost, meta)
                         : 'Unknown'}
                     </td>
                   </tr>
@@ -487,6 +490,8 @@ export function RecommendationsPage() {
         title="Recovery Recommendations"
         description="Prescriptive decision-support interventions (transfers, expedite, alternate suppliers) evaluated against real agreements."
       />
+
+      <CurrencyNotice />
 
       {/* Permanent Warning Banner */}
       <div

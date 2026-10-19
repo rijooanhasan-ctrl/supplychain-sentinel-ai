@@ -136,6 +136,13 @@ If no single feasible intervention eliminates the shortage (`residual_unmet_befo
 - `expedite.PO-CPU-701` arrives on 2026-10-22 (5-day expedite lead time), leaving 36.2 units unmet during 2026-10-21 before receipts arrive at the start of 2026-10-22.
 - Because `alt_supplier.SUP-NEXUS` achieves residual 0.0, no combined plan is required (`combined_plan: null`).
 
+### Currency Display Presentation (INR Mode)
+- All underlying contract prices, catalog unit costs, and optimization formulas remain strictly in USD.
+- When `DISPLAY_CURRENCY="INR"` and a valid `USD_TO_INR_RATE` (e.g. `83.50`) are configured:
+  - `alt_supplier.SUP-NEXUS` incremental cost: `$85,550.00` × `83.50` = `₹71,43,425.00`
+  - `expedite.PO-CPU-701` incremental cost: `$50,000.00` × `83.50` = `₹41,75,000.00`
+- The table displays formatted INR amounts with `₹` and Indian grouping (`en-IN`), accompanied by the currency notice banner.
+
 ---
 
 ## 7. Assumptions and Known Limitations

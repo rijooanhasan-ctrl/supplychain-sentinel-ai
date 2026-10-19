@@ -93,6 +93,16 @@ The default seed 42 dataset produces the following computed metrics for CPU-X7:
    - Exposed Orders Remaining: `10` orders totaling `$1,709,176.00` (orders due during later episodes).
    - Later Shortage: Episode begins `2026-11-02` (44 days, `4,498.0` units unmet); explicitly documented as not covered by this recommendation.
 
+3. **Currency Display Presentation (INR Mode)**:
+   - All internal storage and domain arithmetic remain in USD.
+   - When `DISPLAY_CURRENCY="INR"` and `USD_TO_INR_RATE=83.50` are configured, the UI presents amounts with Indian grouping (`en-IN`) and `₹` symbol:
+     - Recommended action incremental cost: `$85,550.00` × `83.50` = `₹71,43,425.00`
+     - Baseline exposed selling value: `$2,507,110.00` × `83.50` = `₹20,93,43,685.00`
+     - Post-action exposed selling value: `$1,709,176.00` × `83.50` = `₹14,27,16,196.00`
+     - Dynamic difference sentence:
+       > *"Acting costs ₹71,43,425.00; exposed order value in the first shortage window falls from ₹20,93,43,685.00 to ₹14,27,16,196.00 (upper bound, not a loss)."*
+   - Displays the permanent currency disclaimer notice: *"Amounts are stored in USD and shown in INR at a configured rate of 1 USD = ₹83.50 (assumption, not a live exchange rate)"*.
+
 ---
 
 ## Key Assumptions & Limitations

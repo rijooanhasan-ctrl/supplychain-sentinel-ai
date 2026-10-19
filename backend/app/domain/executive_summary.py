@@ -30,6 +30,7 @@ from app.domain.simulation import (
 from app.domain.supplier_risk import (
     SupplierRiskResult,
 )
+from app.domain.money_format import format_money
 
 DEFAULT_EXECUTIVE_SUMMARY_ASSUMPTIONS: List[str] = [
     "Analysis and recovery recommendations evaluate the first shortage window only; subsequent shortages are not covered.",
@@ -203,6 +204,8 @@ class ExecutiveSummaryInputs:
     supplier_results: Dict[int, SupplierRiskResult]
     priority_component_demand_history_days: Optional[int] = None
     flags: List[str] = field(default_factory=list)
+    display_currency: str = "USD"
+    usd_to_inr_rate: Optional[Decimal] = None
 
 
 def build_executive_summary(inputs: ExecutiveSummaryInputs) -> ExecutiveSummary:
@@ -436,9 +439,21 @@ def build_executive_summary(inputs: ExecutiveSummaryInputs) -> ExecutiveSummary:
         dn_rev = sim.baseline.exposed_revenue
 
         # Difference sentence (strictly no "savings" or "loss estimate", includes upper bound wording)
-        cost_str = f"${act_cost:,.2f}" if (act_cost_known and act_cost is not None) else "Unknown"
-        dn_rev_str = f"${dn_rev:,.2f}" if dn_rev is not None else "Unknown"
-        act_rev_str = f"${act_rev:,.2f}" if act_rev is not None else "Unknown"
+        cost_str = (
+            format_money(act_cost, inputs.display_currency, inputs.usd_to_inr_rate)
+            if (act_cost_known and act_cost is not None)
+            else "Unknown"
+        )
+        dn_rev_str = (
+            format_money(dn_rev, inputs.display_currency, inputs.usd_to_inr_rate)
+            if dn_rev is not None
+            else "Unknown"
+        )
+        act_rev_str = (
+            format_money(act_rev, inputs.display_currency, inputs.usd_to_inr_rate)
+            if act_rev is not None
+            else "Unknown"
+        )
 
         if act_cost_known and act_cost is not None:
             diff_sentence = (

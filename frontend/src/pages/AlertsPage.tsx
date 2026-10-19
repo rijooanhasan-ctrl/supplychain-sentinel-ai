@@ -14,7 +14,8 @@ import { LoadingView, ErrorView, EmptyView, UnseededView } from '../components/S
 import { Pagination } from '../components/Pagination';
 import { AlertSeverityBadge, Badge } from '../components/Badge';
 import { WhyThis } from '../components/WhyThis';
-import { formatInteger, formatNumber, formatUsd } from '../lib/format';
+import { CurrencyNotice } from '../components/CurrencyNotice';
+import { formatInteger, formatNumber, formatMoney } from '../lib/format';
 
 const SEVERITY_OPTIONS: { label: string; value: AlertSeverity | '' }[] = [
   { label: 'All Severities', value: '' },
@@ -50,6 +51,7 @@ function AlertDetailPanel({
     [alertId]
   );
   const { data: detail, loading, error, reload } = useApi(fetchDetail, [fetchDetail]);
+  const { meta } = useMeta();
 
   if (loading) {
     return (
@@ -208,7 +210,7 @@ function AlertDetailPanel({
               <p className="text-xs text-slate-600 mt-1">
                 {detail.impact.orders_count} customer order(s) potentially exposed totaling{' '}
                 <span className="font-bold text-slate-900 font-mono">
-                  {formatUsd(detail.impact.exposed_revenue)}
+                  {formatMoney(detail.impact.exposed_revenue, meta)}
                 </span>{' '}
                 in sales value ({formatInteger(detail.impact.total_component_units_required)} component units required).
               </p>
@@ -377,6 +379,8 @@ export function AlertsPage() {
         title="Disruption Detection & Alerts"
         description="Stateless predictive disruption detection across inventory runway, supplier reliability, purchase orders, and demand surges."
       />
+
+      <CurrencyNotice />
 
       {/* Summary Counts Banner */}
       {data && (
@@ -563,7 +567,7 @@ export function AlertsPage() {
                               : '—'}
                           </td>
                           <td className="py-3 px-4 text-right font-mono font-semibold text-slate-900">
-                            {alert.exposed_revenue !== null ? formatUsd(alert.exposed_revenue) : '—'}
+                            {alert.exposed_revenue !== null ? formatMoney(alert.exposed_revenue, meta) : '—'}
                           </td>
                         </tr>
                         {isExpanded && (

@@ -34,6 +34,7 @@ from app.domain.alerts import (
     ProductInput,
     compute_order_exposure_impact,
 )
+from app.domain.money_format import format_money
 
 
 @dataclass(frozen=True)
@@ -42,6 +43,8 @@ class RecoveryConfig:
 
     transfer_days: int = 2
     transfer_cost_per_unit: Optional[Decimal] = None
+    display_currency: str = "USD"
+    usd_to_inr_rate: Optional[Decimal] = None
 
     def __post_init__(self) -> None:
         if self.transfer_days < 0:
@@ -271,9 +274,14 @@ def evaluate_component_recovery(
                 incremental_cost = (
                     Decimal(str(rem_qty)) * matching_offer.unit_cost * matching_offer.expedite_cost_premium_pct
                 )
+                formatted_base_cost = format_money(
+                    matching_offer.unit_cost,
+                    recovery_config.display_currency,
+                    recovery_config.usd_to_inr_rate,
+                )
                 constraints.append(
                     f"Cost premium applied: {matching_offer.expedite_cost_premium_pct * Decimal('100'):.1f}% "
-                    f"over base unit cost of ${matching_offer.unit_cost}."
+                    f"over base unit cost of {formatted_base_cost}."
                 )
             else:
                 cost_known = False
@@ -773,7 +781,15 @@ def evaluate_component_recovery(
     # Invariant: recommendation must never be worse than accept_delay
     assert rec_residual <= raw_unmet, f"Recommendation cannot be worse than accept_delay ({rec_residual} > {raw_unmet})"
 
-    cost_text = f"Incremental cost: ${rec_cost:,.2f}." if rec_cost is not None else "Incremental cost is unknown."
+    if rec_cost is not None:
+        formatted_cost = format_money(
+            rec_cost,
+            recovery_config.display_currency,
+            recovery_config.usd_to_inr_rate,
+        )
+        cost_text = f"Incremental cost: {formatted_cost}."
+    else:
+        cost_text = "Incremental cost is unknown."
 
     # Identify feasible candidate options with unknown cost
     unknown_cost_kinds = sorted({

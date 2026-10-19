@@ -5,8 +5,9 @@ import type { Component, SimulationResponse } from '../api/types';
 import { useMeta } from '../hooks/useMeta';
 import { PageHeader } from '../components/PageHeader';
 import { LoadingView, ErrorView, EmptyView, UnseededView } from '../components/StateViews';
+import { CurrencyNotice } from '../components/CurrencyNotice';
 import { Badge } from '../components/Badge';
-import { formatInteger, formatNumber, formatUsd } from '../lib/format';
+import { formatInteger, formatNumber, formatMoney } from '../lib/format';
 
 function RiskBadge({ level }: { level: string }) {
   const norm = level.toLowerCase();
@@ -261,6 +262,8 @@ export function SimulatorPage() {
         title="What-If Disruption Simulator"
         description="Simulate the upstream and downstream effects of supplier delays, demand spikes, and inventory shifts in real time."
       />
+
+      <CurrencyNotice meta={meta} />
 
       {/* Permanent Warning Banner */}
       <div
@@ -648,7 +651,7 @@ export function SimulatorPage() {
                         · Selling Value:{' '}
                         <span className="font-bold text-slate-900">
                           {simData.baseline.exposed_revenue !== null
-                            ? formatUsd(simData.baseline.exposed_revenue)
+                            ? formatMoney(simData.baseline.exposed_revenue, meta)
                             : '—'}
                         </span>
                       </div>
@@ -661,7 +664,7 @@ export function SimulatorPage() {
                         · Selling Value:{' '}
                         <span className="font-bold text-red-900">
                           {simData.disrupted.exposed_revenue !== null
-                            ? formatUsd(simData.disrupted.exposed_revenue)
+                            ? formatMoney(simData.disrupted.exposed_revenue, meta)
                             : '—'}
                         </span>
                       </div>
@@ -674,7 +677,7 @@ export function SimulatorPage() {
                         · Selling Value:{' '}
                         <span className="font-bold text-emerald-950">
                           {simData.recovered.exposed_revenue !== null
-                            ? formatUsd(simData.recovered.exposed_revenue)
+                            ? formatMoney(simData.recovered.exposed_revenue, meta)
                             : '—'}
                         </span>
                       </div>
@@ -698,7 +701,7 @@ export function SimulatorPage() {
                                 Qty: {formatInteger(act.quantity)} · Arrival:{' '}
                                 {act.arrival_date || '—'} · Cost:{' '}
                                 {act.cost_known && act.incremental_cost !== null
-                                  ? formatUsd(act.incremental_cost)
+                                  ? formatMoney(act.incremental_cost, meta)
                                   : 'Unknown'}
                               </span>
                             </div>

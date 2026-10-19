@@ -23,6 +23,9 @@ def test_meta_on_empty_db(client_empty):
     assert data["label"] is None
     assert all(count == 0 for count in data["counts"].values())
     assert "not seeded" in data["message"].lower()
+    assert data["display_currency"] == "USD"
+    assert data["usd_to_inr_rate"] is None
+    assert data["stored_currency"] == "USD"
 
 
 def test_all_endpoints_return_200_and_envelopes(client_seeded):
@@ -34,6 +37,9 @@ def test_all_endpoints_return_200_and_envelopes(client_seeded):
     assert meta["label"] == "DEMO DATA"
     assert meta["data_source"] == "demo"
     assert meta["counts"]["products"] >= 4
+    assert meta["display_currency"] == "USD"
+    assert meta["usd_to_inr_rate"] is None
+    assert meta["stored_currency"] == "USD"
 
     # /api/warehouses
     res_wh = client_seeded.get("/api/warehouses")
@@ -281,4 +287,21 @@ def test_utc_timestamps_format(client_seeded):
     assert res_health.status_code == 200
     ts = res_health.json()["timestamp"]
     assert ts.endswith("+00:00") or ts.endswith("Z")
+
+
+def test_meta_with_inr_configured(client_seeded):
+    from decimal import Decimal
+    from app.core.config import Settings, get_settings
+
+    inr_settings = Settings(DISPLAY_CURRENCY="INR", USD_TO_INR_RATE=Decimal("83.50"))
+    client_seeded.app.dependency_overrides[get_settings] = lambda: inr_settings
+    try:
+        res = client_seeded.get("/api/meta")
+        assert res.status_code == 200
+        meta = res.json()
+        assert meta["display_currency"] == "INR"
+        assert meta["usd_to_inr_rate"] == "83.50"
+        assert meta["stored_currency"] == "USD"
+    finally:
+        client_seeded.app.dependency_overrides.pop(get_settings, None)
 

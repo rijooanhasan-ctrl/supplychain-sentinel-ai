@@ -6,9 +6,11 @@ import { useMeta } from '../hooks/useMeta';
 import { PageHeader } from '../components/PageHeader';
 import { LoadingView, ErrorView, EmptyView, UnseededView } from '../components/StateViews';
 import { Pagination } from '../components/Pagination';
-import { formatInteger, formatPercentFromFraction, formatUsd } from '../lib/format';
+import { CurrencyNotice } from '../components/CurrencyNotice';
+import { formatInteger, formatPercentFromFraction, formatMoney } from '../lib/format';
 
 function SupplierOffersPanel({ supplierId }: { supplierId: number }) {
+  const { meta } = useMeta();
   const fetchDetail = useCallback(
     (signal: AbortSignal) => getSupplier(supplierId, signal),
     [supplierId]
@@ -48,7 +50,7 @@ function SupplierOffersPanel({ supplierId }: { supplierId: number }) {
           <thead className="bg-slate-50 text-slate-700 uppercase font-semibold">
             <tr>
               <th scope="col" className="px-3 py-2 text-left">Component SKU</th>
-              <th scope="col" className="px-3 py-2 text-right">Unit Cost (USD)</th>
+              <th scope="col" className="px-3 py-2 text-right">Unit Cost ({meta?.display_currency || 'USD'})</th>
               <th scope="col" className="px-3 py-2 text-right">Lead Time</th>
               <th scope="col" className="px-3 py-2 text-right">Min Order Qty</th>
               <th scope="col" className="px-3 py-2 text-right">Max Weekly Capacity</th>
@@ -79,7 +81,7 @@ function SupplierOffersPanel({ supplierId }: { supplierId: number }) {
                     <span className="text-slate-500 font-sans block text-[11px]">{offer.component_name}</span>
                   </th>
                   <td className="px-3 py-2 text-right font-mono text-slate-900 font-semibold">
-                    {formatUsd(offer.unit_cost)}
+                    {formatMoney(offer.unit_cost, meta)}
                   </td>
                   <td className="px-3 py-2 text-right font-mono text-slate-700">
                     {offer.lead_time_days} days
@@ -162,6 +164,8 @@ export function SuppliersPage() {
         title="Supplier Directory"
         description="Catalog of supplier partners and contractual supply parameters. Click 'View Agreements' to inspect component unit costs, lead times, and capacity."
       />
+
+      <CurrencyNotice />
 
       <section aria-labelledby="suppliers-table-heading" className="space-y-4">
         <h2 id="suppliers-table-heading" className="sr-only">Supplier List Table</h2>

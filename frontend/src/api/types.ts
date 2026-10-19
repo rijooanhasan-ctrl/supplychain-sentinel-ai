@@ -21,6 +21,9 @@ export interface DatasetMetaResponse {
   generated_at: string | null; // UTC ISO-8601 (ends with +00:00 or Z)
   counts: Record<string, number>;
   message: string | null;
+  display_currency?: string;
+  usd_to_inr_rate?: string | null;
+  stored_currency?: string;
 }
 
 export interface HealthResponse {

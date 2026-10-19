@@ -7,7 +7,8 @@ import { PageHeader } from '../components/PageHeader';
 import { LoadingView, ErrorView, EmptyView, UnseededView } from '../components/StateViews';
 import { Pagination } from '../components/Pagination';
 import { PoStatusBadge } from '../components/Badge';
-import { formatDate, formatInteger, formatUsd } from '../lib/format';
+import { CurrencyNotice } from '../components/CurrencyNotice';
+import { formatDate, formatInteger, formatMoney } from '../lib/format';
 import { timingLabel, slippedInfo } from '../lib/dates';
 
 const PO_STATUS_OPTIONS: { label: string; value: PurchaseOrderStatus | '' }[] = [
@@ -20,6 +21,7 @@ const PO_STATUS_OPTIONS: { label: string; value: PurchaseOrderStatus | '' }[] = 
 ];
 
 function PurchaseOrderLinesPanel({ poId }: { poId: number }) {
+  const { meta } = useMeta();
   const fetchDetail = useCallback(
     (signal: AbortSignal) => getPurchaseOrder(poId, signal),
     [poId]
@@ -63,7 +65,7 @@ function PurchaseOrderLinesPanel({ poId }: { poId: number }) {
               <th scope="col" className="px-3 py-2 text-right">Qty Ordered</th>
               <th scope="col" className="px-3 py-2 text-right">Qty Received</th>
               <th scope="col" className="px-3 py-2 text-right">Remaining</th>
-              <th scope="col" className="px-3 py-2 text-right">Unit Price (USD)</th>
+              <th scope="col" className="px-3 py-2 text-right">Unit Price ({meta?.display_currency || 'USD'})</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 bg-white">
@@ -90,7 +92,7 @@ function PurchaseOrderLinesPanel({ poId }: { poId: number }) {
                     {formatInteger(remaining)}
                   </td>
                   <td className="px-3 py-2 text-right font-mono text-slate-900 font-semibold">
-                    {formatUsd(line.unit_price)}
+                    {formatMoney(line.unit_price, meta)}
                   </td>
                 </tr>
               );
@@ -184,6 +186,8 @@ export function PurchaseOrdersPage() {
         title="Purchase Orders"
         description="Inbound component purchase orders. Timing indicators evaluate days remaining or overdue relative to the reference snapshot date."
       />
+
+      <CurrencyNotice />
 
       {/* Filter Bar */}
       <section

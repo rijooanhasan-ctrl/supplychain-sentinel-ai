@@ -40,6 +40,9 @@ class DatasetMetaResponse(BaseModel):
     generated_at: Optional[UtcDatetime] = None
     counts: Dict[str, int] = Field(default_factory=dict)
     message: Optional[str] = None
+    display_currency: str = "USD"
+    usd_to_inr_rate: Optional[str] = None
+    stored_currency: str = "USD"
 
 
 class WarehouseResponse(BaseModel):

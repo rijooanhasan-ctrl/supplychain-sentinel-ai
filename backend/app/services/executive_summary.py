@@ -118,6 +118,8 @@ def get_executive_summary_data(
         supplier_results=supplier_results,
         priority_component_demand_history_days=demand_days,
         flags=flags,
+        display_currency=settings.DISPLAY_CURRENCY,
+        usd_to_inr_rate=settings.USD_TO_INR_RATE,
     )
 
     return build_executive_summary(inputs)

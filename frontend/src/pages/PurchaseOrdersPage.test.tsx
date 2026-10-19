@@ -324,4 +324,97 @@ describe('PurchaseOrdersPage', () => {
     expect(screen.getByTestId('remaining-101')).toHaveTextContent('300');
     expect(screen.getByText('$250.00')).toBeInTheDocument();
   });
+
+  it('displays INR notice, changes header to Unit Price (INR), and formats line prices in ₹ without $ when display_currency is INR', async () => {
+    const inrMeta = {
+      ...mockMeta,
+      display_currency: 'INR',
+      usd_to_inr_rate: '83.50',
+    };
+
+    const po: PurchaseOrder = {
+      id: 10,
+      po_number: 'PO-EXPAND',
+      supplier_id: 1,
+      supplier_code: 'SUP-01',
+      supplier_name: 'Apex Silicon',
+      status: 'in_transit',
+      order_date: '2026-10-01',
+      promised_date: '2026-10-20',
+      latest_estimate_date: null,
+    };
+
+    const poDetail: PurchaseOrderDetail = {
+      ...po,
+      lines: [
+        {
+          id: 101,
+          component_id: 1,
+          component_sku: 'CPU-X7',
+          component_name: 'NovaCore X7 Processor',
+          warehouse_id: 1,
+          warehouse_code: 'WH-PLANT',
+          warehouse_name: 'Austin Plant',
+          qty_ordered: 500,
+          qty_received: 200,
+          unit_price: '250.00',
+        },
+      ],
+    };
+
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+      const urlStr = url.toString();
+      if (urlStr.includes('/api/meta')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => inrMeta,
+        } as Response;
+      }
+      if (urlStr.includes('/api/purchase-orders/10')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => poDetail,
+        } as Response;
+      }
+      if (urlStr.includes('/api/purchase-orders')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({ items: [po], total: 1, limit: 50, offset: 0 }),
+        } as Response;
+      }
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ items: [], total: 0 }),
+      } as Response;
+    });
+
+    render(
+      <MetaProvider>
+        <PurchaseOrdersPage />
+      </MetaProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('currency-notice')).toBeInTheDocument();
+    });
+
+    expect(screen.getByTestId('currency-notice')).toHaveTextContent(
+      'Amounts are stored in USD and shown in INR at a configured rate of 1 USD = ₹83.50'
+    );
+
+    const toggleBtn = screen.getByTestId('toggle-po-10');
+    fireEvent.click(toggleBtn);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('lines-table-10')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('Unit Price (INR)')).toBeInTheDocument();
+    expect(screen.getByText('₹20,875.00')).toBeInTheDocument();
+    expect(screen.queryByText('$250.00')).not.toBeInTheDocument();
+  });
 });
