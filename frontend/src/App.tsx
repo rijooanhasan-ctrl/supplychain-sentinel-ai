@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AppLayout } from './app/AppLayout';
 import { MetaProvider } from './context/MetaContext';
 import { GuidedDemoProvider } from './context/GuidedDemoContext';
@@ -29,6 +29,12 @@ export function App() {
           <Routes>
             <Route path="/" element={<AppLayout />}>
               <Route index element={<OverviewPage />} />
+              <Route path="overview" element={<Navigate to="/" replace />} />
+              <Route path="dashboard" element={<Navigate to="/" replace />} />
+              <Route path="index.html" element={<Navigate to="/" replace />} />
+              <Route path="map" element={<Navigate to="/globe" replace />} />
+              <Route path="executive" element={<Navigate to="/executive-summary" replace />} />
+              <Route path="summary" element={<Navigate to="/executive-summary" replace />} />
               <Route path="executive-summary" element={<ExecutiveSummaryPage />} />
               <Route path="report" element={<ReportPage />} />
               <Route path="alerts" element={<AlertsPage />} />
