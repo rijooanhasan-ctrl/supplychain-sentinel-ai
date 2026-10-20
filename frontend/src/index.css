@@ -1,8 +1,76 @@
 @import "tailwindcss";
 
+:root {
+  color-scheme: dark;
+  --bg-canvas: #101214;
+  --bg-sidebar: #151719;
+  --bg-surface: #1B1F22;
+  --bg-elevated: #22272B;
+  --border-subtle: #30363B;
+  --border-strong: #646C74;
+  --text-primary: #E6E8EA;
+  --text-secondary: #A0A6AD;
+  --text-muted: #8B949E;
+  --accent-primary: #38bdf8;
+  --focus-ring: #38bdf8;
+  --link-color: #58a6ff;
+  --bg-input: #161B22;
+  --table-header: #15181B;
+  --table-row-hover: #22272B;
+  --bg-skeleton: #22272B;
+}
+
+@theme {
+  --color-canvas: var(--bg-canvas);
+  --color-sidebar: var(--bg-sidebar);
+  --color-surface: var(--bg-surface);
+  --color-elevated: var(--bg-elevated);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-strong: var(--border-strong);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-accent-primary: var(--accent-primary);
+  --color-focus-ring: var(--focus-ring);
+  --color-link: var(--link-color);
+  --color-input: var(--bg-input);
+  --color-table-header: var(--table-header);
+  --color-table-hover: var(--table-row-hover);
+  --color-skeleton: var(--bg-skeleton);
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: var(--bg-canvas);
+  color: var(--text-primary);
+}
+
+@media print {
+  :root {
+    color-scheme: light;
+    --bg-canvas: #ffffff;
+    --bg-sidebar: #ffffff;
+    --bg-surface: #ffffff;
+    --bg-elevated: #ffffff;
+    --border-subtle: #cbd5e1;
+    --border-strong: #94a3b8;
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --accent-primary: #0284c7;
+    --focus-ring: #0284c7;
+    --link-color: #0284c7;
+    --bg-input: #ffffff;
+    --table-header: #f8fafc;
+    --table-row-hover: #ffffff;
+    --bg-skeleton: #f1f5f9;
+  }
+
+  body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
 }

@@ -134,7 +134,7 @@ export const GlobeListFallback: React.FC<GlobeListFallbackProps> = ({
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search code or name..."
             aria-label="Filter entities in locations list"
-            className="bg-slate-950 border border-slate-700 rounded px-3 py-1.5 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-hidden focus:border-cyan-400"
+            className="bg-slate-950 border border-slate-700 rounded px-3 py-1.5 text-xs text-slate-100 placeholder:text-text-secondary focus:outline-hidden focus:border-cyan-400"
           />
 
           <div className="flex items-center gap-1 text-xs">
@@ -144,7 +144,7 @@ export const GlobeListFallback: React.FC<GlobeListFallbackProps> = ({
               className={`px-2.5 py-1 rounded font-medium ${
                 filterType === 'all'
                   ? 'bg-cyan-950 text-cyan-200 border border-cyan-600'
-                  : 'bg-slate-800 text-slate-400 hover:text-white'
+                  : 'bg-slate-800 text-text-muted hover:text-white'
               }`}
             >
               All ({combinedItems.length})
@@ -155,7 +155,7 @@ export const GlobeListFallback: React.FC<GlobeListFallbackProps> = ({
               className={`px-2.5 py-1 rounded font-medium ${
                 filterType === 'supplier'
                   ? 'bg-cyan-950 text-cyan-200 border border-cyan-600'
-                  : 'bg-slate-800 text-slate-400 hover:text-white'
+                  : 'bg-slate-800 text-text-muted hover:text-white'
               }`}
             >
               Suppliers ({suppliers.length})
@@ -166,7 +166,7 @@ export const GlobeListFallback: React.FC<GlobeListFallbackProps> = ({
               className={`px-2.5 py-1 rounded font-medium ${
                 filterType === 'warehouse'
                   ? 'bg-cyan-950 text-cyan-200 border border-cyan-600'
-                  : 'bg-slate-800 text-slate-400 hover:text-white'
+                  : 'bg-slate-800 text-text-muted hover:text-white'
               }`}
             >
               Warehouses ({warehouses.length})
@@ -175,7 +175,7 @@ export const GlobeListFallback: React.FC<GlobeListFallbackProps> = ({
         </div>
 
         {/* Aria live announcement */}
-        <div aria-live="polite" className="text-xs text-slate-400 font-mono">
+        <div aria-live="polite" className="text-xs text-text-muted font-mono">
           Showing {filteredItems.length} of {combinedItems.length} locations
         </div>
       </div>
@@ -183,7 +183,7 @@ export const GlobeListFallback: React.FC<GlobeListFallbackProps> = ({
       {/* Table */}
       <div className="border border-slate-800 rounded-lg overflow-x-auto bg-slate-900/60 shadow-xl">
         <table className="min-w-full divide-y divide-slate-800 text-xs" data-testid="globe-fallback-table">
-          <thead className="bg-slate-950/80 text-slate-400 font-semibold uppercase text-[11px]">
+          <thead className="bg-slate-950/80 text-text-muted font-semibold uppercase text-[11px]">
             <tr>
               <th scope="col" className="px-4 py-3 text-left">Type</th>
               <th scope="col" className="px-4 py-3 text-left cursor-pointer hover:text-white" onClick={() => handleSort('code')}>
@@ -217,7 +217,7 @@ export const GlobeListFallback: React.FC<GlobeListFallbackProps> = ({
                 </td>
                 <td className="px-4 py-2.5 font-mono font-bold text-white">{item.code}</td>
                 <td className="px-4 py-2.5 text-slate-200 font-medium">{item.name}</td>
-                <td className="px-4 py-2.5 text-slate-400">
+                <td className="px-4 py-2.5 text-text-muted">
                   {item.detailText}
                   {item.riskBand && (
                     <span

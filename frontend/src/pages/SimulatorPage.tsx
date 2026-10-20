@@ -284,17 +284,17 @@ export function SimulatorPage() {
       </div>
 
       {/* Control Panel Card */}
-      <section className="bg-white p-5 rounded-lg border border-slate-200 shadow-xs space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-800">
+      <section className="bg-surface p-5 rounded-lg border border-border-subtle shadow-xs space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border-subtle pb-3">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-text-primary">
             Simulation Parameters &amp; Presets
           </h2>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-500 font-medium">Presets:</span>
+            <span className="text-xs text-text-secondary font-medium">Presets:</span>
             <button
               type="button"
               onClick={applyExampleDelay}
-              className="text-xs px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition-colors border border-slate-300"
+              className="text-xs px-2.5 py-1 rounded bg-elevated hover:bg-surface text-text-primary font-medium transition-colors border border-border-subtle"
               data-testid="preset-delay-btn"
             >
               Example: supplier +7 days late
@@ -302,7 +302,7 @@ export function SimulatorPage() {
             <button
               type="button"
               onClick={applyExampleDemand}
-              className="text-xs px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition-colors border border-slate-300"
+              className="text-xs px-2.5 py-1 rounded bg-elevated hover:bg-surface text-text-primary font-medium transition-colors border border-border-subtle"
               data-testid="preset-demand-btn"
             >
               Example: demand +30%
@@ -314,7 +314,7 @@ export function SimulatorPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             {/* Component Select */}
             <div>
-              <label htmlFor={componentSelectId} className="block text-xs font-semibold text-slate-700 mb-1">
+              <label htmlFor={componentSelectId} className="block text-xs font-semibold text-text-primary mb-1">
                 Component
               </label>
               <select
@@ -322,7 +322,7 @@ export function SimulatorPage() {
                 value={selectedComponentId}
                 onChange={(e) => setSelectedComponentId(parseInt(e.target.value, 10))}
                 disabled={loadingComponents}
-                className="w-full text-xs font-mono py-2 px-2.5 border border-slate-300 rounded-md bg-white text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full text-xs font-mono py-2 px-2.5 border border-border-subtle rounded-md bg-surface text-text-primary focus:ring-2 focus:ring-accent-primary focus:border-blue-500"
                 data-testid="component-select"
               >
                 {components.map((c) => (
@@ -335,7 +335,7 @@ export function SimulatorPage() {
 
             {/* Supplier Delay */}
             <div>
-              <label htmlFor={delayInputId} className="block text-xs font-semibold text-slate-700 mb-1">
+              <label htmlFor={delayInputId} className="block text-xs font-semibold text-text-primary mb-1">
                 Supplier Delay (days)
               </label>
               <input
@@ -345,15 +345,15 @@ export function SimulatorPage() {
                 max={60}
                 value={supplierDelayDays}
                 onChange={(e) => setSupplierDelayDays(parseInt(e.target.value, 10) || 0)}
-                className="w-full text-xs font-mono py-2 px-2.5 border border-slate-300 rounded-md bg-white text-slate-900 focus:ring-2 focus:ring-blue-500"
+                className="w-full text-xs font-mono py-2 px-2.5 border border-border-subtle rounded-md bg-surface text-text-primary focus:ring-2 focus:ring-accent-primary"
                 data-testid="delay-input"
               />
-              <span className="text-[10px] text-slate-500">Range: 0 to 60 days</span>
+              <span className="text-[10px] text-text-secondary">Range: 0 to 60 days</span>
             </div>
 
             {/* Demand Multiplier */}
             <div>
-              <label htmlFor={demandInputId} className="block text-xs font-semibold text-slate-700 mb-1">
+              <label htmlFor={demandInputId} className="block text-xs font-semibold text-text-primary mb-1">
                 Demand Level (multiplier)
               </label>
               <input
@@ -364,15 +364,15 @@ export function SimulatorPage() {
                 max={3.0}
                 value={demandMultiplier}
                 onChange={(e) => setDemandMultiplier(parseFloat(e.target.value) || 1.0)}
-                className="w-full text-xs font-mono py-2 px-2.5 border border-slate-300 rounded-md bg-white text-slate-900 focus:ring-2 focus:ring-blue-500"
+                className="w-full text-xs font-mono py-2 px-2.5 border border-border-subtle rounded-md bg-surface text-text-primary focus:ring-2 focus:ring-accent-primary"
                 data-testid="demand-input"
               />
-              <span className="text-[10px] text-slate-500">Range: 0.5x to 3.0x</span>
+              <span className="text-[10px] text-text-secondary">Range: 0.5x to 3.0x</span>
             </div>
 
             {/* Stock Change (on-hand delta) */}
             <div>
-              <label htmlFor={stockInputId} className="block text-xs font-semibold text-slate-700 mb-1">
+              <label htmlFor={stockInputId} className="block text-xs font-semibold text-text-primary mb-1">
                 Stock Change (units)
               </label>
               <input
@@ -383,29 +383,29 @@ export function SimulatorPage() {
                 max={10000}
                 value={onHandDelta}
                 onChange={(e) => setOnHandDelta(parseInt(e.target.value, 10) || 0)}
-                className="w-full text-xs font-mono py-2 px-2.5 border border-slate-300 rounded-md bg-white text-slate-900 focus:ring-2 focus:ring-blue-500"
+                className="w-full text-xs font-mono py-2 px-2.5 border border-border-subtle rounded-md bg-surface text-text-primary focus:ring-2 focus:ring-accent-primary"
                 data-testid="stock-input"
               />
-              <span className="text-[10px] text-slate-500">Adjustment: -10k to +10k</span>
+              <span className="text-[10px] text-text-secondary">Adjustment: -10k to +10k</span>
             </div>
 
             {/* Alt Supplier Checkbox */}
             <div className="flex flex-col justify-center">
               <label
                 htmlFor={altSupplierCheckboxId}
-                className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer pt-3 sm:pt-4"
+                className="flex items-center gap-2 text-xs font-semibold text-text-primary cursor-pointer pt-3 sm:pt-4"
               >
                 <input
                   id={altSupplierCheckboxId}
                   type="checkbox"
                   checked={altSupplierAvailable}
                   onChange={(e) => setAltSupplierAvailable(e.target.checked)}
-                  className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4 h-4"
+                  className="rounded border-border-subtle text-blue-600 focus:ring-accent-primary w-4 h-4"
                   data-testid="alt-supplier-checkbox"
                 />
                 <span>Alternative Supplier Available</span>
               </label>
-              <span className="text-[10px] text-slate-500 ml-6">Include in recovery search</span>
+              <span className="text-[10px] text-text-secondary ml-6">Include in recovery search</span>
             </div>
           </div>
 
@@ -424,7 +424,7 @@ export function SimulatorPage() {
             <button
               type="button"
               onClick={handleReset}
-              className="px-3.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-md transition-colors"
+              className="px-3.5 py-1.5 text-xs font-semibold text-text-primary bg-elevated hover:bg-surface border border-border-subtle rounded-md transition-colors"
               data-testid="reset-btn"
             >
               Reset
@@ -464,35 +464,35 @@ export function SimulatorPage() {
       {!simLoading && !simError && simData && simData.baseline && simData.disrupted && simData.recovered && (
         <div className="space-y-6" data-testid="simulation-results">
           {/* Header Info */}
-          <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-lg border border-slate-200 shadow-xs">
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-surface p-4 rounded-lg border border-border-subtle shadow-xs">
             <div>
-              <span className="text-xs uppercase font-bold tracking-wider text-slate-500 block">
+              <span className="text-xs uppercase font-bold tracking-wider text-text-secondary block">
                 Simulated Target Component
               </span>
-              <h2 className="text-lg font-bold text-slate-900">
+              <h2 className="text-lg font-bold text-text-primary">
                 {simData.component?.name}{' '}
-                <span className="text-sm font-mono text-slate-600">({simData.component?.sku})</span>
+                <span className="text-sm font-mono text-text-secondary">({simData.component?.sku})</span>
               </h2>
             </div>
-            <div className="text-xs text-right font-mono text-slate-600">
+            <div className="text-xs text-right font-mono text-text-secondary">
               As-Of Baseline:{' '}
-              <span className="font-bold text-slate-900">{simData.as_of}</span>
+              <span className="font-bold text-text-primary">{simData.as_of}</span>
             </div>
           </div>
 
           {/* 3-Column Comparison Table */}
-          <div className="bg-white rounded-lg border border-slate-200 shadow-xs overflow-hidden">
-            <div className="p-3.5 border-b border-slate-200 bg-slate-50/70">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800">
+          <div className="bg-surface rounded-lg border border-border-subtle shadow-xs overflow-hidden">
+            <div className="p-3.5 border-b border-border-subtle bg-elevated/70">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-text-primary">
                 Scenario Comparison: Baseline vs Disrupted vs With Recovery
               </h3>
             </div>
             <div className="overflow-x-auto">
               <table
-                className="w-full text-left text-xs divide-y divide-slate-200"
+                className="w-full text-left text-xs divide-y divide-border-subtle"
                 data-testid="comparison-table"
               >
-                <thead className="bg-slate-100/90 text-slate-700 font-semibold uppercase tracking-wider text-[11px]">
+                <thead className="bg-elevated/90 text-text-primary font-semibold uppercase tracking-wider text-[11px]">
                   <tr>
                     <th className="py-2.5 px-4 w-48">Metric</th>
                     <th className="py-2.5 px-4">1. Baseline (Unchanged)</th>
@@ -500,10 +500,10 @@ export function SimulatorPage() {
                     <th className="py-2.5 px-4 bg-emerald-50/50">3. With Recovery (Intervention)</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 font-mono">
+                <tbody className="divide-y divide-border-subtle font-mono">
                   {/* Risk Level */}
                   <tr>
-                    <td className="py-2.5 px-4 font-sans font-semibold text-slate-700">Risk Level</td>
+                    <td className="py-2.5 px-4 font-sans font-semibold text-text-primary">Risk Level</td>
                     <td className="py-2.5 px-4">
                       <RiskBadge level={simData.baseline.risk_level} />
                     </td>
@@ -517,7 +517,7 @@ export function SimulatorPage() {
 
                   {/* Shortage Date */}
                   <tr>
-                    <td className="py-2.5 px-4 font-sans font-semibold text-slate-700">Shortage Date</td>
+                    <td className="py-2.5 px-4 font-sans font-semibold text-text-primary">Shortage Date</td>
                     <td className="py-2.5 px-4">
                       {simData.baseline.shortage_date ? (
                         <span className="text-red-700 font-bold">{simData.baseline.shortage_date}</span>
@@ -534,7 +534,7 @@ export function SimulatorPage() {
                     </td>
                     <td className="py-2.5 px-4 bg-emerald-50/30">
                       {simData.recovered.shortage_date ? (
-                        <span className="text-slate-900 font-bold">{simData.recovered.shortage_date}</span>
+                        <span className="text-text-primary font-bold">{simData.recovered.shortage_date}</span>
                       ) : (
                         <span className="text-emerald-700 font-bold">No Shortage</span>
                       )}
@@ -543,7 +543,7 @@ export function SimulatorPage() {
 
                   {/* First Shortage Window */}
                   <tr>
-                    <td className="py-2.5 px-4 font-sans font-semibold text-slate-700">Shortage Window</td>
+                    <td className="py-2.5 px-4 font-sans font-semibold text-text-primary">Shortage Window</td>
                     <td className="py-2.5 px-4">
                       {simData.baseline.first_shortage_episode ? (
                         <span>
@@ -568,7 +568,7 @@ export function SimulatorPage() {
                     </td>
                     <td className="py-2.5 px-4 bg-emerald-50/30">
                       {simData.recovered.first_shortage_episode ? (
-                        <span className="text-slate-900">
+                        <span className="text-text-primary">
                           {simData.recovered.first_shortage_episode.days} days (
                           {simData.recovered.first_shortage_episode.start_date} ..{' '}
                           {simData.recovered.first_shortage_episode.end_date})
@@ -581,10 +581,10 @@ export function SimulatorPage() {
 
                   {/* Units Short Before Next Inbound */}
                   <tr>
-                    <td className="py-2.5 px-4 font-sans font-semibold text-slate-700">
+                    <td className="py-2.5 px-4 font-sans font-semibold text-text-primary">
                       Units Short (Pre-Inbound)
                     </td>
-                    <td className="py-2.5 px-4 font-bold text-slate-900">
+                    <td className="py-2.5 px-4 font-bold text-text-primary">
                       {formatNumber(simData.baseline.unmet_before_next_inbound, 1)} units
                     </td>
                     <td className="py-2.5 px-4 bg-red-50/30 font-bold text-red-700">
@@ -599,10 +599,10 @@ export function SimulatorPage() {
 
                   {/* Later Shortage (Not Covered) Row */}
                   <tr>
-                    <td className="py-2.5 px-4 font-sans font-semibold text-slate-700">
+                    <td className="py-2.5 px-4 font-sans font-semibold text-text-primary">
                       Later shortage (not covered)
                     </td>
-                    <td className="py-2.5 px-4 text-xs font-sans text-slate-600">
+                    <td className="py-2.5 px-4 text-xs font-sans text-text-secondary">
                       {simData.baseline.later_shortage ? (
                         <span>
                           From {simData.baseline.later_shortage.date} ({simData.baseline.later_shortage.days} days,{' '}
@@ -622,14 +622,14 @@ export function SimulatorPage() {
                         '—'
                       )}
                     </td>
-                    <td className="py-2.5 px-4 bg-emerald-50/30 text-xs font-sans text-slate-700">
+                    <td className="py-2.5 px-4 bg-emerald-50/30 text-xs font-sans text-text-primary">
                       {simData.recovered.later_shortage ? (
                         <div>
                           <span className="font-medium text-amber-900">
                             From {simData.recovered.later_shortage.date} ({simData.recovered.later_shortage.days} days,{' '}
                             {formatNumber(simData.recovered.later_shortage.units, 1)} units)
                           </span>
-                          <span className="block text-[10px] text-slate-500 italic">
+                          <span className="block text-[10px] text-text-secondary italic">
                             Later shortage not covered by this recovery
                           </span>
                         </div>
@@ -641,16 +641,16 @@ export function SimulatorPage() {
 
                   {/* Exposed Orders & Revenue */}
                   <tr>
-                    <td className="py-2.5 px-4 font-sans font-semibold text-slate-700">
+                    <td className="py-2.5 px-4 font-sans font-semibold text-text-primary">
                       Customer Exposure
                     </td>
                     <td className="py-2.5 px-4 text-xs font-sans">
                       <div>
-                        <span className="font-bold text-slate-900">
+                        <span className="font-bold text-text-primary">
                           {formatInteger(simData.baseline.exposed_orders_count)} orders
                         </span>{' '}
                         · Selling Value:{' '}
-                        <span className="font-bold text-slate-900">
+                        <span className="font-bold text-text-primary">
                           {simData.baseline.exposed_revenue !== null
                             ? formatMoney(simData.baseline.exposed_revenue, meta)
                             : '—'}
@@ -687,18 +687,18 @@ export function SimulatorPage() {
 
                   {/* Recovery Action Row */}
                   <tr>
-                    <td className="py-2.5 px-4 font-sans font-semibold text-slate-700">
+                    <td className="py-2.5 px-4 font-sans font-semibold text-text-primary">
                       Intervention Applied
                     </td>
-                    <td className="py-2.5 px-4 text-slate-400 font-sans italic">—</td>
-                    <td className="py-2.5 px-4 bg-red-50/30 text-slate-400 font-sans italic">—</td>
+                    <td className="py-2.5 px-4 text-text-muted font-sans italic">—</td>
+                    <td className="py-2.5 px-4 bg-red-50/30 text-text-muted font-sans italic">—</td>
                     <td className="py-2.5 px-4 bg-emerald-50/30 font-sans">
                       {simData.recovered.applied_actions.length > 0 ? (
                         <div className="space-y-1">
                           {simData.recovered.applied_actions.map((act) => (
                             <div key={act.id} className="text-xs">
-                              <span className="font-bold text-slate-900 block">{act.description}</span>
-                              <span className="text-[11px] text-slate-600 font-mono">
+                              <span className="font-bold text-text-primary block">{act.description}</span>
+                              <span className="text-[11px] text-text-secondary font-mono">
                                 Qty: {formatInteger(act.quantity)} · Arrival:{' '}
                                 {act.arrival_date || '—'} · Cost:{' '}
                                 {act.cost_known && act.incremental_cost !== null
@@ -709,7 +709,7 @@ export function SimulatorPage() {
                           ))}
                         </div>
                       ) : (
-                        <span className="text-slate-500 italic text-xs">
+                        <span className="text-text-secondary italic text-xs">
                           {simData.recovered.recovery_note || 'No action needed'}
                         </span>
                       )}
@@ -720,7 +720,7 @@ export function SimulatorPage() {
             </div>
 
             {/* Mandatory Upper-Bound Disclosure */}
-            <div className="p-3 bg-slate-50 border-t border-slate-200 text-[11px] text-slate-500 italic">
+            <div className="p-3 bg-elevated border-t border-border-subtle text-[11px] text-text-secondary italic">
               * Upper bound: production lead time and stock allocation are unknown, so these orders are
               potentially exposed, not predicted to be late. The value shown is the selling price of those
               orders, not an estimate of loss.
@@ -744,13 +744,13 @@ export function SimulatorPage() {
 
           {/* SVG Line Chart: 30-Day Ending Stock Balance */}
           {chartMetrics && (
-            <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-xs space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+            <div className="bg-surface p-5 rounded-lg border border-border-subtle shadow-xs space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border-subtle pb-3">
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900">
+                  <h3 className="text-sm font-bold text-text-primary">
                     30-Day Ending Inventory Balance Trajectory
                   </h3>
-                  <p className="text-xs text-slate-500 mt-0.5">
+                  <p className="text-xs text-text-secondary mt-0.5">
                     Comparative daily stock balance across baseline, disrupted, and recovered scenarios.
                   </p>
                 </div>
@@ -789,7 +789,7 @@ export function SimulatorPage() {
                     y1={chartMetrics.padTop}
                     x2={chartMetrics.width - chartMetrics.padRight}
                     y2={chartMetrics.padTop}
-                    stroke="#e2e8f0"
+                    stroke="var(--border-subtle)"
                     strokeWidth="1"
                   />
                   <line
@@ -797,7 +797,7 @@ export function SimulatorPage() {
                     y1={chartMetrics.padTop + chartMetrics.plotH / 2}
                     x2={chartMetrics.width - chartMetrics.padRight}
                     y2={chartMetrics.padTop + chartMetrics.plotH / 2}
-                    stroke="#e2e8f0"
+                    stroke="var(--border-subtle)"
                     strokeWidth="1"
                   />
                   <line
@@ -805,7 +805,7 @@ export function SimulatorPage() {
                     y1={chartMetrics.padTop + chartMetrics.plotH}
                     x2={chartMetrics.width - chartMetrics.padRight}
                     y2={chartMetrics.padTop + chartMetrics.plotH}
-                    stroke="#cbd5e1"
+                    stroke="var(--border-subtle)"
                     strokeWidth="1.5"
                   />
 
@@ -885,15 +885,15 @@ export function SimulatorPage() {
 
               {/* Accessible Alternative: Daily Projection Data Table */}
               <div className="pt-2">
-                <span className="text-xs font-semibold text-slate-700 block mb-1">
+                <span className="text-xs font-semibold text-text-primary block mb-1">
                   Daily Ending Stock Balance (Accessible Alternative)
                 </span>
-                <div className="overflow-x-auto max-h-60 overflow-y-auto border border-slate-200 rounded-md">
+                <div className="overflow-x-auto max-h-60 overflow-y-auto border border-border-subtle rounded-md">
                   <table
-                    className="w-full text-left text-xs divide-y divide-slate-200 font-mono"
+                    className="w-full text-left text-xs divide-y divide-border-subtle font-mono"
                     data-testid="projection-table"
                   >
-                    <thead className="bg-slate-50 text-slate-700 font-semibold sticky top-0">
+                    <thead className="bg-elevated text-text-primary font-semibold sticky top-0">
                       <tr>
                         <th className="py-2 px-3">Date</th>
                         <th className="py-2 px-3 text-right">Baseline Stock</th>
@@ -901,14 +901,14 @@ export function SimulatorPage() {
                         <th className="py-2 px-3 text-right bg-emerald-50/50">Recovered Stock</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-border-subtle">
                       {simData.baseline.daily_projection_30d.map((row, idx) => {
                         const dRow = simData.disrupted?.daily_projection_30d[idx];
                         const rRow = simData.recovered?.daily_projection_30d[idx];
                         return (
-                          <tr key={row.date} className="hover:bg-slate-50/50">
-                            <td className="py-1 px-3 text-slate-800">{row.date}</td>
-                            <td className="py-1 px-3 text-right text-slate-700">
+                          <tr key={row.date} className="hover:bg-elevated/50">
+                            <td className="py-1 px-3 text-text-primary">{row.date}</td>
+                            <td className="py-1 px-3 text-right text-text-primary">
                               {formatNumber(row.ending_balance, 0)}
                             </td>
                             <td className="py-1 px-3 text-right text-red-800 bg-red-50/30 font-semibold">
@@ -928,9 +928,9 @@ export function SimulatorPage() {
           )}
 
           {/* Assumptions Box */}
-          <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 text-xs text-slate-600 space-y-1">
-            <span className="font-bold text-slate-800 block">Simulation Model Assumptions:</span>
-            <ul className="list-disc list-inside space-y-0.5 text-slate-600">
+          <div className="p-4 bg-elevated rounded-lg border border-border-subtle text-xs text-text-secondary space-y-1">
+            <span className="font-bold text-text-primary block">Simulation Model Assumptions:</span>
+            <ul className="list-disc list-inside space-y-0.5 text-text-secondary">
               {simData.assumptions.map((asm, i) => (
                 <li key={i}>{asm}</li>
               ))}

@@ -80,7 +80,7 @@ export function ForecastingPage() {
             weekday_average
           </code>
         </div>
-        <span className="text-xs text-slate-400">
+        <span className="text-xs text-text-muted">
           Evaluated via rolling-origin backtest before consideration for production
         </span>
       </div>
@@ -88,31 +88,31 @@ export function ForecastingPage() {
       {/* Protocol Summary Strip */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-5">
         <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-3">
-          <div className="text-xs text-slate-400">Min Training History</div>
+          <div className="text-xs text-text-muted">Min Training History</div>
           <div className="mt-1 font-mono text-lg font-semibold text-slate-100">
             {protocol.min_train_days} days
           </div>
         </div>
         <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-3">
-          <div className="text-xs text-slate-400">Forecast Horizon</div>
+          <div className="text-xs text-text-muted">Forecast Horizon</div>
           <div className="mt-1 font-mono text-lg font-semibold text-slate-100">
             {protocol.horizon_days} days
           </div>
         </div>
         <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-3">
-          <div className="text-xs text-slate-400">Roll Step Interval</div>
+          <div className="text-xs text-text-muted">Roll Step Interval</div>
           <div className="mt-1 font-mono text-lg font-semibold text-slate-100">
             {protocol.step_days} days
           </div>
         </div>
         <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-3">
-          <div className="text-xs text-slate-400">Backtest Folds</div>
+          <div className="text-xs text-text-muted">Backtest Folds</div>
           <div className="mt-1 font-mono text-lg font-semibold text-sky-400">
             {protocol.folds} folds
           </div>
         </div>
         <div className="col-span-2 rounded-lg border border-slate-800 bg-slate-900/60 p-3 sm:col-span-4 lg:col-span-1">
-          <div className="text-xs text-slate-400">Evaluated Points / Model</div>
+          <div className="text-xs text-text-muted">Evaluated Points / Model</div>
           <div className="mt-1 font-mono text-lg font-semibold text-slate-100">
             {aggregate['weekday_average']?.n_points ?? 0}
           </div>
@@ -130,7 +130,7 @@ export function ForecastingPage() {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+              <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">
                 Evaluation Decision Rule
               </span>
               <span
@@ -152,7 +152,7 @@ export function ForecastingPage() {
 
           <div className="flex items-center gap-4 text-xs font-mono">
             <div className="rounded border border-slate-800 bg-slate-900/80 p-2">
-              <span className="text-slate-400">WAPE Impv: </span>
+              <span className="text-text-muted">WAPE Impv: </span>
               <span
                 className={
                   (decision.pooled_wape_improvement_pct ?? 0) >= 5.0
@@ -164,10 +164,10 @@ export function ForecastingPage() {
                   ? `${decision.pooled_wape_improvement_pct > 0 ? '+' : ''}${decision.pooled_wape_improvement_pct.toFixed(2)}%`
                   : 'N/A'}
               </span>
-              <span className="text-slate-500"> (req &ge; 5%)</span>
+              <span className="text-text-secondary"> (req &ge; 5%)</span>
             </div>
             <div className="rounded border border-slate-800 bg-slate-900/80 p-2">
-              <span className="text-slate-400">Win Rate: </span>
+              <span className="text-text-muted">Win Rate: </span>
               <span
                 className={
                   (decision.win_rate ?? 0) >= 0.6 ? 'text-emerald-400' : 'text-amber-400'
@@ -175,13 +175,13 @@ export function ForecastingPage() {
               >
                 {decision.win_rate !== null ? `${(decision.win_rate * 100).toFixed(1)}%` : 'N/A'}
               </span>
-              <span className="text-slate-500"> (req &ge; 60%)</span>
+              <span className="text-text-secondary"> (req &ge; 60%)</span>
             </div>
           </div>
         </div>
 
         <p className="mt-3 text-sm text-slate-300 leading-relaxed">{decision.reason}</p>
-        <p className="mt-2 text-xs text-slate-400">{decision.rule_text}</p>
+        <p className="mt-2 text-xs text-text-muted">{decision.rule_text}</p>
       </div>
 
       {/* Aggregate Models Table */}
@@ -189,7 +189,7 @@ export function ForecastingPage() {
         <h3 className="text-base font-semibold text-slate-100">Model Performance Summary</h3>
         <div className="overflow-x-auto rounded-lg border border-slate-800 bg-slate-900/40">
           <table className="w-full text-left text-sm">
-            <thead className="border-b border-slate-800 bg-slate-900/80 text-xs uppercase tracking-wider text-slate-400">
+            <thead className="border-b border-slate-800 bg-slate-900/80 text-xs uppercase tracking-wider text-text-muted">
               <tr>
                 <th className="px-4 py-3">Model</th>
                 <th className="px-4 py-3">Type</th>
@@ -212,14 +212,14 @@ export function ForecastingPage() {
                     <td className="px-4 py-3 font-medium text-slate-200">
                       <code>{model.name}</code>
                     </td>
-                    <td className="px-4 py-3 text-xs text-slate-400">{model.type}</td>
+                    <td className="px-4 py-3 text-xs text-text-muted">{model.type}</td>
                     <td className="px-4 py-3">
                       {model.used_by_inventory_risk ? (
                         <span className="inline-flex items-center gap-1.5 rounded bg-emerald-500/20 px-2 py-0.5 text-xs font-medium text-emerald-300">
                           Active in Inventory Risk
                         </span>
                       ) : (
-                        <span className="text-xs text-slate-500">Evaluation Only</span>
+                        <span className="text-xs text-text-secondary">Evaluation Only</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-right font-mono font-medium">
@@ -252,7 +252,7 @@ export function ForecastingPage() {
                     <td className="px-4 py-3 text-right font-mono text-slate-300">
                       {agg ? `${agg.bias > 0 ? '+' : ''}${formatNumber(agg.bias, 2)}` : '—'}
                     </td>
-                    <td className="px-4 py-3 text-right font-mono text-slate-400">
+                    <td className="px-4 py-3 text-right font-mono text-text-muted">
                       {agg?.n_points ?? '—'}
                     </td>
                   </tr>
@@ -269,7 +269,7 @@ export function ForecastingPage() {
           <h3 className="text-base font-semibold text-slate-100">
             Per-Component Backtest Results
           </h3>
-          <span className="text-xs text-slate-400">
+          <span className="text-xs text-text-muted">
             Click a component to view the 14-day projection and last-fold backtest
           </span>
         </div>
@@ -282,7 +282,7 @@ export function ForecastingPage() {
         ) : (
           <div className="overflow-x-auto rounded-lg border border-slate-800 bg-slate-900/40">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-800 bg-slate-900/80 text-xs uppercase tracking-wider text-slate-400">
+              <thead className="border-b border-slate-800 bg-slate-900/80 text-xs uppercase tracking-wider text-text-muted">
                 <tr>
                   <th className="w-8 px-3 py-3" />
                   <th className="px-4 py-3">SKU</th>
@@ -346,7 +346,7 @@ function ComponentTableRow({
           isExpanded ? 'bg-slate-800/60' : 'hover:bg-slate-800/30'
         }`}
       >
-        <td className="px-3 py-3 text-center text-slate-400">
+        <td className="px-3 py-3 text-center text-text-muted">
           <span className="inline-block transition-transform duration-200">
             {isExpanded ? '▼' : '▶'}
           </span>
@@ -357,7 +357,7 @@ function ComponentTableRow({
         <td className="px-4 py-3 text-slate-300">{comp.name}</td>
         <td className="px-4 py-3 text-center">
           {comp.zero_demand ? (
-            <span className="rounded bg-slate-800 px-2 py-0.5 text-xs text-slate-400">
+            <span className="rounded bg-slate-800 px-2 py-0.5 text-xs text-text-muted">
               Zero Demand
             </span>
           ) : comp.best_model ? (
@@ -420,7 +420,7 @@ function ComponentDetailExpanded({
 
   if (loading) {
     return (
-      <div className="py-4 text-center text-xs text-slate-400">
+      <div className="py-4 text-center text-xs text-text-muted">
         Loading 14-day forecasts and last-fold backtest for {sku}...
       </div>
     );
@@ -451,7 +451,7 @@ function ComponentDetailExpanded({
         </h4>
         <div className="overflow-x-auto rounded border border-slate-800 bg-slate-950/50">
           <table className="w-full text-left text-xs">
-            <thead className="border-b border-slate-800 bg-slate-900/60 text-slate-400">
+            <thead className="border-b border-slate-800 bg-slate-900/60 text-text-muted">
               <tr>
                 <th className="px-3 py-2">Date</th>
                 <th className="px-3 py-2">Weekday</th>
@@ -466,7 +466,7 @@ function ComponentDetailExpanded({
                   <td className="px-3 py-1.5 font-mono text-slate-300">
                     {formatDate(d.date)}
                   </td>
-                  <td className="px-3 py-1.5 text-slate-400">{d.weekday}</td>
+                  <td className="px-3 py-1.5 text-text-muted">{d.weekday}</td>
                   <td className="px-3 py-1.5 text-right font-mono text-slate-300">
                     {d.forecasts.seasonal_naive?.toFixed(1) ?? '—'}
                   </td>
@@ -490,7 +490,7 @@ function ComponentDetailExpanded({
         </h4>
         <div className="overflow-x-auto rounded border border-slate-800 bg-slate-950/50">
           <table className="w-full text-left text-xs">
-            <thead className="border-b border-slate-800 bg-slate-900/60 text-slate-400">
+            <thead className="border-b border-slate-800 bg-slate-900/60 text-text-muted">
               <tr>
                 <th className="px-3 py-2">Date</th>
                 <th className="px-3 py-2 text-right font-semibold text-slate-200">

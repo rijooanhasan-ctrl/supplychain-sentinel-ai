@@ -176,7 +176,7 @@ export const SetLocationModal: React.FC<SetLocationModalProps> = ({
             <h3 id="set-location-title" className="font-bold text-base text-cyan-300">
               Set Location for {code}
             </h3>
-            <p className="text-xs text-slate-400 truncate max-w-xs">{name}</p>
+            <p className="text-xs text-text-muted truncate max-w-xs">{name}</p>
           </div>
           <button
             type="button"
@@ -184,7 +184,7 @@ export const SetLocationModal: React.FC<SetLocationModalProps> = ({
               if (onDisableClickToPlace) onDisableClickToPlace();
               onClose();
             }}
-            className="text-slate-400 hover:text-white text-lg p-1"
+            className="text-text-muted hover:text-white text-lg p-1"
             aria-label="Close dialog"
           >
             &times;
@@ -277,7 +277,7 @@ export const SetLocationModal: React.FC<SetLocationModalProps> = ({
                   </option>
                 ))}
               </select>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-text-muted">
                 Entity will be mapped to the approximate geographic center of the country.
               </p>
             </div>
@@ -318,7 +318,7 @@ export const SetLocationModal: React.FC<SetLocationModalProps> = ({
                   />
                 </div>
               </div>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-text-muted">
                 Coordinates (0, 0) represent Null Island and are rejected.
               </p>
             </div>
@@ -337,7 +337,7 @@ export const SetLocationModal: React.FC<SetLocationModalProps> = ({
                   Selected: Lat {effectiveLat.toFixed(4)}, Lon {effectiveLon.toFixed(4)}
                 </div>
               ) : (
-                <div className="text-[11px] text-slate-400 italic">
+                <div className="text-[11px] text-text-muted italic">
                   No globe point clicked yet. Click on the surface behind this modal or move the dialog.
                 </div>
               )}

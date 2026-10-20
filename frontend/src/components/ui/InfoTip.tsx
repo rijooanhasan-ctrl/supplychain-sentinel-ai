@@ -77,7 +77,7 @@ export const InfoTip: React.FC<InfoTipProps> = ({
         aria-label={`About ${term}`}
         aria-expanded={isOpen}
         aria-describedby={isOpen ? tooltipId : undefined}
-        className="inline-flex items-center justify-center w-4 h-4 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer ml-1 text-[11px] font-bold select-none transition-colors"
+        className="inline-flex items-center justify-center w-4 h-4 rounded-full text-text-secondary hover:text-text-primary hover:bg-hover focus:outline-none focus:ring-2 focus:ring-accent-primary cursor-pointer ml-1 text-[11px] font-bold select-none transition-colors"
       >
         <span aria-hidden="true">ⓘ</span>
       </button>
@@ -88,25 +88,25 @@ export const InfoTip: React.FC<InfoTipProps> = ({
           id={tooltipId}
           role="tooltip"
           aria-label={term}
-          className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-72 max-w-[85vw] p-3 bg-slate-900 text-white rounded-lg shadow-xl text-left border border-slate-700 pointer-events-auto"
+          className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-72 max-w-[85vw] p-3 bg-elevated text-text-primary rounded-lg shadow-xl text-left border border-border-strong pointer-events-auto"
         >
-          <div className="flex items-start justify-between gap-2 border-b border-slate-800 pb-1.5 mb-2">
+          <div className="flex items-start justify-between gap-2 border-b border-border-subtle pb-1.5 mb-2">
             <div>
-              <p className="text-xs font-bold text-white">{term}</p>
-              {shortLabel && <p className="text-[11px] text-slate-400">{shortLabel}</p>}
+              <p className="text-xs font-bold text-text-primary">{term}</p>
+              {shortLabel && <p className="text-[11px] text-text-secondary">{shortLabel}</p>}
             </div>
             <button
               type="button"
               onClick={() => setIsOpen(false)}
               aria-label="Close tooltip"
-              className="text-slate-400 hover:text-white text-xs px-1 rounded hover:bg-slate-800 focus:outline-none focus:ring-1 focus:ring-slate-400"
+              className="text-text-secondary hover:text-text-primary text-xs px-1 rounded hover:bg-hover focus:outline-none focus:ring-1 focus:ring-accent-primary"
             >
               ✕
             </button>
           </div>
-          <p className="text-xs text-slate-200 leading-relaxed font-normal">{description}</p>
+          <p className="text-xs text-text-secondary leading-relaxed font-normal">{description}</p>
           {/* Popover Arrow */}
-          <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900 pointer-events-none" />
+          <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-elevated pointer-events-none" />
         </div>
       )}
     </span>

@@ -43,15 +43,15 @@ export const GlobeBottomStrip: React.FC<GlobeBottomStripProps> = ({
         >
           {label}
         </span>
-        <span className="text-slate-400 font-mono">
+        <span className="text-text-muted font-mono">
           Active: <strong className="text-slate-200 font-semibold">{isUploaded ? 'Uploaded' : 'Demo'}</strong>
         </span>
         {as_of && (
-          <span className="text-slate-400 font-mono">
+          <span className="text-text-muted font-mono">
             As-of: <strong className="text-slate-200">{as_of}</strong>
           </span>
         )}
-        <span className="text-slate-400 hidden sm:inline font-mono">
+        <span className="text-text-muted hidden sm:inline font-mono">
           Dataset generated at <strong className="text-slate-300">{genAt}</strong>
         </span>
       </div>
@@ -59,7 +59,7 @@ export const GlobeBottomStrip: React.FC<GlobeBottomStripProps> = ({
       {/* Center: Coverage metrics & Risk breakdown */}
       <div className="flex flex-wrap items-center gap-3 font-mono text-[11px]">
         <div className="flex items-center gap-1.5" title="Suppliers with mapped geographic coordinates">
-          <span className="text-slate-400 font-sans">Suppliers:</span>
+          <span className="text-text-muted font-sans">Suppliers:</span>
           <span className="text-slate-200 font-bold">
             {coverage.suppliers_mapped}/{coverage.suppliers_total}
           </span>
@@ -75,10 +75,10 @@ export const GlobeBottomStrip: React.FC<GlobeBottomStripProps> = ({
           )}
         </div>
 
-        <span className="text-slate-600 hidden md:inline">|</span>
+        <span className="text-text-secondary hidden md:inline">|</span>
 
         <div className="flex items-center gap-1.5" title="Warehouses with mapped coordinates">
-          <span className="text-slate-400 font-sans">Warehouses:</span>
+          <span className="text-text-muted font-sans">Warehouses:</span>
           <span className="text-slate-200 font-bold">
             {coverage.warehouses_mapped}/{coverage.warehouses_total}
           </span>
@@ -89,11 +89,11 @@ export const GlobeBottomStrip: React.FC<GlobeBottomStripProps> = ({
           )}
         </div>
 
-        <span className="text-slate-600 hidden lg:inline">|</span>
+        <span className="text-text-secondary hidden lg:inline">|</span>
 
         {/* Risk distribution pills */}
         <div className="hidden lg:flex items-center gap-1 text-[10px]">
-          <span className="text-slate-400 font-sans mr-0.5">Risk:</span>
+          <span className="text-text-muted font-sans mr-0.5">Risk:</span>
           <span className="px-1.5 py-0.2 rounded bg-rose-950 text-rose-300 border border-rose-800" title="Critical risk suppliers">
             {riskCounts.critical || 0} crit
           </span>
@@ -110,7 +110,7 @@ export const GlobeBottomStrip: React.FC<GlobeBottomStripProps> = ({
       </div>
 
       {/* Right: Mandatory Disclaimer */}
-      <div className="text-[11px] text-slate-400 italic font-sans flex items-center gap-1">
+      <div className="text-[11px] text-text-muted italic font-sans flex items-center gap-1">
         <span>No live SAP connection. Routes are estimated, not shipment tracking.</span>
       </div>
     </footer>

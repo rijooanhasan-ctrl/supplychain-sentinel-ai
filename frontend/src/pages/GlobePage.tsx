@@ -250,7 +250,7 @@ export const GlobePage: React.FC = () => {
         <div className="w-16 h-16 rounded-full border-4 border-cyan-500/30 border-t-cyan-400 animate-spin" />
         <div className="text-center space-y-1">
           <h2 className="text-base font-bold text-slate-100">Initializing Supply Chain Globe</h2>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-text-muted">
             Resolving vendor coordinates, calculating routes, and assessing geographic concentration...
           </p>
         </div>
@@ -291,7 +291,7 @@ export const GlobePage: React.FC = () => {
       >
         <div className="max-w-md w-full bg-[#0d1629] border border-slate-800 rounded-xl p-6 text-center space-y-3 text-slate-300">
           <h2 className="text-base font-bold text-white">Database Not Seeded</h2>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-text-muted">
             No supply chain records are present in the active dataset. Import a CSV dataset or seed demo data.
           </p>
         </div>
@@ -304,7 +304,7 @@ export const GlobePage: React.FC = () => {
     return (
       <div
         data-testid="globe-empty-view"
-        className="min-h-[calc(100vh-80px)] bg-[#070b14] flex items-center justify-center p-6 text-slate-400"
+        className="min-h-[calc(100vh-80px)] bg-[#070b14] flex items-center justify-center p-6 text-text-muted"
       >
         No suppliers to display in active dataset.
       </div>
@@ -327,7 +327,7 @@ export const GlobePage: React.FC = () => {
               className={`px-3 py-1 rounded transition-colors ${
                 viewMode === 'globe'
                   ? 'bg-cyan-600 text-white shadow-xs'
-                  : 'text-slate-400 hover:text-slate-200'
+                  : 'text-text-muted hover:text-slate-200'
               }`}
             >
               3D Globe
@@ -338,7 +338,7 @@ export const GlobePage: React.FC = () => {
               className={`px-3 py-1 rounded transition-colors ${
                 viewMode === 'list'
                   ? 'bg-cyan-600 text-white shadow-xs'
-                  : 'text-slate-400 hover:text-slate-200'
+                  : 'text-text-muted hover:text-slate-200'
               }`}
             >
               Locations List
@@ -434,13 +434,13 @@ export const GlobePage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setActiveCluster(null)}
-                className="text-slate-400 hover:text-white p-1"
+                className="text-text-muted hover:text-white p-1"
                 aria-label="Close cluster selection"
               >
                 &times;
               </button>
             </div>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-text-muted">
               Multiple facilities share this coordinate (Lat: {activeCluster.lat.toFixed(2)}, Lon:{' '}
               {activeCluster.lng.toFixed(2)}). Select an entity to view detailed metrics:
             </p>
@@ -457,7 +457,7 @@ export const GlobePage: React.FC = () => {
                   >
                     <div>
                       <div className="font-bold text-white">{it.item.name}</div>
-                      <div className="font-mono text-[10px] text-slate-400">
+                      <div className="font-mono text-[10px] text-text-muted">
                         {it.item.code} &bull;{' '}
                         {it.type === 'supplier'
                           ? `Risk: ${(it.item as GlobeSupplier).risk_band}`

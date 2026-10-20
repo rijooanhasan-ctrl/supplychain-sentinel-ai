@@ -91,17 +91,17 @@ export function InventoryPage() {
       {/* Filter Bar */}
       <section
         aria-label="Inventory Filters"
-        className="bg-white p-4 rounded-lg border border-slate-200 shadow-xs flex flex-wrap items-center gap-4 text-xs font-medium text-slate-700"
+        className="bg-surface p-4 rounded-lg border border-border-subtle shadow-xs flex flex-wrap items-center gap-4 text-xs font-medium text-text-primary"
       >
         <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-          <label htmlFor="filter-component" className="text-slate-600 font-semibold">
+          <label htmlFor="filter-component" className="text-text-secondary font-semibold">
             Filter by Component:
           </label>
           <select
             id="filter-component"
             value={selectedComponentId ?? ''}
             onChange={(e) => handleComponentChange(e.target.value)}
-            className="border border-slate-300 rounded px-2.5 py-1.5 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 max-w-xs"
+            className="border border-border-subtle rounded px-2.5 py-1.5 bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary max-w-xs"
           >
             <option value="">All Components</option>
             {compData?.items.map((c: Component) => (
@@ -113,14 +113,14 @@ export function InventoryPage() {
         </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-          <label htmlFor="filter-warehouse" className="text-slate-600 font-semibold">
+          <label htmlFor="filter-warehouse" className="text-text-secondary font-semibold">
             Filter by Warehouse:
           </label>
           <select
             id="filter-warehouse"
             value={selectedWarehouseId ?? ''}
             onChange={(e) => handleWarehouseChange(e.target.value)}
-            className="border border-slate-300 rounded px-2.5 py-1.5 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 max-w-xs"
+            className="border border-border-subtle rounded px-2.5 py-1.5 bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary max-w-xs"
           >
             <option value="">All Warehouses</option>
             {whData?.items.map((w: Warehouse) => (
@@ -168,11 +168,11 @@ export function InventoryPage() {
                 message="No stock level records match the selected component and warehouse filters."
               />
             ) : (
-              <div className="bg-white border border-slate-200 rounded-lg shadow-xs overflow-hidden">
+              <div className="bg-surface border border-border-subtle rounded-lg shadow-xs overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-slate-200 text-sm" data-testid="inventory-table">
+                  <table className="min-w-full divide-y divide-border-subtle text-sm" data-testid="inventory-table">
                     <caption className="sr-only">Inventory stock levels per warehouse</caption>
-                    <thead className="bg-slate-50 text-slate-700 text-xs uppercase font-semibold">
+                    <thead className="bg-elevated text-text-primary text-xs uppercase font-semibold">
                       <tr>
                         <th scope="col" className="px-4 py-3 text-left">Component</th>
                         <th scope="col" className="px-4 py-3 text-left">Warehouse</th>
@@ -183,29 +183,29 @@ export function InventoryPage() {
                         <th scope="col" className="px-4 py-3 text-left">As-Of (UTC)</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 bg-white">
+                    <tbody className="divide-y divide-border-subtle bg-surface">
                       {invData.items.map((row: InventoryItem) => {
                         const usable = row.on_hand - row.reserved;
                         const isDeficit = row.reserved > row.on_hand;
                         const isZeroUsable = usable === 0 && !isDeficit;
 
                         return (
-                          <tr key={row.id} className="hover:bg-slate-50/80 transition-colors">
-                            <th scope="row" className="px-4 py-3 text-left font-medium text-slate-900">
+                          <tr key={row.id} className="hover:bg-elevated/80 transition-colors">
+                            <th scope="row" className="px-4 py-3 text-left font-medium text-text-primary">
                               <span className="font-mono font-semibold text-blue-700">{row.component_sku}</span>
-                              <span className="text-xs text-slate-500 block">{row.component_name}</span>
+                              <span className="text-xs text-text-secondary block">{row.component_name}</span>
                             </th>
-                            <td className="px-4 py-3 text-slate-800">
+                            <td className="px-4 py-3 text-text-primary">
                               <span className="font-semibold">{row.warehouse_code}</span>
-                              <span className="text-xs text-slate-500 block">{row.warehouse_name}</span>
+                              <span className="text-xs text-text-secondary block">{row.warehouse_name}</span>
                             </td>
-                            <td className="px-4 py-3 text-right font-mono text-slate-800">
+                            <td className="px-4 py-3 text-right font-mono text-text-primary">
                               {formatInteger(row.on_hand)}
                             </td>
-                            <td className="px-4 py-3 text-right font-mono text-slate-600">
+                            <td className="px-4 py-3 text-right font-mono text-text-secondary">
                               {formatInteger(row.reserved)}
                             </td>
-                            <td className="px-4 py-3 text-right font-mono font-bold text-slate-900" data-testid={`usable-${row.id}`}>
+                            <td className="px-4 py-3 text-right font-mono font-bold text-text-primary" data-testid={`usable-${row.id}`}>
                               {formatInteger(usable)}
                             </td>
                             <td className="px-4 py-3">
@@ -229,7 +229,7 @@ export function InventoryPage() {
                                 <span className="text-xs text-emerald-700 font-medium">In Stock</span>
                               )}
                             </td>
-                            <td className="px-4 py-3 text-xs text-slate-500 font-mono">
+                            <td className="px-4 py-3 text-xs text-text-secondary font-mono">
                               {formatUtcTimestamp(row.as_of_ts)}
                             </td>
                           </tr>

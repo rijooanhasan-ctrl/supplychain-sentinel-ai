@@ -29,10 +29,10 @@ export function Pagination({
   return (
     <nav
       aria-label="Pagination Navigation"
-      className="flex flex-col sm:flex-row items-center justify-between gap-4 py-3 px-2 border-t border-slate-200 text-xs text-slate-700"
+      className="flex flex-col sm:flex-row items-center justify-between gap-4 py-3 px-2 border-t border-border-subtle text-xs text-text-secondary"
     >
       <div className="flex items-center gap-3">
-        <label htmlFor="pagination-limit" className="font-medium text-slate-600">
+        <label htmlFor="pagination-limit" className="font-medium text-text-secondary">
           Rows per page:
         </label>
         <select
@@ -40,7 +40,7 @@ export function Pagination({
           value={limit}
           disabled={disabled}
           onChange={(e) => onLimitChange(Number(e.target.value))}
-          className="border border-slate-300 rounded px-2 py-1 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+          className="border border-border-subtle rounded px-2 py-1 bg-input text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary font-medium"
         >
           {limits.map((l) => (
             <option key={l} value={l}>
@@ -51,13 +51,13 @@ export function Pagination({
       </div>
 
       <div
-        className="font-medium text-slate-600"
+        className="font-medium text-text-secondary"
         aria-live="polite"
         data-testid="pagination-range"
       >
-        Showing <span className="font-semibold text-slate-900">{start}</span>–
-        <span className="font-semibold text-slate-900">{end}</span> of{' '}
-        <span className="font-semibold text-slate-900">{total}</span>
+        Showing <span className="font-semibold text-text-primary">{start}</span>–
+        <span className="font-semibold text-text-primary">{end}</span> of{' '}
+        <span className="font-semibold text-text-primary">{total}</span>
       </div>
 
       <div className="flex items-center gap-2">
@@ -66,7 +66,7 @@ export function Pagination({
           onClick={() => onOffsetChange(Math.max(0, offset - limit))}
           disabled={!hasPrevious || disabled}
           aria-label="Previous page"
-          className="px-3 py-1.5 border border-slate-300 rounded font-medium bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+          className="px-3 py-1.5 border border-border-subtle rounded font-medium bg-elevated text-text-primary hover:bg-hover disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-accent-primary transition-colors"
         >
           Previous
         </button>
@@ -75,7 +75,7 @@ export function Pagination({
           onClick={() => onOffsetChange(offset + limit)}
           disabled={!hasNext || disabled}
           aria-label="Next page"
-          className="px-3 py-1.5 border border-slate-300 rounded font-medium bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+          className="px-3 py-1.5 border border-border-subtle rounded font-medium bg-elevated text-text-primary hover:bg-hover disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-accent-primary transition-colors"
         >
           Next
         </button>

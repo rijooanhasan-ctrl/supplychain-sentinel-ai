@@ -311,8 +311,8 @@ export function ImportPage() {
   if (statusLoading) {
     return (
       <main className="p-6 max-w-5xl mx-auto space-y-4">
-        <h1 className="text-xl font-bold text-slate-900">Import Data</h1>
-        <p className="text-sm text-slate-500">Checking import service configuration...</p>
+        <h1 className="text-xl font-bold text-text-primary">Import Data</h1>
+        <p className="text-sm text-text-secondary">Checking import service configuration...</p>
       </main>
     );
   }
@@ -321,7 +321,7 @@ export function ImportPage() {
   if (statusError || !status) {
     return (
       <main className="p-6 max-w-5xl mx-auto space-y-4">
-        <h1 className="text-xl font-bold text-slate-900">Import Data</h1>
+        <h1 className="text-xl font-bold text-text-primary">Import Data</h1>
         <aside
           role="alert"
           aria-label="Import service connection error"
@@ -334,7 +334,7 @@ export function ImportPage() {
           <button
             type="button"
             onClick={loadStatus}
-            className="px-3 py-1.5 bg-white border border-red-300 rounded font-medium text-red-900 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="px-3 py-1.5 bg-surface border border-red-300 rounded font-medium text-red-900 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500"
           >
             Retry
           </button>
@@ -347,7 +347,7 @@ export function ImportPage() {
   if (!status.enabled) {
     return (
       <main className="p-6 max-w-5xl mx-auto space-y-4">
-        <h1 className="text-xl font-bold text-slate-900">Import Data</h1>
+        <h1 className="text-xl font-bold text-text-primary">Import Data</h1>
         <aside
           role="status"
           className="p-5 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-950 font-medium"
@@ -363,10 +363,10 @@ export function ImportPage() {
   return (
     <main className="p-4 sm:p-6 max-w-5xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border-subtle pb-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Import Data</h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
+          <h1 className="text-2xl font-bold text-text-primary">Import Data</h1>
+          <p className="text-xs sm:text-sm text-text-secondary mt-1">
             Safely test custom supply chain scenarios using separate, user-supplied CSV files.
           </p>
         </div>
@@ -374,9 +374,9 @@ export function ImportPage() {
           type="button"
           onClick={handleDownloadTemplates}
           disabled={isDownloadingTemplates}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 rounded text-xs font-medium shadow-xs focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-surface border border-border-subtle text-text-primary hover:bg-elevated rounded text-xs font-medium shadow-xs focus:outline-none focus:ring-2 focus:ring-accent-primary cursor-pointer disabled:opacity-50"
         >
-          <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-4 h-4 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
           </svg>
           {isDownloadingTemplates ? 'Downloading...' : 'Download template files'}
@@ -386,14 +386,14 @@ export function ImportPage() {
       {/* Dataset Switcher Section */}
       <section
         aria-labelledby="active-dataset-heading"
-        className="bg-white border border-slate-200 rounded-lg p-4 sm:p-5 shadow-xs space-y-3"
+        className="bg-surface border border-border-subtle rounded-lg p-4 sm:p-5 shadow-xs space-y-3"
       >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h2 id="active-dataset-heading" className="text-sm font-semibold uppercase tracking-wider text-slate-600">
+            <h2 id="active-dataset-heading" className="text-sm font-semibold uppercase tracking-wider text-text-secondary">
               Active Dataset
             </h2>
-            <p className="text-base font-bold text-slate-900 mt-0.5 flex items-center gap-2">
+            <p className="text-base font-bold text-text-primary mt-0.5 flex items-center gap-2">
               <span>{activeDatasetName === 'uploaded' ? 'Uploaded Dataset' : 'Demo Dataset'}</span>
               <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${activeDatasetName === 'uploaded' ? 'bg-purple-100 text-purple-800 border border-purple-200' : 'bg-amber-100 text-amber-800 border border-amber-200'}`}>
                 {activeDatasetName}
@@ -406,7 +406,7 @@ export function ImportPage() {
               type="button"
               onClick={() => handleSwitchDataset('demo')}
               disabled={isSwitching || activeDatasetName === 'demo'}
-              className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold rounded border border-slate-300 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              className="px-3 py-1.5 bg-elevated hover:bg-surface text-text-primary text-xs font-semibold rounded border border-border-subtle disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-accent-primary cursor-pointer"
             >
               View demo data
             </button>
@@ -414,7 +414,7 @@ export function ImportPage() {
               type="button"
               onClick={() => handleSwitchDataset('uploaded')}
               disabled={isSwitching || activeDatasetName === 'uploaded' || !status.uploaded_available}
-              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-accent-primary cursor-pointer"
             >
               View uploaded data
             </button>
@@ -429,14 +429,14 @@ export function ImportPage() {
       </section>
 
       {/* Upload & Form Section */}
-      <section className="bg-white border border-slate-200 rounded-lg p-4 sm:p-5 shadow-xs space-y-5">
-        <h2 className="text-base font-semibold text-slate-900 border-b border-slate-100 pb-2">
+      <section className="bg-surface border border-border-subtle rounded-lg p-4 sm:p-5 shadow-xs space-y-5">
+        <h2 className="text-base font-semibold text-text-primary border-b border-border-subtle pb-2">
           Upload User Dataset (CSV)
         </h2>
 
         {/* As-Of Date Input */}
         <div className="max-w-md space-y-1">
-          <label htmlFor={dateInputId} className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+          <label htmlFor={dateInputId} className="block text-xs font-semibold uppercase tracking-wider text-text-primary">
             As-Of Snapshot Date <span className="text-red-500">*</span>
           </label>
           <input
@@ -449,9 +449,9 @@ export function ImportPage() {
               setValidatedFingerprint(null);
             }}
             required
-            className="w-full px-3 py-2 text-sm border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            className="w-full px-3 py-2 text-sm border border-border-subtle rounded focus:ring-2 focus:ring-accent-primary focus:outline-none"
           />
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-text-secondary">
             History should end the day before the as-of date. Money values must be in USD.
           </p>
         </div>
@@ -464,13 +464,13 @@ export function ImportPage() {
           className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
             isDragging
               ? 'border-blue-500 bg-blue-50/50'
-              : 'border-slate-300 hover:border-slate-400 bg-slate-50/50'
+              : 'border-border-subtle hover:border-border-strong bg-elevated/50'
           }`}
         >
-          <svg className="w-10 h-10 mx-auto text-slate-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-10 h-10 mx-auto text-text-muted mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
           </svg>
-          <p className="text-sm font-medium text-slate-800">
+          <p className="text-sm font-medium text-text-primary">
             Drag and drop CSV files here, or{' '}
             <label
               htmlFor={fileInputId}
@@ -479,7 +479,7 @@ export function ImportPage() {
               browse
             </label>
           </p>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-text-secondary mt-1">
             Accepts up to {status.limits.max_files} CSV files (max {formatBytes(status.limits.max_file_bytes)} per file, {formatBytes(status.limits.max_total_bytes)} total)
           </p>
           <input
@@ -499,16 +499,16 @@ export function ImportPage() {
         {/* Selected Files List */}
         {files.length > 0 && (
           <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-slate-600">
+            <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-text-secondary">
               <span>Selected Files ({files.length})</span>
               <span>Total: {formatBytes(files.reduce((a, b) => a + b.size, 0))}</span>
             </div>
-            <ul className="divide-y divide-slate-100 border border-slate-200 rounded text-xs bg-white">
+            <ul className="divide-y divide-border-subtle border border-border-subtle rounded text-xs bg-surface">
               {files.map((sf) => (
                 <li key={sf.name} className="px-3 py-2 flex items-center justify-between gap-2">
-                  <span className="font-mono text-slate-800 font-medium truncate">{sf.name}</span>
+                  <span className="font-mono text-text-primary font-medium truncate">{sf.name}</span>
                   <div className="flex items-center gap-3 shrink-0">
-                    <span className="text-slate-500">{formatBytes(sf.size)}</span>
+                    <span className="text-text-secondary">{formatBytes(sf.size)}</span>
                     <button
                       type="button"
                       onClick={() => handleRemoveFile(sf.name)}
@@ -542,7 +542,7 @@ export function ImportPage() {
             type="button"
             onClick={handleValidate}
             disabled={isValidating || files.length === 0}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-bold shadow-xs disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-bold shadow-xs disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-accent-primary cursor-pointer"
           >
             {isValidating ? 'Validating...' : 'Validate'}
           </button>
@@ -582,7 +582,7 @@ export function ImportPage() {
               <button
                 type="button"
                 onClick={() => setShowConfirmModal(false)}
-                className="px-3 py-1.5 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 rounded text-xs font-medium focus:outline-none focus:ring-2 focus:ring-slate-400 cursor-pointer"
+                className="px-3 py-1.5 bg-surface border border-border-subtle text-text-primary hover:bg-elevated rounded text-xs font-medium focus:outline-none focus:ring-2 focus:ring-slate-400 cursor-pointer"
               >
                 Cancel
               </button>
@@ -615,10 +615,10 @@ export function ImportPage() {
       {validationReport && (
         <section
           aria-live="polite"
-          className="bg-white border border-slate-200 rounded-lg p-4 sm:p-5 shadow-xs space-y-4"
+          className="bg-surface border border-border-subtle rounded-lg p-4 sm:p-5 shadow-xs space-y-4"
         >
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-            <h2 className="text-base font-semibold text-slate-900">Validation Results</h2>
+          <div className="flex items-center justify-between border-b border-border-subtle pb-3">
+            <h2 className="text-base font-semibold text-text-primary">Validation Results</h2>
             <span
               className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
                 validationReport.valid
@@ -645,11 +645,11 @@ export function ImportPage() {
                       <th scope="col" className="px-3 py-2">Message</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-red-100 bg-white">
+                  <tbody className="divide-y divide-red-100 bg-surface">
                     {validationReport.errors.map((err: ValidationErrorItem, idx: number) => (
                       <tr key={idx} className="hover:bg-red-50/40">
-                        <td className="px-3 py-2 font-mono text-slate-800">{err.file}</td>
-                        <td className="px-3 py-2 text-slate-600">{err.line ?? '—'}</td>
+                        <td className="px-3 py-2 font-mono text-text-primary">{err.file}</td>
+                        <td className="px-3 py-2 text-text-secondary">{err.line ?? '—'}</td>
                         <td className="px-3 py-2 text-red-900">{err.message}</td>
                       </tr>
                     ))}
@@ -673,19 +673,19 @@ export function ImportPage() {
 
           {/* Coverage Details */}
           {validationReport.coverage && (
-            <div className="space-y-3 pt-2 border-t border-slate-100">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">
+            <div className="space-y-3 pt-2 border-t border-border-subtle">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-text-primary">
                 Entity Coverage &amp; Feed Omission Consequences
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                 {/* Covered */}
-                <div className="p-3 bg-slate-50 border border-slate-200 rounded space-y-1">
+                <div className="p-3 bg-elevated border border-border-subtle rounded space-y-1">
                   <span className="font-semibold text-emerald-800 block">
                     Covered Entities ({validationReport.coverage.entities_covered.length})
                   </span>
                   <div className="flex flex-wrap gap-1.5 mt-1">
                     {validationReport.coverage.entities_covered.map((ent) => (
-                      <span key={ent} className="px-2 py-0.5 bg-white border border-slate-200 rounded font-mono text-slate-800">
+                      <span key={ent} className="px-2 py-0.5 bg-surface border border-border-subtle rounded font-mono text-text-primary">
                         {ent}
                       </span>
                     ))}
@@ -693,23 +693,23 @@ export function ImportPage() {
                 </div>
 
                 {/* Missing & Consequences */}
-                <div className="p-3 bg-slate-50 border border-slate-200 rounded space-y-1">
+                <div className="p-3 bg-elevated border border-border-subtle rounded space-y-1">
                   <span className="font-semibold text-amber-800 block">
                     Missing Entities ({validationReport.coverage.missing?.length ?? 0})
                   </span>
                   {validationReport.coverage.missing && validationReport.coverage.missing.length > 0 ? (
-                    <ul className="list-disc pl-4 space-y-1 text-slate-700 mt-1">
+                    <ul className="list-disc pl-4 space-y-1 text-text-primary mt-1">
                       {validationReport.coverage.missing.map((ent) => (
                         <li key={ent}>
                           <span className="font-mono font-medium">{ent}</span>:{' '}
-                          <span className="text-slate-600">
+                          <span className="text-text-secondary">
                             {validationReport.coverage.consequences?.[ent] || 'No specific consequence noted.'}
                           </span>
                         </li>
                       ))}
                     </ul>
                   ) : (
-                    <p className="text-slate-500">All standard entity feeds are covered.</p>
+                    <p className="text-text-secondary">All standard entity feeds are covered.</p>
                   )}
                 </div>
               </div>
@@ -718,15 +718,15 @@ export function ImportPage() {
 
           {/* Row Counts Breakdown */}
           {validationReport.row_counts && Object.keys(validationReport.row_counts).length > 0 && (
-            <div className="pt-2 border-t border-slate-100">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
+            <div className="pt-2 border-t border-border-subtle">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-text-primary mb-2">
                 Loaded Row Counts
               </h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 text-xs">
                 {Object.entries(validationReport.row_counts).map(([entity, count]) => (
-                  <div key={entity} className="p-2 bg-slate-50 rounded border border-slate-200 flex justify-between items-center">
-                    <span className="font-mono text-slate-700">{entity}</span>
-                    <span className="font-bold text-slate-900">{count}</span>
+                  <div key={entity} className="p-2 bg-elevated rounded border border-border-subtle flex justify-between items-center">
+                    <span className="font-mono text-text-primary">{entity}</span>
+                    <span className="font-bold text-text-primary">{count}</span>
                   </div>
                 ))}
               </div>

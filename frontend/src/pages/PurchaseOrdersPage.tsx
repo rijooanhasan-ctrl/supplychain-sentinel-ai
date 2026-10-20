@@ -45,7 +45,7 @@ function PurchaseOrderLinesPanel({ poId }: { poId: number }) {
 
   if (!data || data.lines.length === 0) {
     return (
-      <div className="p-4 bg-white rounded border border-slate-200 text-xs text-slate-500">
+      <div className="p-4 bg-surface rounded border border-border-subtle text-xs text-text-secondary">
         No line items on file for this purchase order.
       </div>
     );
@@ -53,12 +53,12 @@ function PurchaseOrderLinesPanel({ poId }: { poId: number }) {
 
   return (
     <div className="space-y-2" data-testid={`lines-table-${poId}`}>
-      <h4 className="text-xs font-semibold text-slate-700 uppercase tracking-wider">
+      <h4 className="text-xs font-semibold text-text-primary uppercase tracking-wider">
         Purchase Order Line Items &amp; Fulfillment Progress
       </h4>
-      <div className="overflow-x-auto border border-slate-200 rounded bg-white">
-        <table className="min-w-full divide-y divide-slate-200 text-xs">
-          <thead className="bg-slate-50 text-slate-700 uppercase font-semibold">
+      <div className="overflow-x-auto border border-border-subtle rounded bg-surface">
+        <table className="min-w-full divide-y divide-border-subtle text-xs">
+          <thead className="bg-elevated text-text-primary uppercase font-semibold">
             <tr>
               <th scope="col" className="px-3 py-2 text-left">Component</th>
               <th scope="col" className="px-3 py-2 text-left">Destination Warehouse</th>
@@ -68,30 +68,30 @@ function PurchaseOrderLinesPanel({ poId }: { poId: number }) {
               <th scope="col" className="px-3 py-2 text-right">Unit Price ({meta?.display_currency || 'USD'})</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 bg-white">
+          <tbody className="divide-y divide-border-subtle bg-surface">
             {data.lines.map((line: PurchaseOrderLine) => {
               const remaining = line.qty_ordered - line.qty_received;
 
               return (
-                <tr key={line.id} className="hover:bg-slate-50/80">
-                  <th scope="row" className="px-3 py-2 font-mono font-semibold text-slate-900 text-left">
+                <tr key={line.id} className="hover:bg-elevated/80">
+                  <th scope="row" className="px-3 py-2 font-mono font-semibold text-text-primary text-left">
                     <span>{line.component_sku}</span>
-                    <span className="text-slate-500 font-sans block text-[11px]">{line.component_name}</span>
+                    <span className="text-text-secondary font-sans block text-[11px]">{line.component_name}</span>
                   </th>
-                  <td className="px-3 py-2 text-slate-800">
+                  <td className="px-3 py-2 text-text-primary">
                     <span className="font-semibold">{line.warehouse_code}</span>
-                    <span className="text-slate-500 block text-[11px]">{line.warehouse_name}</span>
+                    <span className="text-text-secondary block text-[11px]">{line.warehouse_name}</span>
                   </td>
-                  <td className="px-3 py-2 text-right font-mono text-slate-800">
+                  <td className="px-3 py-2 text-right font-mono text-text-primary">
                     {formatInteger(line.qty_ordered)}
                   </td>
-                  <td className="px-3 py-2 text-right font-mono text-slate-800">
+                  <td className="px-3 py-2 text-right font-mono text-text-primary">
                     {formatInteger(line.qty_received)}
                   </td>
-                  <td className="px-3 py-2 text-right font-mono font-bold text-slate-900" data-testid={`remaining-${line.id}`}>
+                  <td className="px-3 py-2 text-right font-mono font-bold text-text-primary" data-testid={`remaining-${line.id}`}>
                     {formatInteger(remaining)}
                   </td>
-                  <td className="px-3 py-2 text-right font-mono text-slate-900 font-semibold">
+                  <td className="px-3 py-2 text-right font-mono text-text-primary font-semibold">
                     {formatMoney(line.unit_price, meta)}
                   </td>
                 </tr>
@@ -192,17 +192,17 @@ export function PurchaseOrdersPage() {
       {/* Filter Bar */}
       <section
         aria-label="Purchase Order Filters"
-        className="bg-white p-4 rounded-lg border border-slate-200 shadow-xs flex flex-wrap items-center gap-4 text-xs font-medium text-slate-700"
+        className="bg-surface p-4 rounded-lg border border-border-subtle shadow-xs flex flex-wrap items-center gap-4 text-xs font-medium text-text-primary"
       >
         <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-          <label htmlFor="filter-status" className="text-slate-600 font-semibold">
+          <label htmlFor="filter-status" className="text-text-secondary font-semibold">
             Status:
           </label>
           <select
             id="filter-status"
             value={selectedStatus}
             onChange={(e) => handleStatusChange(e.target.value)}
-            className="border border-slate-300 rounded px-2.5 py-1.5 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="border border-border-subtle rounded px-2.5 py-1.5 bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
           >
             {PO_STATUS_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -213,14 +213,14 @@ export function PurchaseOrdersPage() {
         </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-          <label htmlFor="filter-supplier" className="text-slate-600 font-semibold">
+          <label htmlFor="filter-supplier" className="text-text-secondary font-semibold">
             Supplier:
           </label>
           <select
             id="filter-supplier"
             value={selectedSupplierId ?? ''}
             onChange={(e) => handleSupplierChange(e.target.value)}
-            className="border border-slate-300 rounded px-2.5 py-1.5 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 max-w-xs"
+            className="border border-border-subtle rounded px-2.5 py-1.5 bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary max-w-xs"
           >
             <option value="">All Suppliers</option>
             {supData?.items.map((s: Supplier) => (
@@ -268,11 +268,11 @@ export function PurchaseOrdersPage() {
                 message="No orders match the selected status or supplier filters."
               />
             ) : (
-              <div className="bg-white border border-slate-200 rounded-lg shadow-xs overflow-hidden">
+              <div className="bg-surface border border-border-subtle rounded-lg shadow-xs overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-slate-200 text-sm" data-testid="pos-table">
+                  <table className="min-w-full divide-y divide-border-subtle text-sm" data-testid="pos-table">
                     <caption className="sr-only">Inbound Purchase Orders</caption>
-                    <thead className="bg-slate-50 text-slate-700 text-xs uppercase font-semibold">
+                    <thead className="bg-elevated text-text-primary text-xs uppercase font-semibold">
                       <tr>
                         <th scope="col" className="px-4 py-3 text-left">PO Number</th>
                         <th scope="col" className="px-4 py-3 text-left">Supplier</th>
@@ -284,7 +284,7 @@ export function PurchaseOrdersPage() {
                         <th scope="col" className="px-4 py-3 text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 bg-white">
+                    <tbody className="divide-y divide-border-subtle bg-surface">
                       {data.items.map((po: PurchaseOrder) => {
                         const isExpanded = expandedPoIds.has(po.id);
                         const timing = timingLabel(po, asOf);
@@ -292,30 +292,30 @@ export function PurchaseOrdersPage() {
                         const slipped = slippedInfo(po);
 
                         return (
-                          <tr key={po.id} className="hover:bg-slate-50/80 transition-colors">
-                            <th scope="row" className="px-4 py-3 font-mono font-bold text-slate-900 text-left">
+                          <tr key={po.id} className="hover:bg-elevated/80 transition-colors">
+                            <th scope="row" className="px-4 py-3 font-mono font-bold text-text-primary text-left">
                               {po.po_number}
                             </th>
-                            <td className="px-4 py-3 text-slate-800">
+                            <td className="px-4 py-3 text-text-primary">
                               <span className="font-semibold">{po.supplier_name}</span>
-                              <span className="text-xs text-slate-500 font-mono block">({po.supplier_code})</span>
+                              <span className="text-xs text-text-secondary font-mono block">({po.supplier_code})</span>
                             </td>
                             <td className="px-4 py-3">
                               <PoStatusBadge status={po.status} />
                             </td>
-                            <td className="px-4 py-3 font-mono text-slate-700 text-xs">
+                            <td className="px-4 py-3 font-mono text-text-primary text-xs">
                               {formatDate(po.order_date)}
                             </td>
-                            <td className="px-4 py-3 font-mono text-slate-700 text-xs">
+                            <td className="px-4 py-3 font-mono text-text-primary text-xs">
                               {formatDate(po.promised_date)}
                             </td>
                             <td className="px-4 py-3 font-mono text-xs">
                               {po.latest_estimate_date ? (
-                                <span className="text-slate-900 font-medium">
+                                <span className="text-text-primary font-medium">
                                   {formatDate(po.latest_estimate_date)}
                                 </span>
                               ) : (
-                                <span className="text-slate-400 italic">None provided</span>
+                                <span className="text-text-muted italic">None provided</span>
                               )}
                             </td>
                             <td className="px-4 py-3 text-xs font-medium" data-testid={`timing-${po.po_number}`}>
@@ -325,7 +325,7 @@ export function PurchaseOrdersPage() {
                                 ) : timing === 'Due today' ? (
                                   <span className="text-amber-800 font-bold">{timing}</span>
                                 ) : (
-                                  <span className="text-slate-700">{timing}</span>
+                                  <span className="text-text-primary">{timing}</span>
                                 )}
                               </div>
                               {slipped && (
@@ -340,7 +340,7 @@ export function PurchaseOrdersPage() {
                                 onClick={() => toggleExpand(po.id)}
                                 aria-expanded={isExpanded}
                                 aria-controls={`po-lines-${po.id}`}
-                                className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                                className="px-3 py-1 bg-elevated hover:bg-surface text-text-primary rounded text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-accent-primary cursor-pointer"
                                 data-testid={`toggle-po-${po.id}`}
                               >
                                 {isExpanded ? 'Hide Lines' : 'View Lines'}
@@ -358,7 +358,7 @@ export function PurchaseOrdersPage() {
                   <div
                     key={`po-panel-${poId}`}
                     id={`po-lines-${poId}`}
-                    className="p-4 bg-slate-50 border-t border-slate-200"
+                    className="p-4 bg-elevated border-t border-border-subtle"
                   >
                     <PurchaseOrderLinesPanel poId={poId} />
                   </div>

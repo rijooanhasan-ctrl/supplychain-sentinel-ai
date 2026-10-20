@@ -56,7 +56,7 @@ function AlertDetailPanel({
 
   if (loading) {
     return (
-      <div className="p-4 bg-slate-50 border-t border-slate-200" data-testid={`alert-detail-loading-${alertId}`}>
+      <div className="p-4 bg-elevated border-t border-border-subtle" data-testid={`alert-detail-loading-${alertId}`}>
         <LoadingView message="Loading alert evidence, impact, and scenarios..." />
       </div>
     );
@@ -64,7 +64,7 @@ function AlertDetailPanel({
 
   if (error || !detail) {
     return (
-      <div className="p-4 bg-slate-50 border-t border-slate-200" data-testid={`alert-detail-error-${alertId}`}>
+      <div className="p-4 bg-elevated border-t border-border-subtle" data-testid={`alert-detail-error-${alertId}`}>
         <ErrorView
           error={error || new Error('Failed to load alert detail')}
           onRetry={reload}
@@ -78,12 +78,12 @@ function AlertDetailPanel({
     <div
       id={`alert-detail-${alertId}`}
       data-testid={`alert-detail-panel-${alertId}`}
-      className="p-5 bg-slate-50 border-t border-slate-200 space-y-6 text-xs text-slate-800"
+      className="p-5 bg-elevated border-t border-border-subtle space-y-6 text-xs text-text-primary"
     >
       {/* 1. Summary banner */}
-      <section className="bg-white p-4 rounded-lg border border-slate-200 shadow-xs">
+      <section className="bg-surface p-4 rounded-lg border border-border-subtle shadow-xs">
         <div className="flex items-center justify-between mb-2">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-text-secondary">
             Disruption Summary
           </h4>
           <WhyThis
@@ -97,12 +97,12 @@ function AlertDetailPanel({
             dataTestId={`why-this-alert-${alertId}`}
           />
         </div>
-        <p className="text-sm font-medium text-slate-900 leading-relaxed" data-testid="alert-detail-summary">
+        <p className="text-sm font-medium text-text-primary leading-relaxed" data-testid="alert-detail-summary">
           {detail.summary}
         </p>
         {detail.flags.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-2 items-center">
-            <span className="text-xs font-semibold text-slate-500">Flags:</span>
+            <span className="text-xs font-semibold text-text-secondary">Flags:</span>
             {detail.flags.map((flag) => (
               <Badge key={flag} variant="neutral">
                 {flag}
@@ -114,27 +114,27 @@ function AlertDetailPanel({
 
       {/* 2. Evidence Table */}
       {detail.evidence.length > 0 && (
-        <section className="bg-white p-4 rounded-lg border border-slate-200 shadow-xs">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">
+        <section className="bg-surface p-4 rounded-lg border border-border-subtle shadow-xs">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-text-secondary mb-3">
             Computed Evidence
           </h4>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse" data-testid="alert-evidence-table">
               <thead>
-                <tr className="border-b border-slate-200 text-slate-500 font-semibold">
+                <tr className="border-b border-border-subtle text-text-secondary font-semibold">
                   <th className="py-2 px-3">Metric / Fact</th>
                   <th className="py-2 px-3">Value</th>
                   <th className="py-2 px-3">Unit</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 font-mono">
+              <tbody className="divide-y divide-border-subtle font-mono">
                 {detail.evidence.map((ev, i) => (
-                  <tr key={i} className="hover:bg-slate-50">
-                    <td className="py-2 px-3 font-sans font-medium text-slate-700">{ev.label}</td>
-                    <td className="py-2 px-3 text-slate-900">
+                  <tr key={i} className="hover:bg-elevated">
+                    <td className="py-2 px-3 font-sans font-medium text-text-primary">{ev.label}</td>
+                    <td className="py-2 px-3 text-text-primary">
                       {ev.value !== null && ev.value !== undefined ? String(ev.value) : '—'}
                     </td>
-                    <td className="py-2 px-3 font-sans text-slate-500">{ev.unit || '—'}</td>
+                    <td className="py-2 px-3 font-sans text-text-secondary">{ev.unit || '—'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -145,19 +145,19 @@ function AlertDetailPanel({
 
       {/* 3. Delay Scenario Analysis (What-If) */}
       {detail.delay_scenarios && detail.delay_scenarios.length > 0 && (
-        <section className="bg-white p-4 rounded-lg border border-slate-200 shadow-xs">
+        <section className="bg-surface p-4 rounded-lg border border-border-subtle shadow-xs">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-2">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-text-secondary">
               Supplier Delay Exposure Scenarios
             </h4>
-            <span className="text-xs italic text-slate-500">
+            <span className="text-xs italic text-text-secondary">
               What-if cases from historical delays, not predictions
             </span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs" data-testid="delay-scenarios-table">
               <thead>
-                <tr className="border-b border-slate-200 text-slate-500 font-semibold">
+                <tr className="border-b border-border-subtle text-text-secondary font-semibold">
                   <th className="py-2 px-3">Scenario</th>
                   <th className="py-2 px-3">Shift</th>
                   <th className="py-2 px-3">Expected Date</th>
@@ -167,27 +167,27 @@ function AlertDetailPanel({
                   <th className="py-2 px-3">Incremental Unmet</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 font-mono">
+              <tbody className="divide-y divide-border-subtle font-mono">
                 {detail.delay_scenarios.map((sc) => (
                   <tr
                     key={sc.scenario_name}
-                    className={sc.scenario_name === 'baseline' ? 'bg-slate-50 font-semibold' : 'hover:bg-slate-50'}
+                    className={sc.scenario_name === 'baseline' ? 'bg-elevated font-semibold' : 'hover:bg-elevated'}
                   >
-                    <td className="py-2 px-3 font-sans capitalize text-slate-800">
+                    <td className="py-2 px-3 font-sans capitalize text-text-primary">
                       {sc.scenario_name}
                     </td>
-                    <td className="py-2 px-3 text-slate-700">+{sc.shift_days}d</td>
-                    <td className="py-2 px-3 text-slate-700">{sc.expected_date || '—'}</td>
-                    <td className="py-2 px-3 text-slate-700">{sc.shortage_date || 'None'}</td>
-                    <td className="py-2 px-3 text-slate-700">
+                    <td className="py-2 px-3 text-text-primary">+{sc.shift_days}d</td>
+                    <td className="py-2 px-3 text-text-primary">{sc.expected_date || '—'}</td>
+                    <td className="py-2 px-3 text-text-primary">{sc.shortage_date || 'None'}</td>
+                    <td className="py-2 px-3 text-text-primary">
                       {sc.first_episode_days > 0 ? `${sc.first_episode_days} days` : '0 days'}
                     </td>
-                    <td className="py-2 px-3 text-slate-700">
+                    <td className="py-2 px-3 text-text-primary">
                       {sc.unmet_before_next_inbound !== null
                         ? `${formatNumber(sc.unmet_before_next_inbound, 1)} units`
                         : '—'}
                     </td>
-                    <td className="py-2 px-3 text-slate-900 font-bold">
+                    <td className="py-2 px-3 text-text-primary font-bold">
                       {sc.incremental_total_unmet > 0
                         ? `+${formatNumber(sc.incremental_total_unmet, 1)} units`
                         : '0.0 units'}
@@ -202,22 +202,22 @@ function AlertDetailPanel({
 
       {/* 4. Customer Order Exposure / Impact */}
       {detail.impact && (
-        <section className="bg-white p-4 rounded-lg border border-slate-200 shadow-xs space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+        <section className="bg-surface p-4 rounded-lg border border-border-subtle shadow-xs space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border-subtle pb-3">
             <div>
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-text-secondary">
                 Customer Order Exposure
               </h4>
-              <p className="text-xs text-slate-600 mt-1">
+              <p className="text-xs text-text-secondary mt-1">
                 {detail.impact.orders_count} customer order(s) potentially exposed totaling{' '}
-                <span className="font-bold text-slate-900 font-mono">
+                <span className="font-bold text-text-primary font-mono">
                   {formatMoney(detail.impact.exposed_revenue, meta)}
                 </span>{' '}
                 in sales value ({formatInteger(detail.impact.total_component_units_required)} component units required).
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-slate-500">Priority Breakdown:</span>
+              <span className="text-xs font-semibold text-text-secondary">Priority Breakdown:</span>
               <Badge variant="danger">Critical: {detail.impact.count_by_priority['critical'] || 0}</Badge>
               <Badge variant="warning">High: {detail.impact.count_by_priority['high'] || 0}</Badge>
               <Badge variant="neutral">Normal: {detail.impact.count_by_priority['normal'] || 0}</Badge>
@@ -228,7 +228,7 @@ function AlertDetailPanel({
           {detail.impact.exposed_orders.length > 0 && (
             <div className="overflow-x-auto max-h-60 overflow-y-auto">
               <table className="w-full text-left border-collapse text-xs" data-testid="exposed-orders-table">
-                <thead className="sticky top-0 bg-slate-50 z-10 border-b border-slate-200 text-slate-500 font-semibold">
+                <thead className="sticky top-0 bg-elevated z-10 border-b border-border-subtle text-text-secondary font-semibold">
                   <tr>
                     <th className="py-2 px-3">Order Number</th>
                     <th className="py-2 px-3">Customer</th>
@@ -239,14 +239,14 @@ function AlertDetailPanel({
                     <th className="py-2 px-3">Units Needed</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 font-mono">
+                <tbody className="divide-y divide-border-subtle font-mono">
                   {detail.impact.exposed_orders.map((ord) => (
-                    <tr key={ord.order_number} className="hover:bg-slate-50">
+                    <tr key={ord.order_number} className="hover:bg-elevated">
                       <td className="py-1.5 px-3 font-semibold text-blue-700">{ord.order_number}</td>
-                      <td className="py-1.5 px-3 font-sans text-slate-800">{ord.customer_name}</td>
-                      <td className="py-1.5 px-3 font-sans text-slate-700">{ord.product_sku}</td>
-                      <td className="py-1.5 px-3 text-slate-800">{ord.quantity}</td>
-                      <td className="py-1.5 px-3 text-slate-700">{ord.due_date}</td>
+                      <td className="py-1.5 px-3 font-sans text-text-primary">{ord.customer_name}</td>
+                      <td className="py-1.5 px-3 font-sans text-text-primary">{ord.product_sku}</td>
+                      <td className="py-1.5 px-3 text-text-primary">{ord.quantity}</td>
+                      <td className="py-1.5 px-3 text-text-primary">{ord.due_date}</td>
                       <td className="py-1.5 px-3 font-sans">
                         <span
                           className={`capitalize font-semibold ${
@@ -254,13 +254,13 @@ function AlertDetailPanel({
                               ? 'text-red-700'
                               : ord.priority === 'high'
                               ? 'text-amber-700'
-                              : 'text-slate-600'
+                              : 'text-text-secondary'
                           }`}
                         >
                           {ord.priority}
                         </span>
                       </td>
-                      <td className="py-1.5 px-3 text-slate-900 font-bold">{ord.component_units_required}</td>
+                      <td className="py-1.5 px-3 text-text-primary font-bold">{ord.component_units_required}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -272,11 +272,11 @@ function AlertDetailPanel({
 
       {/* 5. Assumptions */}
       {detail.assumptions.length > 0 && (
-        <section className="bg-white p-4 rounded-lg border border-slate-200 shadow-xs">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+        <section className="bg-surface p-4 rounded-lg border border-border-subtle shadow-xs">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-text-secondary mb-2">
             Assessment Assumptions & Limitations
           </h4>
-          <ul className="list-disc pl-5 space-y-1 text-xs text-slate-600" data-testid="alert-assumptions-list">
+          <ul className="list-disc pl-5 space-y-1 text-xs text-text-secondary" data-testid="alert-assumptions-list">
             {detail.assumptions.map((ass, i) => (
               <li key={i} className="leading-relaxed">
                 {ass}
@@ -288,8 +288,8 @@ function AlertDetailPanel({
 
       {/* 6. Related Disruption Alerts */}
       {detail.related_alert_ids.length > 0 && (
-        <section className="bg-white p-4 rounded-lg border border-slate-200 shadow-xs">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+        <section className="bg-surface p-4 rounded-lg border border-border-subtle shadow-xs">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-text-secondary mb-2">
             Related Disruption Alerts
           </h4>
           <div className="flex flex-wrap gap-2">
@@ -298,7 +298,7 @@ function AlertDetailPanel({
                 key={relId}
                 type="button"
                 onClick={() => onSelectAlert && onSelectAlert(relId)}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100 transition-colors focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100 transition-colors focus:outline-hidden focus:ring-2 focus:ring-accent-primary"
                 data-testid={`related-alert-link-${relId}`}
               >
                 <span>{relId}</span>
@@ -387,14 +387,14 @@ export function AlertsPage() {
       {data && (
         <section
           aria-label="Alerts summary counts"
-          className="bg-white p-4 rounded-lg border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-4"
+          className="bg-surface p-4 rounded-lg border border-border-subtle shadow-xs flex flex-wrap items-center justify-between gap-4"
           data-testid="alerts-summary-banner"
         >
-          <div className="flex flex-wrap items-center gap-4 text-xs font-medium text-slate-700">
-            <span className="font-semibold text-slate-900 uppercase tracking-wider text-xs">
+          <div className="flex flex-wrap items-center gap-4 text-xs font-medium text-text-primary">
+            <span className="font-semibold text-text-primary uppercase tracking-wider text-xs">
               System Disruption Status:
             </span>
-            <span data-testid="summary-counts-text" className="text-slate-800">
+            <span data-testid="summary-counts-text" className="text-text-primary">
               Critical {data.summary.counts_by_severity['critical'] || 0} · High{' '}
               {data.summary.counts_by_severity['high'] || 0} · Medium{' '}
               {data.summary.counts_by_severity['medium'] || 0} · Low{' '}
@@ -402,8 +402,8 @@ export function AlertsPage() {
               {data.summary.counts_by_severity['info'] || 0}
             </span>
           </div>
-          <div className="text-xs text-slate-500 font-mono">
-            Total Alerts: <span className="font-bold text-slate-900">{data.summary.total_alerts}</span>
+          <div className="text-xs text-text-secondary font-mono">
+            Total Alerts: <span className="font-bold text-text-primary">{data.summary.total_alerts}</span>
           </div>
         </section>
       )}
@@ -411,10 +411,10 @@ export function AlertsPage() {
       {/* Filter Toolbar */}
       <section
         aria-label="Alert filters"
-        className="bg-white p-4 rounded-lg border border-slate-200 shadow-xs flex flex-wrap items-center gap-4"
+        className="bg-surface p-4 rounded-lg border border-border-subtle shadow-xs flex flex-wrap items-center gap-4"
       >
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-          <label htmlFor="severity-filter" className="text-xs font-semibold text-slate-700">
+          <label htmlFor="severity-filter" className="text-xs font-semibold text-text-primary">
             Severity:
           </label>
           <select
@@ -422,7 +422,7 @@ export function AlertsPage() {
             data-testid="severity-filter-select"
             value={severityFilter}
             onChange={(e) => handleSeverityChange(e.target.value as AlertSeverity | '')}
-            className="text-xs border border-slate-300 rounded px-2.5 py-1.5 bg-white text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+            className="text-xs border border-border-subtle rounded px-2.5 py-1.5 bg-surface text-text-primary focus:outline-hidden focus:ring-2 focus:ring-accent-primary"
           >
             {SEVERITY_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -433,7 +433,7 @@ export function AlertsPage() {
         </div>
 
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-          <label htmlFor="type-filter" className="text-xs font-semibold text-slate-700">
+          <label htmlFor="type-filter" className="text-xs font-semibold text-text-primary">
             Alert Type:
           </label>
           <select
@@ -441,7 +441,7 @@ export function AlertsPage() {
             data-testid="type-filter-select"
             value={typeFilter}
             onChange={(e) => handleTypeChange(e.target.value as AlertType | '')}
-            className="text-xs border border-slate-300 rounded px-2.5 py-1.5 bg-white text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+            className="text-xs border border-border-subtle rounded px-2.5 py-1.5 bg-surface text-text-primary focus:outline-hidden focus:ring-2 focus:ring-accent-primary"
           >
             {TYPE_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -466,14 +466,14 @@ export function AlertsPage() {
       )}
 
       {data && (
-        <div className="bg-white rounded-lg border border-slate-200 shadow-xs overflow-hidden">
+        <div className="bg-surface rounded-lg border border-border-subtle shadow-xs overflow-hidden">
           {data.items.length === 0 ? (
             <EmptyView message="No disruption alerts match the current filter criteria." />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs" data-testid="alerts-table">
                 <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50 text-slate-600 font-semibold">
+                  <tr className="border-b border-border-subtle bg-elevated text-text-secondary font-semibold">
                     <th className="py-3 px-4 w-12 text-center">Action</th>
                     <th className="py-3 px-4">Severity</th>
                     <th className="py-3 px-4">Type</th>
@@ -484,7 +484,7 @@ export function AlertsPage() {
                     <th className="py-3 px-4 text-right">Exposed Revenue</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-border-subtle">
                   {data.items.map((alert: AlertListItem) => {
                     const isExpanded = expandedAlertId === alert.id;
                     const subjectStr =
@@ -497,8 +497,8 @@ export function AlertsPage() {
                       <Fragment key={alert.id}>
                         <tr
                           id={`alert-row-${alert.id}`}
-                          className={`hover:bg-slate-50 transition-colors ${
-                            isExpanded ? 'bg-slate-50/80' : ''
+                          className={`hover:bg-elevated transition-colors ${
+                            isExpanded ? 'bg-elevated/80' : ''
                           }`}
                         >
                           <td className="py-3 px-4 text-center">
@@ -507,7 +507,7 @@ export function AlertsPage() {
                               aria-expanded={isExpanded}
                               aria-controls={`alert-detail-${alert.id}`}
                               onClick={() => handleToggleExpand(alert.id)}
-                              className="p-1 rounded text-slate-500 hover:text-slate-800 hover:bg-slate-200 transition-colors focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                              className="p-1 rounded text-text-secondary hover:text-text-primary hover:bg-surface transition-colors focus:outline-hidden focus:ring-2 focus:ring-accent-primary"
                               data-testid={`toggle-expand-${alert.id}`}
                               title={isExpanded ? 'Collapse alert details' : 'Expand alert details'}
                             >
@@ -519,11 +519,11 @@ export function AlertsPage() {
                           <td className="py-3 px-4">
                             <AlertSeverityBadge severity={alert.severity} />
                           </td>
-                          <td className="py-3 px-4 font-medium text-slate-700">
+                          <td className="py-3 px-4 font-medium text-text-primary">
                             {ALERT_TYPE_LABELS[alert.type] || alert.type}
                           </td>
                           <td className="py-3 px-4 max-w-md">
-                            <div className="font-semibold text-slate-900 flex items-center justify-between gap-2">
+                            <div className="font-semibold text-text-primary flex items-center justify-between gap-2">
                               <span>{alert.title}</span>
                               {alert.type === 'inventory_shortage' && (
                                 <div className="flex items-center gap-2 shrink-0">
@@ -552,28 +552,28 @@ export function AlertsPage() {
                                 </div>
                               )}
                             </div>
-                            <div className="text-slate-500 text-xs truncate mt-0.5" title={alert.summary}>
+                            <div className="text-text-secondary text-xs truncate mt-0.5" title={alert.summary}>
                               {alert.summary}
                             </div>
                           </td>
-                          <td className="py-3 px-4 font-mono text-slate-800">
+                          <td className="py-3 px-4 font-mono text-text-primary">
                             {subjectStr}
                           </td>
-                          <td className="py-3 px-4 font-mono text-slate-700">
+                          <td className="py-3 px-4 font-mono text-text-primary">
                             {alert.days_until_impact !== null ? `${alert.days_until_impact}d` : '—'}
                           </td>
-                          <td className="py-3 px-4 text-right font-mono text-slate-800">
+                          <td className="py-3 px-4 text-right font-mono text-text-primary">
                             {alert.affected_orders_count !== null
                               ? formatInteger(alert.affected_orders_count)
                               : '—'}
                           </td>
-                          <td className="py-3 px-4 text-right font-mono font-semibold text-slate-900">
+                          <td className="py-3 px-4 text-right font-mono font-semibold text-text-primary">
                             {alert.exposed_revenue !== null ? formatMoney(alert.exposed_revenue, meta) : '—'}
                           </td>
                         </tr>
                         {isExpanded && (
                           <tr id={`alert-expanded-row-${alert.id}`}>
-                            <td colSpan={8} className="p-0 border-t border-slate-200">
+                            <td colSpan={8} className="p-0 border-t border-border-subtle">
                               <AlertDetailPanel
                                 alertId={alert.id}
                                 onSelectAlert={handleSelectRelatedAlert}
@@ -590,7 +590,7 @@ export function AlertsPage() {
           )}
 
           {data.total > limit && (
-            <div className="p-4 border-t border-slate-200">
+            <div className="p-4 border-t border-border-subtle">
               <Pagination
                 total={data.total}
                 offset={offset}

@@ -31,8 +31,8 @@ export const StatusLegend: React.FC<StatusLegendProps> = ({
           <span
             className={`inline-flex items-center gap-1.5 px-2 py-1 rounded border transition-colors ${
               isSelected
-                ? 'ring-2 ring-blue-500 font-bold'
-                : 'hover:bg-slate-50'
+                ? 'ring-2 ring-accent-primary font-bold'
+                : 'hover:bg-hover'
             } ${itemClassName}`}
             style={{
               borderColor: item.strokeColor,
@@ -42,7 +42,7 @@ export const StatusLegend: React.FC<StatusLegendProps> = ({
           >
             {/* Visual swatch with SVG pattern preview */}
             <svg
-              className="w-3.5 h-3.5 rounded-xs shrink-0 border border-slate-300"
+              className="w-3.5 h-3.5 rounded-xs shrink-0 border border-border-subtle"
               aria-hidden="true"
               viewBox="0 0 16 16"
             >
@@ -60,7 +60,7 @@ export const StatusLegend: React.FC<StatusLegendProps> = ({
               type="button"
               onClick={() => onSelect(lvl)}
               aria-pressed={isSelected}
-              className="focus:outline-none focus:ring-2 focus:ring-blue-500 rounded cursor-pointer"
+              className="focus:outline-none focus:ring-2 focus:ring-accent-primary rounded cursor-pointer"
             >
               {content}
             </button>

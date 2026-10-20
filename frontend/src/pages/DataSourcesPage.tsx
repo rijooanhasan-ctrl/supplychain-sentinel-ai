@@ -77,10 +77,10 @@ export function DataSourcesPage() {
   return (
     <div className="space-y-6" data-testid="data-sources-page">
       {/* Page Header */}
-      <div className="border-b border-slate-200 pb-4 flex flex-wrap items-center justify-between gap-4">
+      <div className="border-b border-border-subtle pb-4 flex flex-wrap items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-text-primary">
               Data Sources &amp; Integration Status
             </h1>
             {(metaApi.data?.label || isDemo) && (
@@ -92,7 +92,7 @@ export function DataSourcesPage() {
               </span>
             )}
           </div>
-          <p className="text-sm text-slate-600 mt-1">
+          <p className="text-sm text-text-secondary mt-1">
             System health, active connector metadata, and verified dataset counts.
           </p>
         </div>
@@ -101,10 +101,10 @@ export function DataSourcesPage() {
       {/* Section 1: Backend Health */}
       <section
         aria-labelledby="health-heading"
-        className="bg-white border border-slate-200 rounded-lg p-5 shadow-xs"
+        className="bg-surface border border-border-subtle rounded-lg p-5 shadow-xs"
       >
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-          <h2 id="health-heading" className="text-base font-semibold text-slate-900">
+        <div className="flex items-center justify-between border-b border-border-subtle pb-3 mb-4">
+          <h2 id="health-heading" className="text-base font-semibold text-text-primary">
             1. Backend Health
           </h2>
           {healthApi.data && (
@@ -117,7 +117,7 @@ export function DataSourcesPage() {
 
         {healthApi.loading && (
           <div
-            className="py-6 text-center text-slate-500 text-sm"
+            className="py-6 text-center text-text-secondary text-sm"
             aria-live="polite"
             aria-busy="true"
             data-testid="health-loading"
@@ -139,7 +139,7 @@ export function DataSourcesPage() {
               <button
                 type="button"
                 onClick={healthApi.reload}
-                className="px-3 py-1 bg-white border border-red-300 rounded text-xs font-medium text-red-700 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 cursor-pointer"
+                className="px-3 py-1 bg-surface border border-red-300 rounded text-xs font-medium text-red-700 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 cursor-pointer"
               >
                 Retry Health
               </button>
@@ -150,27 +150,27 @@ export function DataSourcesPage() {
 
         {healthApi.data && !healthApi.loading && (
           <dl className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm" data-testid="health-data">
-            <div className="p-3 bg-slate-50 rounded border border-slate-100">
-              <dt className="text-xs font-medium text-slate-500 uppercase tracking-wider">Application</dt>
-              <dd className="mt-1 font-medium text-slate-900">{healthApi.data.app}</dd>
+            <div className="p-3 bg-elevated rounded border border-border-subtle">
+              <dt className="text-xs font-medium text-text-secondary uppercase tracking-wider">Application</dt>
+              <dd className="mt-1 font-medium text-text-primary">{healthApi.data.app}</dd>
             </div>
-            <div className="p-3 bg-slate-50 rounded border border-slate-100">
-              <dt className="text-xs font-medium text-slate-500 uppercase tracking-wider">Version</dt>
-              <dd className="mt-1 font-medium text-slate-900" data-testid="health-version">{healthApi.data.version}</dd>
+            <div className="p-3 bg-elevated rounded border border-border-subtle">
+              <dt className="text-xs font-medium text-text-secondary uppercase tracking-wider">Version</dt>
+              <dd className="mt-1 font-medium text-text-primary" data-testid="health-version">{healthApi.data.version}</dd>
             </div>
-            <div className="p-3 bg-slate-50 rounded border border-slate-100">
-              <dt className="text-xs font-medium text-slate-500 uppercase tracking-wider">Environment</dt>
-              <dd className="mt-1 font-medium text-slate-900">{healthApi.data.environment}</dd>
+            <div className="p-3 bg-elevated rounded border border-border-subtle">
+              <dt className="text-xs font-medium text-text-secondary uppercase tracking-wider">Environment</dt>
+              <dd className="mt-1 font-medium text-text-primary">{healthApi.data.environment}</dd>
             </div>
-            <div className="p-3 bg-slate-50 rounded border border-slate-100">
-              <dt className="text-xs font-medium text-slate-500 uppercase tracking-wider">Data Source</dt>
-              <dd className="mt-1 font-medium text-slate-900">{healthApi.data.data_source}</dd>
+            <div className="p-3 bg-elevated rounded border border-border-subtle">
+              <dt className="text-xs font-medium text-text-secondary uppercase tracking-wider">Data Source</dt>
+              <dd className="mt-1 font-medium text-text-primary">{healthApi.data.data_source}</dd>
             </div>
-            <div className="p-3 bg-slate-50 rounded border border-slate-100 sm:col-span-2">
-              <dt className="text-xs font-medium text-slate-500 uppercase tracking-wider">Server Timestamp</dt>
-              <dd className="mt-1 font-medium text-slate-900">
+            <div className="p-3 bg-elevated rounded border border-border-subtle sm:col-span-2">
+              <dt className="text-xs font-medium text-text-secondary uppercase tracking-wider">Server Timestamp</dt>
+              <dd className="mt-1 font-medium text-text-primary">
                 {formatUtcTimestamp(healthApi.data.timestamp)}
-                <span className="text-xs text-slate-500 ml-2 font-mono">({healthApi.data.timestamp})</span>
+                <span className="text-xs text-text-secondary ml-2 font-mono">({healthApi.data.timestamp})</span>
               </dd>
             </div>
           </dl>
@@ -179,7 +179,7 @@ export function DataSourcesPage() {
 
       {/* Sections 2, 3, 4: Dataset, Integration, and Record Counts */}
       {metaApi.loading && (
-        <section className="bg-white border border-slate-200 rounded-lg p-8 text-center text-slate-500 shadow-xs" aria-live="polite" aria-busy="true" data-testid="meta-loading">
+        <section className="bg-surface border border-border-subtle rounded-lg p-8 text-center text-text-secondary shadow-xs" aria-live="polite" aria-busy="true" data-testid="meta-loading">
           <p className="text-sm">Loading dataset metadata and integration status...</p>
         </section>
       )}
@@ -197,7 +197,7 @@ export function DataSourcesPage() {
             <button
               type="button"
               onClick={metaApi.reload}
-              className="px-3 py-1.5 bg-white border border-red-300 rounded text-xs font-medium text-red-700 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 cursor-pointer"
+              className="px-3 py-1.5 bg-surface border border-red-300 rounded text-xs font-medium text-red-700 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 cursor-pointer"
             >
               Retry Dataset Load
             </button>
@@ -222,7 +222,7 @@ export function DataSourcesPage() {
                 <button
                   type="button"
                   onClick={metaApi.reload}
-                  className="px-3 py-1 bg-white border border-amber-300 rounded text-xs font-medium text-amber-800 hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-1 cursor-pointer"
+                  className="px-3 py-1 bg-surface border border-amber-300 rounded text-xs font-medium text-amber-800 hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-1 cursor-pointer"
                 >
                   Refresh Status
                 </button>
@@ -242,35 +242,35 @@ export function DataSourcesPage() {
               {/* Section 2: Dataset Metadata */}
               <section
                 aria-labelledby="dataset-heading"
-                className="bg-white border border-slate-200 rounded-lg p-5 shadow-xs"
+                className="bg-surface border border-border-subtle rounded-lg p-5 shadow-xs"
               >
-                <h2 id="dataset-heading" className="text-base font-semibold text-slate-900 border-b border-slate-100 pb-3 mb-4">
+                <h2 id="dataset-heading" className="text-base font-semibold text-text-primary border-b border-border-subtle pb-3 mb-4">
                   2. Dataset Metadata
                 </h2>
                 <dl className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm" data-testid="dataset-meta">
-                  <div className="p-3 bg-slate-50 rounded border border-slate-100">
-                    <dt className="text-xs font-medium text-slate-500 uppercase tracking-wider">Dataset Label</dt>
-                    <dd className="mt-1 font-medium text-slate-900">{metaApi.data.label || '—'}</dd>
+                  <div className="p-3 bg-elevated rounded border border-border-subtle">
+                    <dt className="text-xs font-medium text-text-secondary uppercase tracking-wider">Dataset Label</dt>
+                    <dd className="mt-1 font-medium text-text-primary">{metaApi.data.label || '—'}</dd>
                   </div>
-                  <div className="p-3 bg-slate-50 rounded border border-slate-100">
-                    <dt className="text-xs font-medium text-slate-500 uppercase tracking-wider">Source</dt>
-                    <dd className="mt-1 font-medium text-slate-900">{metaApi.data.data_source}</dd>
+                  <div className="p-3 bg-elevated rounded border border-border-subtle">
+                    <dt className="text-xs font-medium text-text-secondary uppercase tracking-wider">Source</dt>
+                    <dd className="mt-1 font-medium text-text-primary">{metaApi.data.data_source}</dd>
                   </div>
-                  <div className="p-3 bg-slate-50 rounded border border-slate-100">
-                    <dt className="text-xs font-medium text-slate-500 uppercase tracking-wider">Seed Value</dt>
-                    <dd className="mt-1 font-medium text-slate-900">{metaApi.data.seed !== null ? metaApi.data.seed : '—'}</dd>
+                  <div className="p-3 bg-elevated rounded border border-border-subtle">
+                    <dt className="text-xs font-medium text-text-secondary uppercase tracking-wider">Seed Value</dt>
+                    <dd className="mt-1 font-medium text-text-primary">{metaApi.data.seed !== null ? metaApi.data.seed : '—'}</dd>
                   </div>
-                  <div className="p-3 bg-slate-50 rounded border border-slate-100">
-                    <dt className="text-xs font-medium text-slate-500 uppercase tracking-wider">As-Of Date</dt>
-                    <dd className="mt-1 font-medium text-slate-900">{metaApi.data.as_of || '—'}</dd>
+                  <div className="p-3 bg-elevated rounded border border-border-subtle">
+                    <dt className="text-xs font-medium text-text-secondary uppercase tracking-wider">As-Of Date</dt>
+                    <dd className="mt-1 font-medium text-text-primary">{metaApi.data.as_of || '—'}</dd>
                   </div>
-                  <div className="p-3 bg-slate-50 rounded border border-slate-100">
-                    <dt className="text-xs font-medium text-slate-500 uppercase tracking-wider">Generator Version</dt>
-                    <dd className="mt-1 font-medium text-slate-900">{metaApi.data.generator_version || '—'}</dd>
+                  <div className="p-3 bg-elevated rounded border border-border-subtle">
+                    <dt className="text-xs font-medium text-text-secondary uppercase tracking-wider">Generator Version</dt>
+                    <dd className="mt-1 font-medium text-text-primary">{metaApi.data.generator_version || '—'}</dd>
                   </div>
-                  <div className="p-3 bg-slate-50 rounded border border-slate-100">
-                    <dt className="text-xs font-medium text-slate-500 uppercase tracking-wider">Generated At</dt>
-                    <dd className="mt-1 font-medium text-slate-900">
+                  <div className="p-3 bg-elevated rounded border border-border-subtle">
+                    <dt className="text-xs font-medium text-text-secondary uppercase tracking-wider">Generated At</dt>
+                    <dd className="mt-1 font-medium text-text-primary">
                       {formatUtcTimestamp(metaApi.data.generated_at)}
                     </dd>
                   </div>
@@ -280,22 +280,22 @@ export function DataSourcesPage() {
               {/* Section 3: Integration Status */}
               <section
                 aria-labelledby="integration-heading"
-                className="bg-white border border-slate-200 rounded-lg p-5 shadow-xs space-y-4"
+                className="bg-surface border border-border-subtle rounded-lg p-5 shadow-xs space-y-4"
                 data-testid="integration-status-section"
               >
-                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                  <h2 id="integration-heading" className="text-base font-semibold text-slate-900">
+                <div className="flex items-center justify-between border-b border-border-subtle pb-3">
+                  <h2 id="integration-heading" className="text-base font-semibold text-text-primary">
                     3. Integration Status &amp; Connector Capabilities
                   </h2>
                   {integrationApi.data && (
-                    <span className="inline-flex items-center text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-800 border border-slate-200">
+                    <span className="inline-flex items-center text-xs font-semibold px-2.5 py-0.5 rounded-full bg-elevated text-text-primary border border-border-subtle">
                       Live Connection: {integrationApi.data.is_live ? 'YES' : 'NO'}
                     </span>
                   )}
                 </div>
 
                 {integrationApi.loading && (
-                  <p className="text-xs text-slate-500 py-3 text-center">Loading integration capabilities...</p>
+                  <p className="text-xs text-text-secondary py-3 text-center">Loading integration capabilities...</p>
                 )}
 
                 {integrationApi.error && (
@@ -305,9 +305,9 @@ export function DataSourcesPage() {
                 {integrationApi.data && !integrationApi.loading && (
                   <div className="space-y-4">
                     <div className="overflow-x-auto">
-                      <table className="min-w-full text-left text-sm divide-y divide-slate-200 border border-slate-200 rounded">
+                      <table className="min-w-full text-left text-sm divide-y divide-border-subtle border border-border-subtle rounded">
                         <caption className="sr-only">Integration status and connector details</caption>
-                        <thead className="bg-slate-50 text-slate-700">
+                        <thead className="bg-elevated text-text-primary">
                           <tr>
                             <th scope="col" className="px-4 py-2.5 font-semibold text-xs uppercase tracking-wider w-1/3">
                               Integration Property
@@ -317,14 +317,14 @@ export function DataSourcesPage() {
                             </th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100 bg-white">
+                        <tbody className="divide-y divide-border-subtle bg-surface">
                           <tr>
-                            <th scope="row" className="px-4 py-3 font-medium text-slate-900 whitespace-nowrap">
+                            <th scope="row" className="px-4 py-3 font-medium text-text-primary whitespace-nowrap">
                               Active Connector
                             </th>
-                            <td className="px-4 py-3 text-slate-700 font-mono text-xs">
+                            <td className="px-4 py-3 text-text-primary font-mono text-xs">
                               {integrationApi.data.active_source}
-                              <span className="ml-2 font-sans font-medium text-slate-600">
+                              <span className="ml-2 font-sans font-medium text-text-secondary">
                                 ({integrationApi.data.active_source === 'file-import'
                                   ? 'File import (user-supplied data, not live)'
                                   : integrationApi.data.label})
@@ -332,10 +332,10 @@ export function DataSourcesPage() {
                             </td>
                           </tr>
                           <tr>
-                            <th scope="row" className="px-4 py-3 font-medium text-slate-900 whitespace-nowrap">
+                            <th scope="row" className="px-4 py-3 font-medium text-text-primary whitespace-nowrap">
                               Live System Connection
                             </th>
-                            <td className="px-4 py-3 text-slate-700 text-xs">
+                            <td className="px-4 py-3 text-text-primary text-xs">
                               <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-50 text-amber-900 border border-amber-200">
                                 {integrationApi.data.active_source === 'file-import'
                                   ? 'False — File import (user-supplied data, not live)'
@@ -344,10 +344,10 @@ export function DataSourcesPage() {
                             </td>
                           </tr>
                           <tr>
-                            <th scope="row" className="px-4 py-3 font-medium text-slate-900 whitespace-nowrap">
+                            <th scope="row" className="px-4 py-3 font-medium text-text-primary whitespace-nowrap">
                               Entities Covered
                             </th>
-                            <td className="px-4 py-3 text-slate-700 text-xs">
+                            <td className="px-4 py-3 text-text-primary text-xs">
                               <div className="flex flex-wrap gap-1.5">
                                 {(integrationApi.data.entities_covered || []).map((ent: string) => (
                                   <span key={ent} className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-50 text-emerald-800 border border-emerald-200">
@@ -359,13 +359,13 @@ export function DataSourcesPage() {
                           </tr>
                           {(integrationApi.data.entities_missing || []).length > 0 && (
                             <tr>
-                              <th scope="row" className="px-4 py-3 font-medium text-slate-900 whitespace-nowrap">
+                              <th scope="row" className="px-4 py-3 font-medium text-text-primary whitespace-nowrap">
                                 Entities Missing
                               </th>
-                              <td className="px-4 py-3 text-slate-700 text-xs">
+                              <td className="px-4 py-3 text-text-primary text-xs">
                                 <div className="flex flex-wrap gap-1.5">
                                   {(integrationApi.data.entities_missing || []).map((ent: string) => (
-                                    <span key={ent} className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-300">
+                                    <span key={ent} className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-elevated text-text-primary border border-border-subtle">
                                       {formatEntityName(ent)}
                                     </span>
                                   ))}
@@ -398,17 +398,17 @@ export function DataSourcesPage() {
               {/* Section 4: Record Counts */}
               <section
                 aria-labelledby="counts-heading"
-                className="bg-white border border-slate-200 rounded-lg p-5 shadow-xs"
+                className="bg-surface border border-border-subtle rounded-lg p-5 shadow-xs"
               >
-                <h2 id="counts-heading" className="text-base font-semibold text-slate-900 border-b border-slate-100 pb-3 mb-4">
+                <h2 id="counts-heading" className="text-base font-semibold text-text-primary border-b border-border-subtle pb-3 mb-4">
                   4. Record Counts
                 </h2>
                 <div className="overflow-x-auto">
-                  <table className="min-w-full text-left text-sm divide-y divide-slate-200 border border-slate-200 rounded" data-testid="record-counts-table">
-                    <caption className="text-xs text-slate-500 py-2 px-1 text-left">
+                  <table className="min-w-full text-left text-sm divide-y divide-border-subtle border border-border-subtle rounded" data-testid="record-counts-table">
+                    <caption className="text-xs text-text-secondary py-2 px-1 text-left">
                       Total entities currently loaded into the decision-support database.
                     </caption>
-                    <thead className="bg-slate-50 text-slate-700">
+                    <thead className="bg-elevated text-text-primary">
                       <tr>
                         <th scope="col" className="px-4 py-2.5 font-semibold text-xs uppercase tracking-wider">
                           Entity Name
@@ -418,13 +418,13 @@ export function DataSourcesPage() {
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 bg-white">
+                    <tbody className="divide-y divide-border-subtle bg-surface">
                       {Object.entries(metaApi.data.counts).map(([key, count]) => (
-                        <tr key={key} className="hover:bg-slate-50 transition-colors">
-                          <th scope="row" className="px-4 py-2.5 font-medium text-slate-900">
+                        <tr key={key} className="hover:bg-elevated transition-colors">
+                          <th scope="row" className="px-4 py-2.5 font-medium text-text-primary">
                             {formatEntityName(key)}
                           </th>
-                          <td className="px-4 py-2.5 text-right font-mono text-slate-700">
+                          <td className="px-4 py-2.5 text-right font-mono text-text-primary">
                             {count.toLocaleString()}
                           </td>
                         </tr>
@@ -437,19 +437,19 @@ export function DataSourcesPage() {
               {/* Section 5: Web Data Import */}
               <section
                 aria-labelledby="import-heading"
-                className="bg-white border border-slate-200 rounded-lg p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                className="bg-surface border border-border-subtle rounded-lg p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4"
               >
                 <div>
-                  <h2 id="import-heading" className="text-base font-semibold text-slate-900">
+                  <h2 id="import-heading" className="text-base font-semibold text-text-primary">
                     5. User-Supplied CSV Data Import
                   </h2>
-                  <p className="text-xs text-slate-600 mt-1">
+                  <p className="text-xs text-text-secondary mt-1">
                     Upload and validate custom supply chain datasets safely stored in a separate database.
                   </p>
                 </div>
                 <a
                   href="/import"
-                  className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-bold shrink-0 shadow-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-bold shrink-0 shadow-xs focus:outline-none focus:ring-2 focus:ring-accent-primary"
                 >
                   Import Data &rarr;
                 </a>

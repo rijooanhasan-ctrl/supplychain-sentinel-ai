@@ -41,16 +41,16 @@ function OptionDetailExpansion({
   return (
     <div
       id={`option-expansion-${option.id}-${optionIndex}`}
-      className="p-4 bg-slate-50 border-t border-slate-200 text-xs space-y-3"
+      className="p-4 bg-elevated border-t border-border-subtle text-xs space-y-3"
       data-testid={`option-expansion-${option.id}`}
     >
       {/* Constraints Applied */}
       {option.constraints_applied.length > 0 && (
         <div>
-          <span className="font-semibold text-slate-800 uppercase tracking-wider text-[11px] block mb-1">
+          <span className="font-semibold text-text-primary uppercase tracking-wider text-[11px] block mb-1">
             Constraints Applied:
           </span>
-          <ul className="list-disc list-inside space-y-0.5 text-slate-700 pl-1">
+          <ul className="list-disc list-inside space-y-0.5 text-text-primary pl-1">
             {option.constraints_applied.map((c, i) => (
               <li key={i}>{c}</li>
             ))}
@@ -61,10 +61,10 @@ function OptionDetailExpansion({
       {/* Assumptions */}
       {option.assumptions.length > 0 && (
         <div>
-          <span className="font-semibold text-slate-800 uppercase tracking-wider text-[11px] block mb-1">
+          <span className="font-semibold text-text-primary uppercase tracking-wider text-[11px] block mb-1">
             Assumptions:
           </span>
-          <ul className="list-disc list-inside space-y-0.5 text-slate-600 pl-1">
+          <ul className="list-disc list-inside space-y-0.5 text-text-secondary pl-1">
             {option.assumptions.map((a, i) => (
               <li key={i}>{a}</li>
             ))}
@@ -75,7 +75,7 @@ function OptionDetailExpansion({
       {/* Flags */}
       {option.flags.length > 0 && (
         <div>
-          <span className="font-semibold text-slate-800 uppercase tracking-wider text-[11px] block mb-1">
+          <span className="font-semibold text-text-primary uppercase tracking-wider text-[11px] block mb-1">
             Operational Flags:
           </span>
           <div className="flex flex-wrap gap-1.5 mt-1">
@@ -101,23 +101,23 @@ function OptionDetailExpansion({
 
       {/* Accept Delay Impact: Customer Orders Exposed */}
       {option.kind === 'accept_delay' && option.impact && (
-        <div className="pt-2 border-t border-slate-200 space-y-2" data-testid="accept-delay-impact-panel">
-          <div className="font-semibold text-slate-900 flex items-center justify-between">
+        <div className="pt-2 border-t border-border-subtle space-y-2" data-testid="accept-delay-impact-panel">
+          <div className="font-semibold text-text-primary flex items-center justify-between">
             <span>Customer Orders Potentially Exposed ({option.impact.orders_count} orders)</span>
-            <span className="font-mono text-slate-800 font-bold">
+            <span className="font-mono text-text-primary font-bold">
               Selling Value: {formatMoney(option.impact.exposed_revenue, meta)}
             </span>
           </div>
-          <p className="text-[11px] text-slate-500 italic">
+          <p className="text-[11px] text-text-secondary italic">
             Upper bound of exposure: production lead time and stock allocation to orders are unknown,
             so these orders are potentially exposed, not predicted to be late. Exposed revenue is the
             selling value of those orders, not an estimate of loss.
           </p>
 
           {option.impact.exposed_orders.length > 0 && (
-            <div className="overflow-x-auto max-h-56 overflow-y-auto border border-slate-200 rounded mt-2">
-              <table className="min-w-full divide-y divide-slate-200 text-left text-xs bg-white">
-                <thead className="bg-slate-100 font-semibold text-slate-700 sticky top-0">
+            <div className="overflow-x-auto max-h-56 overflow-y-auto border border-border-subtle rounded mt-2">
+              <table className="min-w-full divide-y divide-border-subtle text-left text-xs bg-surface">
+                <thead className="bg-elevated font-semibold text-text-primary sticky top-0">
                   <tr>
                     <th className="py-2 px-3">Order #</th>
                     <th className="py-2 px-3">Customer</th>
@@ -128,12 +128,12 @@ function OptionDetailExpansion({
                     <th className="py-2 px-3 text-right">Units Req.</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 font-mono text-[11px]">
+                <tbody className="divide-y divide-border-subtle font-mono text-[11px]">
                   {option.impact.exposed_orders.map((order) => (
-                    <tr key={order.order_number} className="hover:bg-slate-50">
+                    <tr key={order.order_number} className="hover:bg-elevated">
                       <td className="py-1.5 px-3 font-semibold text-blue-700">{order.order_number}</td>
-                      <td className="py-1.5 px-3 font-sans text-slate-800">{order.customer_name}</td>
-                      <td className="py-1.5 px-3 font-sans text-slate-800">
+                      <td className="py-1.5 px-3 font-sans text-text-primary">{order.customer_name}</td>
+                      <td className="py-1.5 px-3 font-sans text-text-primary">
                         {order.product_sku} ({order.product_name})
                       </td>
                       <td className="py-1.5 px-3 font-sans">
@@ -143,15 +143,15 @@ function OptionDetailExpansion({
                               ? 'bg-red-100 text-red-800'
                               : order.priority === 'high'
                                 ? 'bg-amber-100 text-amber-800'
-                                : 'bg-slate-100 text-slate-700'
+                                : 'bg-elevated text-text-primary'
                           }`}
                         >
                           {order.priority}
                         </span>
                       </td>
                       <td className="py-1.5 px-3 text-right">{order.quantity}</td>
-                      <td className="py-1.5 px-3 text-slate-700">{order.due_date}</td>
-                      <td className="py-1.5 px-3 text-right font-bold text-slate-900">
+                      <td className="py-1.5 px-3 text-text-primary">{order.due_date}</td>
+                      <td className="py-1.5 px-3 text-right font-bold text-text-primary">
                         {order.component_units_required}
                       </td>
                     </tr>
@@ -180,15 +180,15 @@ function ComponentCard({
 
   return (
     <article
-      className="bg-white rounded-lg border border-slate-200 shadow-xs overflow-hidden"
+      className="bg-surface rounded-lg border border-border-subtle shadow-xs overflow-hidden"
       data-testid={`recommendation-card-${rec.sku}`}
     >
       {/* Component Header */}
-      <div className="p-4 md:p-5 border-b border-slate-200 bg-slate-50/70 flex flex-wrap items-center justify-between gap-4">
+      <div className="p-4 md:p-5 border-b border-border-subtle bg-elevated/70 flex flex-wrap items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <h2 className="text-lg font-bold text-slate-900 tracking-tight">{rec.sku}</h2>
-            <span className="text-sm font-medium text-slate-600">{rec.name}</span>
+            <h2 className="text-lg font-bold text-text-primary tracking-tight">{rec.sku}</h2>
+            <span className="text-sm font-medium text-text-secondary">{rec.name}</span>
             <span
               className={`px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider border ${
                 rec.risk_level === 'critical'
@@ -207,11 +207,11 @@ function ComponentCard({
               <span aria-hidden="true">&rarr;</span>
             </Link>
           </div>
-          <p className="text-xs text-slate-500 mt-1 font-mono">
+          <p className="text-xs text-text-secondary mt-1 font-mono">
             First Shortage Date:{' '}
-            <span className="font-semibold text-slate-800">{rec.baseline_shortage_date}</span> · Shortage
+            <span className="font-semibold text-text-primary">{rec.baseline_shortage_date}</span> · Shortage
             Runway Need:{' '}
-            <span className="font-semibold text-slate-900">
+            <span className="font-semibold text-text-primary">
               {formatNumber(rec.baseline_unmet_before_next_inbound, 1)} units
             </span>{' '}
             (Target: <span className="font-bold text-blue-700">{rec.need_units} units</span>)
@@ -236,8 +236,8 @@ function ComponentCard({
 
       {/* Options Table */}
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs divide-y divide-slate-200">
-          <thead className="bg-slate-100/80 text-slate-700 font-semibold uppercase tracking-wider text-[11px]">
+        <table className="w-full text-left text-xs divide-y divide-border-subtle">
+          <thead className="bg-elevated/80 text-text-primary font-semibold uppercase tracking-wider text-[11px]">
             <tr>
               <th className="py-2.5 px-3 w-10 text-center">Info</th>
               <th className="py-2.5 px-3">Option</th>
@@ -250,7 +250,7 @@ function ComponentCard({
               <th className="py-2.5 px-3 text-center">Status</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-border-subtle">
             {rec.options.map((opt, idx) => {
               const isRecommended = opt.id === rec.recommended_option_id;
               const isExpanded = expandedOptionId === opt.id;
@@ -262,11 +262,11 @@ function ComponentCard({
               return (
                 <Fragment key={opt.id}>
                   <tr
-                    className={`transition-colors hover:bg-slate-50/80 ${
+                    className={`transition-colors hover:bg-elevated/80 ${
                       isRecommended
                         ? 'bg-blue-50/50 font-medium'
                         : isExpanded
-                          ? 'bg-slate-50'
+                          ? 'bg-elevated'
                           : ''
                     }`}
                     data-testid={`option-row-${opt.id}`}
@@ -277,7 +277,7 @@ function ComponentCard({
                         aria-expanded={isExpanded}
                         aria-controls={`option-expansion-${opt.id}-${idx}`}
                         onClick={() => toggleExpand(opt.id)}
-                        className="p-1 rounded text-slate-500 hover:text-slate-800 hover:bg-slate-200 transition-colors"
+                        className="p-1 rounded text-text-secondary hover:text-text-primary hover:bg-surface transition-colors"
                         title={isExpanded ? 'Collapse details' : 'Expand constraints & assumptions'}
                         data-testid={`expand-btn-${opt.id}`}
                       >
@@ -286,19 +286,19 @@ function ComponentCard({
                         </span>
                       </button>
                     </td>
-                    <td className="py-3 px-3 font-semibold text-slate-900 whitespace-nowrap">
+                    <td className="py-3 px-3 font-semibold text-text-primary whitespace-nowrap">
                       <div className="flex items-center gap-1.5">
                         <OptionKindBadge kind={opt.kind} />
                       </div>
                     </td>
                     <td className="py-3 px-3 max-w-sm">
-                      <div className="font-sans text-slate-900">{opt.description}</div>
-                      <div className="text-[11px] text-slate-500 mt-0.5">Source: {sourceLabel}</div>
+                      <div className="font-sans text-text-primary">{opt.description}</div>
+                      <div className="text-[11px] text-text-secondary mt-0.5">Source: {sourceLabel}</div>
                     </td>
-                    <td className="py-3 px-3 text-right font-mono font-semibold text-slate-800 whitespace-nowrap">
+                    <td className="py-3 px-3 text-right font-mono font-semibold text-text-primary whitespace-nowrap">
                       {opt.quantity > 0 ? formatInteger(opt.quantity) : '0'}
                     </td>
-                    <td className="py-3 px-3 font-mono text-slate-700 whitespace-nowrap">
+                    <td className="py-3 px-3 font-mono text-text-primary whitespace-nowrap">
                       {opt.arrival_date ? opt.arrival_date : '—'}
                     </td>
                     <td className="py-3 px-3 text-right font-mono whitespace-nowrap">
@@ -307,7 +307,7 @@ function ComponentCard({
                           Unknown
                         </span>
                       ) : (
-                        <span className="font-semibold text-slate-900">
+                        <span className="font-semibold text-text-primary">
                           {formatMoney(opt.incremental_cost, meta)}
                         </span>
                       )}
@@ -339,7 +339,7 @@ function ComponentCard({
                           ★ Recommended
                         </span>
                       ) : (
-                        <span className="text-slate-400 text-xs">—</span>
+                        <span className="text-text-muted text-xs">—</span>
                       )}
                     </td>
                   </tr>
@@ -387,7 +387,7 @@ function ComponentCard({
           </div>
 
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-amber-200 text-left text-xs bg-white rounded border border-amber-200">
+            <table className="min-w-full divide-y divide-amber-200 text-left text-xs bg-surface rounded border border-amber-200">
               <thead className="bg-amber-100 font-semibold text-amber-900">
                 <tr>
                   <th className="py-1.5 px-3">Step</th>
@@ -401,17 +401,17 @@ function ComponentCard({
               <tbody className="divide-y divide-amber-100 font-mono text-[11px]">
                 {rec.combined_plan.steps.map((st, i) => (
                   <tr key={i}>
-                    <td className="py-1.5 px-3 font-semibold text-slate-800">#{i + 1}</td>
+                    <td className="py-1.5 px-3 font-semibold text-text-primary">#{i + 1}</td>
                     <td className="py-1.5 px-3 font-sans">
                       <OptionKindBadge kind={st.kind} />
                     </td>
-                    <td className="py-1.5 px-3 font-sans text-slate-800">
+                    <td className="py-1.5 px-3 font-sans text-text-primary">
                       {st.source_code} ({st.source_name})
                     </td>
-                    <td className="py-1.5 px-3 text-right font-bold text-slate-900">
+                    <td className="py-1.5 px-3 text-right font-bold text-text-primary">
                       {formatInteger(st.quantity)}
                     </td>
-                    <td className="py-1.5 px-3 text-slate-700">{st.arrival_date || '—'}</td>
+                    <td className="py-1.5 px-3 text-text-primary">{st.arrival_date || '—'}</td>
                     <td className="py-1.5 px-3 text-right">
                       {st.cost_known && st.incremental_cost !== null
                         ? formatMoney(st.incremental_cost, meta)
@@ -426,11 +426,11 @@ function ComponentCard({
       )}
 
       {/* Card Footer: Scope Clarification, Later Shortage Note and Alternatives Note */}
-      <div className="p-3 bg-slate-50/90 border-t border-slate-200 text-xs text-slate-600 flex flex-wrap items-center justify-between gap-3">
-        <div className="italic text-slate-500">
-          <span className="font-semibold text-slate-700">Alternatives Note: </span>
+      <div className="p-3 bg-elevated/90 border-t border-border-subtle text-xs text-text-secondary flex flex-wrap items-center justify-between gap-3">
+        <div className="italic text-text-secondary">
+          <span className="font-semibold text-text-primary">Alternatives Note: </span>
           {rec.alternatives_note}
-          <span className="block text-[11px] text-slate-500 mt-0.5">
+          <span className="block text-[11px] text-text-secondary mt-0.5">
             * &quot;Recommended&quot; designates the option that fixes the first shortage window; later shortages are not covered.
           </span>
         </div>
@@ -514,9 +514,9 @@ export function RecommendationsPage() {
 
       {/* Component Filter Banner (if component_id is active) */}
       {componentIdFilter !== undefined && (
-        <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-xs flex items-center justify-between text-xs">
-          <span className="text-slate-700">
-            Filtered by Component ID: <span className="font-bold text-slate-900">{componentIdFilter}</span>
+        <div className="bg-surface p-3 rounded-lg border border-border-subtle shadow-xs flex items-center justify-between text-xs">
+          <span className="text-text-primary">
+            Filtered by Component ID: <span className="font-bold text-text-primary">{componentIdFilter}</span>
           </span>
           <button
             type="button"

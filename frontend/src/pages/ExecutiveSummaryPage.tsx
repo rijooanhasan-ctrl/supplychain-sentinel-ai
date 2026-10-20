@@ -50,7 +50,7 @@ export function ExecutiveSummaryPage() {
             <button
               type="button"
               onClick={startDemo}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 rounded-md text-xs font-semibold cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 rounded-md text-xs font-semibold cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent-primary"
               data-testid="start-guided-demo-btn"
             >
               <span className="w-2 h-2 rounded-full bg-blue-600" aria-hidden="true" />
@@ -58,10 +58,10 @@ export function ExecutiveSummaryPage() {
             </button>
             <Link
               to="/report"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-md text-xs font-semibold shadow-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-surface hover:bg-elevated text-text-primary border border-border-subtle rounded-md text-xs font-semibold shadow-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent-primary"
               data-testid="print-save-pdf-btn"
             >
-              <svg className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-3.5 h-3.5 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
               </svg>
               Print / Save as PDF
@@ -69,7 +69,7 @@ export function ExecutiveSummaryPage() {
           </div>
         </div>
         <EmptyView message="No components currently at risk" />
-        <div className="p-4 bg-slate-100 rounded-lg text-xs text-slate-600 text-center border border-slate-200">
+        <div className="p-4 bg-elevated rounded-lg text-xs text-text-secondary text-center border border-border-subtle">
           Decision support only. No orders are created.
         </div>
       </div>
@@ -92,7 +92,7 @@ export function ExecutiveSummaryPage() {
           <button
             type="button"
             onClick={startDemo}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 rounded-md text-xs font-semibold cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 rounded-md text-xs font-semibold cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent-primary"
             data-testid="start-guided-demo-btn"
           >
             <span className="w-2 h-2 rounded-full bg-blue-600" aria-hidden="true" />
@@ -100,10 +100,10 @@ export function ExecutiveSummaryPage() {
           </button>
           <Link
             to="/report"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-md text-xs font-semibold shadow-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-surface hover:bg-elevated text-text-primary border border-border-subtle rounded-md text-xs font-semibold shadow-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent-primary"
             data-testid="print-save-pdf-btn"
           >
-            <svg className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-3.5 h-3.5 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
             </svg>
             Print / Save as PDF
@@ -115,7 +115,7 @@ export function ExecutiveSummaryPage() {
 
       {/* 1. Headline Sentence + DEMO DATA label */}
       <section
-        className="p-4 md:p-5 bg-white border border-slate-200 rounded-xl shadow-xs space-y-2"
+        className="p-4 md:p-5 bg-surface border border-border-subtle rounded-xl shadow-xs space-y-2"
         data-testid="executive-headline-section"
       >
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -127,17 +127,17 @@ export function ExecutiveSummaryPage() {
               {data.label || 'DEMO DATA'}
             </span>
             {data.as_of && (
-              <span className="text-xs text-slate-500 font-mono">
+              <span className="text-xs text-text-secondary font-mono">
                 As of: {data.as_of}
               </span>
             )}
           </div>
-          <span className="text-xs font-semibold text-slate-500">
+          <span className="text-xs font-semibold text-text-secondary">
             Decision support only. No orders are created.
           </span>
         </div>
         <h2
-          className="text-base md:text-lg font-bold text-slate-900 leading-snug"
+          className="text-base md:text-lg font-bold text-text-primary leading-snug"
           data-testid="executive-headline-text"
         >
           {data.headline}
@@ -147,7 +147,7 @@ export function ExecutiveSummaryPage() {
       {/* 2. Top Risks (Up to 3 cards) */}
       <section className="space-y-3" data-testid="top-risks-section">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-700">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-text-primary">
             Top Priority Risks (Up to 3)
           </h3>
           <Link
@@ -171,55 +171,55 @@ export function ExecutiveSummaryPage() {
             return (
               <article
                 key={risk.component_id}
-                className="p-4 bg-white border border-slate-200 rounded-lg shadow-xs flex flex-col justify-between space-y-3"
+                className="p-4 bg-surface border border-border-subtle rounded-lg shadow-xs flex flex-col justify-between space-y-3"
                 data-testid={`risk-card-${risk.component_sku}`}
               >
                 <div className="space-y-2">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-bold text-base text-slate-900 tracking-tight">
+                    <span className="font-bold text-base text-text-primary tracking-tight">
                       {risk.component_sku}
                     </span>
                     <Badge variant={severityVariant} testId={`severity-badge-${risk.component_sku}`}>
                       {risk.severity}
                     </Badge>
                   </div>
-                  <p className="text-xs text-slate-500 truncate" title={risk.component_name}>
+                  <p className="text-xs text-text-secondary truncate" title={risk.component_name}>
                     {risk.component_name}
                   </p>
 
-                  <div className="pt-2 border-t border-slate-100 text-xs space-y-1 font-mono">
+                  <div className="pt-2 border-t border-border-subtle text-xs space-y-1 font-mono">
                     <div className="flex justify-between">
-                      <span className="text-slate-500 font-sans">Shortage Date:</span>
-                      <span className="font-semibold text-slate-800">
+                      <span className="text-text-secondary font-sans">Shortage Date:</span>
+                      <span className="font-semibold text-text-primary">
                         {risk.shortage_date || '—'}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-500 font-sans">Days Away:</span>
-                      <span className="font-semibold text-slate-800">
+                      <span className="text-text-secondary font-sans">Days Away:</span>
+                      <span className="font-semibold text-text-primary">
                         {risk.days_until_impact !== null ? `${risk.days_until_impact} days` : '—'}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-500 font-sans">Units Short:</span>
+                      <span className="text-text-secondary font-sans">Units Short:</span>
                       <span className="font-semibold text-red-700">
                         {formatNumber(risk.units_short_before_next_inbound, 1)}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-500 font-sans">First Window:</span>
-                      <span className="font-semibold text-slate-700">
+                      <span className="text-text-secondary font-sans">First Window:</span>
+                      <span className="font-semibold text-text-primary">
                         {risk.first_shortage_window_days} days
                       </span>
                     </div>
                   </div>
 
-                  <p className="text-xs text-slate-600 line-clamp-2 pt-1 font-sans">
+                  <p className="text-xs text-text-secondary line-clamp-2 pt-1 font-sans">
                     {risk.reason}
                   </p>
                 </div>
 
-                <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
+                <div className="pt-2 border-t border-border-subtle flex flex-wrap items-center justify-between gap-2">
                   <WhyThis
                     items={risk.why}
                     dataTestId={`why-this-risk-${risk.component_sku}`}
@@ -227,13 +227,13 @@ export function ExecutiveSummaryPage() {
                   <div className="flex items-center gap-3 text-xs font-semibold">
                     <Link
                       to={`/globe?component=${encodeURIComponent(risk.component_sku)}`}
-                      className="text-slate-600 hover:text-slate-900 hover:underline"
+                      className="text-text-secondary hover:text-text-primary hover:underline"
                     >
                       View on map
                     </Link>
                     <Link
                       to="/alerts"
-                      className="text-slate-600 hover:text-slate-900 hover:underline"
+                      className="text-text-secondary hover:text-text-primary hover:underline"
                     >
                       Alerts
                     </Link>
@@ -255,7 +255,7 @@ export function ExecutiveSummaryPage() {
       {/* 3. Recommended Action Card */}
       {pd && (
         <section
-          className="p-5 bg-white border border-blue-200 rounded-xl shadow-xs space-y-4"
+          className="p-5 bg-surface border border-blue-200 rounded-xl shadow-xs space-y-4"
           data-testid="recommended-action-card"
         >
           <div className="flex flex-wrap items-center justify-between gap-2">
@@ -266,7 +266,7 @@ export function ExecutiveSummaryPage() {
               >
                 Recommended
               </span>
-              <h3 className="font-bold text-base text-slate-900">
+              <h3 className="font-bold text-base text-text-primary">
                 Priority Recovery Action: {pd.component_sku}
               </h3>
             </div>
@@ -278,34 +278,34 @@ export function ExecutiveSummaryPage() {
           </p>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 text-xs">
-            <div className="p-3 bg-slate-50 rounded border border-slate-200">
-              <span className="text-[11px] font-semibold text-slate-500 uppercase block mb-1">
+            <div className="p-3 bg-elevated rounded border border-border-subtle">
+              <span className="text-[11px] font-semibold text-text-secondary uppercase block mb-1">
                 Action
               </span>
-              <span className="font-semibold text-slate-900">{pd.recommended_option_kind}</span>
+              <span className="font-semibold text-text-primary">{pd.recommended_option_kind}</span>
             </div>
-            <div className="p-3 bg-slate-50 rounded border border-slate-200">
-              <span className="text-[11px] font-semibold text-slate-500 uppercase block mb-1">
+            <div className="p-3 bg-elevated rounded border border-border-subtle">
+              <span className="text-[11px] font-semibold text-text-secondary uppercase block mb-1">
                 Quantity
               </span>
-              <span className="font-mono font-bold text-slate-900">
+              <span className="font-mono font-bold text-text-primary">
                 {formatInteger(pd.quantity)} units
               </span>
             </div>
-            <div className="p-3 bg-slate-50 rounded border border-slate-200">
-              <span className="text-[11px] font-semibold text-slate-500 uppercase block mb-1">
+            <div className="p-3 bg-elevated rounded border border-border-subtle">
+              <span className="text-[11px] font-semibold text-text-secondary uppercase block mb-1">
                 Expected Arrival
               </span>
-              <span className="font-mono font-semibold text-slate-800">
+              <span className="font-mono font-semibold text-text-primary">
                 {pd.arrival_date || '—'}
               </span>
             </div>
-            <div className="p-3 bg-slate-50 rounded border border-slate-200">
-              <span className="text-[11px] font-semibold text-slate-500 uppercase block mb-1">
+            <div className="p-3 bg-elevated rounded border border-border-subtle">
+              <span className="text-[11px] font-semibold text-text-secondary uppercase block mb-1">
                 Incremental Cost
               </span>
               <span
-                className="font-mono font-bold text-slate-900"
+                className="font-mono font-bold text-text-primary"
                 data-testid="decision-cost"
               >
                 {!pd.cost_known || pd.incremental_cost === null
@@ -313,8 +313,8 @@ export function ExecutiveSummaryPage() {
                   : formatMoney(pd.incremental_cost, meta)}
               </span>
             </div>
-            <div className="p-3 bg-slate-50 rounded border border-slate-200">
-              <span className="text-[11px] font-semibold text-slate-500 uppercase block mb-1">
+            <div className="p-3 bg-elevated rounded border border-border-subtle">
+              <span className="text-[11px] font-semibold text-text-secondary uppercase block mb-1">
                 Residual Short
               </span>
               <span className="font-mono font-bold text-emerald-700">
@@ -323,7 +323,7 @@ export function ExecutiveSummaryPage() {
             </div>
           </div>
 
-          <p className="text-xs text-slate-700 font-sans">{pd.recommended_option_description}</p>
+          <p className="text-xs text-text-primary font-sans">{pd.recommended_option_description}</p>
 
           {pd.later_shortage_note && (
             <div
@@ -340,14 +340,14 @@ export function ExecutiveSummaryPage() {
       {/* 4. Cost of Acting vs Doing Nothing */}
       {cc && (
         <section
-          className="p-5 bg-white border border-slate-200 rounded-xl shadow-xs space-y-4"
+          className="p-5 bg-surface border border-border-subtle rounded-xl shadow-xs space-y-4"
           data-testid="cost-comparison-section"
         >
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-slate-800">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-text-primary">
               Cost of Acting vs. Doing Nothing
             </h3>
-            <span className="text-xs text-slate-500 italic">
+            <span className="text-xs text-text-secondary italic">
               Comparative decision tradeoff
             </span>
           </div>
@@ -355,60 +355,60 @@ export function ExecutiveSummaryPage() {
           {/* Side-by-side Table */}
           <div className="overflow-x-auto">
             <table
-              className="w-full text-left text-xs divide-y divide-slate-200 border border-slate-200 rounded-lg overflow-hidden"
+              className="w-full text-left text-xs divide-y divide-border-subtle border border-border-subtle rounded-lg overflow-hidden"
               data-testid="cost-comparison-table"
             >
-              <thead className="bg-slate-100/80 text-slate-700 font-bold uppercase tracking-wider text-[11px]">
+              <thead className="bg-elevated/80 text-text-primary font-bold uppercase tracking-wider text-[11px]">
                 <tr>
                   <th className="py-2.5 px-4">Metric / Dimension</th>
                   <th className="py-2.5 px-4 text-right bg-blue-50/50 text-blue-900">Act (Execute Recovery)</th>
-                  <th className="py-2.5 px-4 text-right bg-slate-50 text-slate-900">Do Nothing (Accept Delay)</th>
+                  <th className="py-2.5 px-4 text-right bg-elevated text-text-primary">Do Nothing (Accept Delay)</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 font-mono">
-                <tr className="hover:bg-slate-50">
-                  <td className="py-3 px-4 font-sans font-medium text-slate-700">
+              <tbody className="divide-y divide-border-subtle font-mono">
+                <tr className="hover:bg-elevated">
+                  <td className="py-3 px-4 font-sans font-medium text-text-primary">
                     Intervention Cost
                   </td>
-                  <td className="py-3 px-4 text-right font-bold text-slate-900 bg-blue-50/20">
+                  <td className="py-3 px-4 text-right font-bold text-text-primary bg-blue-50/20">
                     {!cc.act.cost_known || cc.act.cost === null
                       ? 'Unknown'
                       : formatMoney(cc.act.cost, meta)}
                   </td>
-                  <td className="py-3 px-4 text-right text-slate-400 bg-slate-50/40 font-sans">
+                  <td className="py-3 px-4 text-right text-text-muted bg-elevated/40 font-sans">
                     —
                   </td>
                 </tr>
-                <tr className="hover:bg-slate-50">
-                  <td className="py-3 px-4 font-sans font-medium text-slate-700">
+                <tr className="hover:bg-elevated">
+                  <td className="py-3 px-4 font-sans font-medium text-text-primary">
                     Units Short Before Next Inbound
                   </td>
                   <td className="py-3 px-4 text-right font-bold text-emerald-700 bg-blue-50/20">
                     {formatNumber(cc.act.residual_units_short, 1)}
                   </td>
-                  <td className="py-3 px-4 text-right font-bold text-red-700 bg-slate-50/40">
+                  <td className="py-3 px-4 text-right font-bold text-red-700 bg-elevated/40">
                     {formatNumber(cc.do_nothing.units_short, 1)}
                   </td>
                 </tr>
-                <tr className="hover:bg-slate-50">
-                  <td className="py-3 px-4 font-sans font-medium text-slate-700">
+                <tr className="hover:bg-elevated">
+                  <td className="py-3 px-4 font-sans font-medium text-text-primary">
                     Affected Customer Orders
                   </td>
-                  <td className="py-3 px-4 text-right font-bold text-slate-900 bg-blue-50/20">
+                  <td className="py-3 px-4 text-right font-bold text-text-primary bg-blue-50/20">
                     {formatInteger(cc.act.affected_orders_count)}
                   </td>
-                  <td className="py-3 px-4 text-right font-bold text-slate-900 bg-slate-50/40">
+                  <td className="py-3 px-4 text-right font-bold text-text-primary bg-elevated/40">
                     {formatInteger(cc.do_nothing.affected_orders_count)}
                   </td>
                 </tr>
-                <tr className="hover:bg-slate-50">
-                  <td className="py-3 px-4 font-sans font-medium text-slate-700">
+                <tr className="hover:bg-elevated">
+                  <td className="py-3 px-4 font-sans font-medium text-text-primary">
                     Selling Value of Affected Orders
                   </td>
-                  <td className="py-3 px-4 text-right font-bold text-slate-900 bg-blue-50/20">
+                  <td className="py-3 px-4 text-right font-bold text-text-primary bg-blue-50/20">
                     {cc.act.selling_value !== null ? formatMoney(cc.act.selling_value, meta) : '—'}
                   </td>
-                  <td className="py-3 px-4 text-right font-bold text-slate-900 bg-slate-50/40">
+                  <td className="py-3 px-4 text-right font-bold text-text-primary bg-elevated/40">
                     {cc.do_nothing.selling_value !== null ? formatMoney(cc.do_nothing.selling_value, meta) : '—'}
                   </td>
                 </tr>
@@ -418,7 +418,7 @@ export function ExecutiveSummaryPage() {
 
           {/* Generated Difference Sentence */}
           <div
-            className="p-3.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 space-y-2 leading-relaxed"
+            className="p-3.5 bg-elevated border border-border-subtle rounded-lg text-xs text-text-primary space-y-2 leading-relaxed"
             data-testid="difference-sentence-box"
           >
             <p className="font-medium">{cc.difference_sentence}</p>
@@ -426,7 +426,7 @@ export function ExecutiveSummaryPage() {
 
           {/* Mandatory Upper Bound Wording */}
           <p
-            className="text-[11px] text-slate-500 italic leading-normal"
+            className="text-[11px] text-text-secondary italic leading-normal"
             data-testid="upper-bound-disclaimer"
           >
             {cc.exposure_disclaimer}
@@ -437,15 +437,15 @@ export function ExecutiveSummaryPage() {
       {/* 5. Data Quality Lineage Section */}
       {dq && (
         <section
-          className="p-5 bg-white border border-slate-200 rounded-xl shadow-xs space-y-3"
+          className="p-5 bg-surface border border-border-subtle rounded-xl shadow-xs space-y-3"
           data-testid="data-quality-section"
         >
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="space-y-0.5">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-700">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-text-primary">
                 Data Quality & Integrity Lineage
               </h3>
-              <p className="text-xs text-slate-600" data-testid="data-quality-note">
+              <p className="text-xs text-text-secondary" data-testid="data-quality-note">
                 {dq.data_quality_note}
               </p>
             </div>
@@ -455,7 +455,7 @@ export function ExecutiveSummaryPage() {
               aria-expanded={dqExpanded}
               aria-controls="data-quality-expansion-panel"
               data-testid="toggle-data-quality-btn"
-              className="text-xs font-semibold px-3 py-1 rounded border border-slate-300 bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="text-xs font-semibold px-3 py-1 rounded border border-border-subtle bg-elevated text-text-primary hover:bg-surface transition-colors focus:outline-none focus:ring-2 focus:ring-accent-primary"
             >
               {dqExpanded ? 'Hide Details ▲' : 'Expand Details ▼'}
             </button>
@@ -464,24 +464,24 @@ export function ExecutiveSummaryPage() {
           {dqExpanded && (
             <div
               id="data-quality-expansion-panel"
-              className="pt-3 border-t border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs"
+              className="pt-3 border-t border-border-subtle grid grid-cols-1 md:grid-cols-2 gap-4 text-xs"
               data-testid="data-quality-expansion-panel"
             >
               <div className="space-y-2">
-                <span className="font-bold text-slate-700 uppercase tracking-wider text-[11px] block">
+                <span className="font-bold text-text-primary uppercase tracking-wider text-[11px] block">
                   Evaluation Audit
                 </span>
-                <ul className="space-y-1 font-mono text-slate-700">
+                <ul className="space-y-1 font-mono text-text-primary">
                   <li>
-                    <span className="font-sans font-medium text-slate-500">Components Evaluated:</span>{' '}
+                    <span className="font-sans font-medium text-text-secondary">Components Evaluated:</span>{' '}
                     <span className="font-bold">{dq.components_evaluated}</span>
                   </li>
                   <li>
-                    <span className="font-sans font-medium text-slate-500">Unknown Risk / Short History:</span>{' '}
+                    <span className="font-sans font-medium text-text-secondary">Unknown Risk / Short History:</span>{' '}
                     <span className="font-bold">{dq.components_unknown_risk}</span>
                   </li>
                   <li>
-                    <span className="font-sans font-medium text-slate-500">Demand History Lookback:</span>{' '}
+                    <span className="font-sans font-medium text-text-secondary">Demand History Lookback:</span>{' '}
                     <span className="font-bold">
                       {dq.priority_component_demand_history_days !== null
                         ? `${dq.priority_component_demand_history_days} days`
@@ -489,14 +489,14 @@ export function ExecutiveSummaryPage() {
                     </span>
                   </li>
                   <li>
-                    <span className="font-sans font-medium text-slate-500">Live SAP Connection:</span>{' '}
+                    <span className="font-sans font-medium text-text-secondary">Live SAP Connection:</span>{' '}
                     <span className="font-bold">{dq.is_live ? 'Yes' : 'No (Synthetic Sample)'}</span>
                   </li>
                 </ul>
               </div>
 
               <div className="space-y-2">
-                <span className="font-bold text-slate-700 uppercase tracking-wider text-[11px] block">
+                <span className="font-bold text-text-primary uppercase tracking-wider text-[11px] block">
                   Supplier Confidence Breakdown
                 </span>
                 <div className="flex gap-2">
@@ -513,10 +513,10 @@ export function ExecutiveSummaryPage() {
 
                 {dq.top_risk_supplier_confidence.length > 0 && (
                   <div className="pt-2">
-                    <span className="text-[11px] font-semibold text-slate-500 block mb-1">
+                    <span className="text-[11px] font-semibold text-text-secondary block mb-1">
                       Suppliers in Active Disruptions:
                     </span>
-                    <ul className="list-disc list-inside space-y-0.5 text-slate-700">
+                    <ul className="list-disc list-inside space-y-0.5 text-text-primary">
                       {dq.top_risk_supplier_confidence.map((s) => (
                         <li key={s.supplier_id} className="flex items-center justify-between gap-2">
                           <div>
@@ -541,8 +541,8 @@ export function ExecutiveSummaryPage() {
       )}
 
       {/* 6. Assumptions and Permanent Note */}
-      <section className="p-4 bg-slate-100 rounded-lg border border-slate-200 text-xs text-slate-600 space-y-2">
-        <span className="font-bold uppercase tracking-wider text-slate-700 block">
+      <section className="p-4 bg-elevated rounded-lg border border-border-subtle text-xs text-text-secondary space-y-2">
+        <span className="font-bold uppercase tracking-wider text-text-primary block">
           Key Planning Assumptions & Limitations
         </span>
         <ul className="list-disc list-inside space-y-1 pl-1">
@@ -550,7 +550,7 @@ export function ExecutiveSummaryPage() {
             <li key={i}>{asm}</li>
           ))}
         </ul>
-        <div className="pt-2 border-t border-slate-200 text-center font-semibold text-slate-700">
+        <div className="pt-2 border-t border-border-subtle text-center font-semibold text-text-primary">
           Decision support only. No orders are created.
         </div>
       </section>

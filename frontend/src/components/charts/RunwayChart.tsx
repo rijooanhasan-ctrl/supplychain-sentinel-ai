@@ -48,15 +48,15 @@ export const RunwayChart: React.FC<RunwayChartProps> = ({ items, asOf, className
   return (
     <div className={`space-y-4 ${className}`} data-testid="runway-chart-container">
       {/* Dynamic Summary Banner */}
-      <div className="p-3 bg-amber-50/80 border border-amber-200 rounded-md text-xs font-medium text-amber-950 flex items-center gap-2">
-        <span aria-hidden="true" className="text-amber-700 text-sm">⏱</span>
+      <div className="p-3 bg-amber-950/40 border border-amber-800/60 rounded-md text-xs font-medium text-amber-200 flex items-center gap-2">
+        <span aria-hidden="true" className="text-amber-400 text-sm">⏱</span>
         <span data-testid="runway-summary-text">{summaryText}</span>
       </div>
 
       {/* Axis Scale Header */}
       <div className="relative pl-36 sm:pl-48 pr-4 select-none">
-        <div className="flex justify-between text-[11px] font-mono text-slate-500 border-b border-slate-300 pb-1">
-          <span className="font-bold text-slate-900">Today (Day 0)</span>
+        <div className="flex justify-between text-[11px] font-mono text-text-secondary border-b border-border-subtle pb-1">
+          <span className="font-bold text-text-primary">Today (Day 0)</span>
           <span>Day 7</span>
           <span>Day 14</span>
           <span>Day 21</span>
@@ -95,20 +95,20 @@ export const RunwayChart: React.FC<RunwayChartProps> = ({ items, asOf, className
           return (
             <div
               key={item.sku}
-              className="group p-2.5 bg-slate-50 hover:bg-slate-100/80 border border-slate-200 rounded-lg transition-colors flex flex-col sm:flex-row sm:items-center gap-2"
+              className="group p-2.5 bg-elevated hover:bg-hover border border-border-subtle rounded-lg transition-colors flex flex-col sm:flex-row sm:items-center gap-2"
               data-testid={`runway-row-${item.sku}`}
             >
               {/* Component Label & Simulator Link */}
               <div className="w-full sm:w-44 shrink-0 space-y-0.5">
                 <Link
                   to={`/simulator?component_id=${item.component_id}`}
-                  className="font-mono font-bold text-xs text-blue-700 hover:text-blue-900 hover:underline flex items-center gap-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded"
+                  className="font-mono font-bold text-xs text-accent-primary hover:text-sky-300 hover:underline flex items-center gap-1.5 focus:outline-none focus:ring-1 focus:ring-accent-primary rounded"
                   title={`Simulate what-if scenarios for ${item.sku}`}
                 >
                   <span>{item.sku}</span>
-                  <span aria-hidden="true" className="text-[10px] text-slate-400">&rarr;</span>
+                  <span aria-hidden="true" className="text-[10px] text-text-secondary">&rarr;</span>
                 </Link>
-                <p className="text-[11px] text-slate-600 truncate" title={item.name}>
+                <p className="text-[11px] text-text-secondary truncate" title={item.name}>
                   {item.name}
                 </p>
                 <div className="flex items-center gap-1.5 pt-0.5">
@@ -137,7 +137,7 @@ export const RunwayChart: React.FC<RunwayChartProps> = ({ items, asOf, className
                       y1="0"
                       x2={d * pxPerDay}
                       y2="44"
-                      stroke="#cbd5e1"
+                      stroke="#30363B"
                       strokeDasharray="2,2"
                       strokeWidth="1"
                     />
@@ -167,7 +167,7 @@ export const RunwayChart: React.FC<RunwayChartProps> = ({ items, asOf, className
                     <text
                       x="8"
                       y="29"
-                      fill="#ffffff"
+                      fill="var(--text-primary)"
                       fontSize="9"
                       fontWeight="bold"
                       fontFamily="monospace"
@@ -184,7 +184,7 @@ export const RunwayChart: React.FC<RunwayChartProps> = ({ items, asOf, className
                         y="18"
                         width={gapWidth}
                         height="14"
-                        fill="#fee2e2"
+                        fill="#3c1214"
                         stroke="#dc2626"
                         strokeWidth="1"
                         strokeDasharray="3,2"
@@ -200,7 +200,7 @@ export const RunwayChart: React.FC<RunwayChartProps> = ({ items, asOf, className
                         <text
                           x={stockBarWidth + 6}
                           y="29"
-                          fill="#991b1b"
+                          fill="#fca5a5"
                           fontSize="8.5"
                           fontWeight="bold"
                           fontFamily="monospace"
@@ -220,8 +220,8 @@ export const RunwayChart: React.FC<RunwayChartProps> = ({ items, asOf, className
                         y="18"
                         width={unscheduledGapWidth}
                         height="14"
-                        fill="#fef2f2"
-                        stroke="#b91c1c"
+                        fill="#3c1214"
+                        stroke="#ef4444"
                         strokeWidth="1"
                         strokeDasharray="4,2"
                       />
@@ -235,7 +235,7 @@ export const RunwayChart: React.FC<RunwayChartProps> = ({ items, asOf, className
                       <text
                         x={stockBarWidth + 6}
                         y="29"
-                        fill="#b91c1c"
+                        fill="#fca5a5"
                         fontSize="8.5"
                         fontStyle="italic"
                         fontWeight="bold"
@@ -257,15 +257,15 @@ export const RunwayChart: React.FC<RunwayChartProps> = ({ items, asOf, className
                       {/* Triangle marker pointing down to bar */}
                       <polygon
                         points="-5,-6 5,-6 0,0"
-                        fill="#1d4ed8"
-                        stroke="#ffffff"
+                        fill="#38bdf8"
+                        stroke="#101214"
                         strokeWidth="1.2"
                       />
                       {/* Date tick text placed cleanly above the bar */}
                       <text
                         x="0"
                         y="-8"
-                        fill="#1e3a8a"
+                        fill="#38bdf8"
                         fontSize="8"
                         fontWeight="bold"
                         fontFamily="monospace"
@@ -281,7 +281,7 @@ export const RunwayChart: React.FC<RunwayChartProps> = ({ items, asOf, className
                     <text
                       x={CHART_WIDTH - 2}
                       y="29"
-                      fill="#64748b"
+                      fill="#A0A6AD"
                       fontSize="8.5"
                       fontWeight="bold"
                       fontFamily="monospace"
@@ -307,8 +307,8 @@ export const RunwayTable: React.FC<{ items: InventoryRiskItem[]; asOf: string }>
     .slice(0, 8);
 
   return (
-    <table className="min-w-full divide-y divide-slate-200 text-xs">
-      <thead className="bg-slate-50 text-slate-700 font-semibold">
+    <table className="min-w-full divide-y divide-border-subtle text-xs bg-surface">
+      <thead className="bg-elevated text-text-secondary font-semibold">
         <tr>
           <th scope="col" className="px-3 py-2.5 text-left">Component</th>
           <th scope="col" className="px-3 py-2.5 text-center">Risk Level</th>
@@ -319,7 +319,7 @@ export const RunwayTable: React.FC<{ items: InventoryRiskItem[]; asOf: string }>
           <th scope="col" className="px-3 py-2.5 text-center">Simulate</th>
         </tr>
       </thead>
-      <tbody className="divide-y divide-slate-100 bg-white">
+      <tbody className="divide-y divide-border-subtle bg-surface">
         {eligible.map((it) => {
           const shortageDays = it.days_until_shortage ?? 0;
           const repl = it.next_replenishment;
@@ -327,40 +327,40 @@ export const RunwayTable: React.FC<{ items: InventoryRiskItem[]; asOf: string }>
           const gap = deliveryDays != null && deliveryDays > shortageDays ? deliveryDays - shortageDays : null;
 
           return (
-            <tr key={it.sku} className="hover:bg-slate-50/80">
+            <tr key={it.sku} className="hover:bg-hover">
               <td className="px-3 py-2.5">
-                <div className="font-mono font-bold text-slate-900">{it.sku}</div>
-                <div className="text-slate-500 text-[11px] truncate max-w-[180px]">{it.name}</div>
+                <div className="font-mono font-bold text-text-primary">{it.sku}</div>
+                <div className="text-text-secondary text-[11px] truncate max-w-[180px]">{it.name}</div>
               </td>
               <td className="px-3 py-2.5 text-center">
                 <span className="font-semibold uppercase text-[11px]">{it.risk_level}</span>
               </td>
-              <td className="px-3 py-2.5 text-right font-mono font-bold text-slate-900">
+              <td className="px-3 py-2.5 text-right font-mono font-bold text-text-primary">
                 {shortageDays} days
               </td>
-              <td className="px-3 py-2.5 text-slate-800 font-mono">
+              <td className="px-3 py-2.5 text-text-primary font-mono">
                 {it.shortage_date ? formatDate(it.shortage_date) : 'None'}
               </td>
               <td className="px-3 py-2.5">
                 {repl ? (
                   <div>
-                    <span className="font-mono font-bold text-blue-900">{formatDate(repl.date)}</span>
-                    <span className="text-slate-500 ml-1">({repl.qty} units, {repl.po_number || 'PO'})</span>
+                    <span className="font-mono font-bold text-accent-primary">{formatDate(repl.date)}</span>
+                    <span className="text-text-secondary ml-1">({repl.qty} units, {repl.po_number || 'PO'})</span>
                     {gap != null && (
-                      <span className="block text-[11px] text-red-700 font-medium">Gap: {gap} days</span>
+                      <span className="block text-[11px] text-red-400 font-medium">Gap: {gap} days</span>
                     )}
                   </div>
                 ) : (
-                  <span className="text-red-700 font-semibold italic">No delivery scheduled</span>
+                  <span className="text-red-400 font-semibold italic">No delivery scheduled</span>
                 )}
               </td>
-              <td className="px-3 py-2.5 text-right font-mono font-bold text-red-700">
+              <td className="px-3 py-2.5 text-right font-mono font-bold text-red-400">
                 {it.unmet_before_next_inbound != null ? it.unmet_before_next_inbound.toFixed(1) : '—'}
               </td>
               <td className="px-3 py-2.5 text-center">
                 <Link
                   to={`/simulator?component_id=${it.component_id}`}
-                  className="text-blue-600 hover:text-blue-800 font-semibold underline px-1 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded"
+                  className="text-accent-primary hover:text-sky-300 font-semibold underline px-1 focus:outline-none focus:ring-1 focus:ring-accent-primary rounded"
                 >
                   Simulate &rarr;
                 </Link>

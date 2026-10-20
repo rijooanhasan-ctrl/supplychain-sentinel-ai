@@ -50,20 +50,20 @@ export const ChartCard: React.FC<ChartCardProps> = ({
     <section
       data-testid={testId}
       aria-label={title}
-      className={`bg-white border border-slate-200 rounded-lg p-4 sm:p-5 shadow-xs space-y-4 ${className}`}
+      className={`bg-surface border border-border-subtle rounded-lg p-4 sm:p-5 shadow-xs space-y-4 ${className}`}
     >
       {/* Header with Title, Plain Subtitle, and View as Table Toggle */}
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 border-b border-slate-100 pb-3">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 border-b border-border-subtle pb-3">
         <div className="space-y-0.5">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
+            <h2 className="text-base sm:text-lg font-bold text-text-primary tracking-tight">
               {title}
             </h2>
             {infoTerm && infoDescription && (
               <InfoTip term={infoTerm} description={infoDescription} />
             )}
           </div>
-          <p className="text-xs sm:text-sm text-slate-500 font-normal leading-relaxed">
+          <p className="text-xs sm:text-sm text-text-secondary font-normal leading-relaxed">
             {subtitle}
           </p>
         </div>
@@ -75,7 +75,7 @@ export const ChartCard: React.FC<ChartCardProps> = ({
             onClick={() => setShowTable((prev) => !prev)}
             aria-pressed={showTable}
             aria-label={showTable ? 'Switch to graphical chart view' : 'Switch to accessible tabular view'}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-text-primary bg-elevated hover:bg-hover border border-border-subtle rounded transition-colors focus:outline-none focus:ring-2 focus:ring-accent-primary cursor-pointer"
           >
             <span aria-hidden="true">{showTable ? '📊' : '📋'}</span>
             <span>{showTable ? 'View as chart' : 'View as table'}</span>
@@ -102,11 +102,11 @@ export const ChartCard: React.FC<ChartCardProps> = ({
             <EmptyView title={emptyTitle} message={emptyMessage} />
           </div>
         ) : showTable ? (
-          <div className="overflow-x-auto focus:outline-none focus:ring-1 focus:ring-blue-400 rounded">
+          <div className="overflow-x-auto focus:outline-none focus:ring-1 focus:ring-accent-primary rounded">
             {tableView}
           </div>
         ) : (
-          <div className="overflow-x-auto focus:outline-none focus:ring-1 focus:ring-blue-400 rounded">
+          <div className="overflow-x-auto focus:outline-none focus:ring-1 focus:ring-accent-primary rounded">
             {children}
           </div>
         )}

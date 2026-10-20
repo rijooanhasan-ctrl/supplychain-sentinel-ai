@@ -34,7 +34,7 @@ function SupplierOffersPanel({ supplierId }: { supplierId: number }) {
 
   if (!data || data.offers.length === 0) {
     return (
-      <div className="p-4 bg-white rounded border border-slate-200 text-xs text-slate-500">
+      <div className="p-4 bg-surface rounded border border-border-subtle text-xs text-text-secondary">
         No active component supply agreements on file for this vendor.
       </div>
     );
@@ -42,12 +42,12 @@ function SupplierOffersPanel({ supplierId }: { supplierId: number }) {
 
   return (
     <div className="space-y-2" data-testid={`offers-table-${supplierId}`}>
-      <h4 className="text-xs font-semibold text-slate-700 uppercase tracking-wider">
+      <h4 className="text-xs font-semibold text-text-primary uppercase tracking-wider">
         Active Component Supply Agreements &amp; Procurement Terms
       </h4>
-      <div className="overflow-x-auto border border-slate-200 rounded bg-white">
-        <table className="min-w-full divide-y divide-slate-200 text-xs">
-          <thead className="bg-slate-50 text-slate-700 uppercase font-semibold">
+      <div className="overflow-x-auto border border-border-subtle rounded bg-surface">
+        <table className="min-w-full divide-y divide-border-subtle text-xs">
+          <thead className="bg-elevated text-text-primary uppercase font-semibold">
             <tr>
               <th scope="col" className="px-3 py-2 text-left">Component SKU</th>
               <th scope="col" className="px-3 py-2 text-right">Unit Cost ({meta?.display_currency || 'USD'})</th>
@@ -58,7 +58,7 @@ function SupplierOffersPanel({ supplierId }: { supplierId: number }) {
               <th scope="col" className="px-3 py-2 text-left">Expedite Terms</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 bg-white">
+          <tbody className="divide-y divide-border-subtle bg-surface">
             {data.offers.map((offer: SupplierOffer) => {
               // Expedite terms display logic
               let expediteDisplay = 'Not available';
@@ -75,21 +75,21 @@ function SupplierOffersPanel({ supplierId }: { supplierId: number }) {
               }
 
               return (
-                <tr key={offer.id} className="hover:bg-slate-50/80">
-                  <th scope="row" className="px-3 py-2 font-mono font-semibold text-slate-900 text-left">
+                <tr key={offer.id} className="hover:bg-elevated/80">
+                  <th scope="row" className="px-3 py-2 font-mono font-semibold text-text-primary text-left">
                     <span>{offer.component_sku}</span>
-                    <span className="text-slate-500 font-sans block text-[11px]">{offer.component_name}</span>
+                    <span className="text-text-secondary font-sans block text-[11px]">{offer.component_name}</span>
                   </th>
-                  <td className="px-3 py-2 text-right font-mono text-slate-900 font-semibold">
+                  <td className="px-3 py-2 text-right font-mono text-text-primary font-semibold">
                     {formatMoney(offer.unit_cost, meta)}
                   </td>
-                  <td className="px-3 py-2 text-right font-mono text-slate-700">
+                  <td className="px-3 py-2 text-right font-mono text-text-primary">
                     {offer.lead_time_days} days
                   </td>
-                  <td className="px-3 py-2 text-right font-mono text-slate-700">
+                  <td className="px-3 py-2 text-right font-mono text-text-primary">
                     {formatInteger(offer.min_order_qty)}
                   </td>
-                  <td className="px-3 py-2 text-right font-mono text-slate-700" data-testid={`capacity-${offer.id}`}>
+                  <td className="px-3 py-2 text-right font-mono text-text-primary" data-testid={`capacity-${offer.id}`}>
                     {offer.max_weekly_capacity !== null
                       ? formatInteger(offer.max_weekly_capacity)
                       : 'Unknown'}
@@ -100,10 +100,10 @@ function SupplierOffersPanel({ supplierId }: { supplierId: number }) {
                         Yes
                       </span>
                     ) : (
-                      <span className="text-slate-400">No</span>
+                      <span className="text-text-muted">No</span>
                     )}
                   </td>
-                  <td className="px-3 py-2 text-slate-700" data-testid={`expedite-${offer.id}`}>
+                  <td className="px-3 py-2 text-text-primary" data-testid={`expedite-${offer.id}`}>
                     {expediteDisplay}
                   </td>
                 </tr>
@@ -188,11 +188,11 @@ export function SuppliersPage() {
                 message="The supplier database currently has no records."
               />
             ) : (
-              <div className="bg-white border border-slate-200 rounded-lg shadow-xs overflow-hidden">
+              <div className="bg-surface border border-border-subtle rounded-lg shadow-xs overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-slate-200 text-sm" data-testid="suppliers-table">
+                  <table className="min-w-full divide-y divide-border-subtle text-sm" data-testid="suppliers-table">
                     <caption className="sr-only">Supplier Directory</caption>
-                    <thead className="bg-slate-50 text-slate-700 text-xs uppercase font-semibold">
+                    <thead className="bg-elevated text-text-primary text-xs uppercase font-semibold">
                       <tr>
                         <th scope="col" className="px-4 py-3 text-left">Code</th>
                         <th scope="col" className="px-4 py-3 text-left">Supplier Name</th>
@@ -200,19 +200,19 @@ export function SuppliersPage() {
                         <th scope="col" className="px-4 py-3 text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 bg-white">
+                    <tbody className="divide-y divide-border-subtle bg-surface">
                       {data.items.map((supplier: Supplier) => {
                         const isExpanded = expandedSupplierIds.has(supplier.id);
 
                         return (
-                          <tr key={supplier.id} className="hover:bg-slate-50/80 transition-colors">
-                            <th scope="row" className="px-4 py-3 font-mono font-bold text-slate-900 text-left">
+                          <tr key={supplier.id} className="hover:bg-elevated/80 transition-colors">
+                            <th scope="row" className="px-4 py-3 font-mono font-bold text-text-primary text-left">
                               {supplier.code}
                             </th>
-                            <td className="px-4 py-3 text-slate-900 font-medium">
+                            <td className="px-4 py-3 text-text-primary font-medium">
                               {supplier.name}
                             </td>
-                            <td className="px-4 py-3 text-slate-600">
+                            <td className="px-4 py-3 text-text-secondary">
                               {supplier.country}
                             </td>
                             <td className="px-4 py-3 text-right">
@@ -221,7 +221,7 @@ export function SuppliersPage() {
                                 onClick={() => toggleExpand(supplier.id)}
                                 aria-expanded={isExpanded}
                                 aria-controls={`supplier-details-${supplier.id}`}
-                                className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                                className="px-3 py-1 bg-elevated hover:bg-surface text-text-primary rounded text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-accent-primary cursor-pointer"
                                 data-testid={`toggle-supplier-${supplier.id}`}
                               >
                                 {isExpanded ? 'Hide Agreements' : 'View Agreements'}
@@ -239,7 +239,7 @@ export function SuppliersPage() {
                   <div
                     key={`panel-${supId}`}
                     id={`supplier-details-${supId}`}
-                    className="p-4 bg-slate-50 border-t border-slate-200"
+                    className="p-4 bg-elevated border-t border-border-subtle"
                   >
                     <SupplierOffersPanel supplierId={supId} />
                   </div>

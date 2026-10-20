@@ -39,7 +39,7 @@ export function WhyThis({
         aria-expanded={isOpen}
         aria-controls={contentId}
         data-testid={dataTestId}
-        className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded border border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-900 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded border border-blue-700/60 bg-blue-950/60 text-blue-300 hover:bg-blue-900/60 hover:text-blue-200 transition-colors focus:outline-none focus:ring-2 focus:ring-accent-primary"
       >
         <span aria-hidden="true" className="font-bold text-[11px]">
           {isOpen ? '▼' : '▶'}
@@ -51,16 +51,16 @@ export function WhyThis({
         <div
           id={contentId}
           data-testid="why-this-panel"
-          className="mt-2 p-3 bg-slate-50 border border-slate-200 rounded-md text-xs text-slate-800 space-y-2 shadow-xs"
+          className="mt-2 p-3 bg-elevated border border-border-subtle rounded-md text-xs text-text-primary space-y-2 shadow-xs"
         >
           {normalizedItems.map((item, idx) => (
             <div key={idx} className="space-y-0.5">
               {item.label && (
-                <span className="font-bold text-slate-900 text-[11px] uppercase tracking-wider block">
+                <span className="font-bold text-text-primary text-[11px] uppercase tracking-wider block">
                   {item.label}:
                 </span>
               )}
-              <p className="text-slate-700 leading-relaxed font-sans">{item.text}</p>
+              <p className="text-text-secondary leading-relaxed font-sans">{item.text}</p>
             </div>
           ))}
         </div>

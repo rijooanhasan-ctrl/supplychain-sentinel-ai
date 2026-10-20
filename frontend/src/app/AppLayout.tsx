@@ -51,7 +51,7 @@ export function AppLayout() {
   const { startDemo } = useGuidedDemo();
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col print:bg-white">
+    <div className="min-h-screen bg-canvas text-text-primary flex flex-col print:bg-white print:text-black">
       {/* Top Banner (DEMO DATA & As-Of Date) */}
       <div className="print:hidden">
         <DemoBanner />
@@ -61,27 +61,27 @@ export function AppLayout() {
         {/* Navigation Sidebar (Desktop) and Top Bar (Mobile) */}
         <aside
           aria-label="Sidebar Navigation"
-          className="print:hidden w-full md:w-64 bg-white border-b md:border-b-0 md:border-r border-slate-200 shrink-0"
+          className="print:hidden w-full md:w-64 bg-sidebar border-b md:border-b-0 md:border-r border-border-subtle shrink-0"
         >
           {/* Brand Header */}
-          <div className="p-4 md:p-5 border-b border-slate-100 flex items-center justify-between">
+          <div className="p-4 md:p-5 border-b border-border-subtle flex items-center justify-between">
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-bold text-base tracking-tight text-slate-900">
+                <span className="font-bold text-base tracking-tight text-text-primary">
                   SupplyChain Sentinel
                 </span>
-                <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 border border-blue-200">
+                <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-blue-950/80 text-blue-300 border border-blue-700/60">
                   AI
                 </span>
               </div>
-              <p className="text-xs text-slate-600 mt-0.5">Resilient Supply Chain</p>
+              <p className="text-xs text-text-secondary mt-0.5">Resilient Supply Chain</p>
             </div>
 
             {/* Mobile menu toggle */}
             <button
               type="button"
               onClick={() => setMobileMenuOpen((open) => !open)}
-              className="md:hidden p-2 rounded text-slate-600 hover:text-slate-900 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="md:hidden p-2 rounded text-text-secondary hover:text-text-primary hover:bg-hover focus:outline-none focus:ring-2 focus:ring-accent-primary"
               aria-label="Toggle navigation menu"
               aria-expanded={mobileMenuOpen}
             >
@@ -102,7 +102,7 @@ export function AppLayout() {
           >
             {NAV_SECTIONS.map((section) => (
               <div key={section.title} className="space-y-1">
-                <div className="px-3 pt-1 pb-0.5 text-[11px] font-bold uppercase tracking-wider text-slate-600">
+                <div className="px-3 pt-1 pb-0.5 text-[11px] font-bold uppercase tracking-wider text-text-secondary">
                   {section.title}
                 </div>
                 {section.items.map((item) => (
@@ -112,10 +112,10 @@ export function AppLayout() {
                     end={item.to === '/'}
                     onClick={() => setMobileMenuOpen(false)}
                     className={({ isActive }) =>
-                      `flex items-center px-3 py-1.5 text-sm rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 ${
+                      `flex items-center px-3 py-1.5 text-sm rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-1 ${
                         isActive
-                          ? 'bg-blue-50 text-blue-900 font-semibold border-l-4 border-blue-600'
-                          : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100 font-medium'
+                          ? 'bg-surface text-accent-primary font-semibold border-l-4 border-accent-primary'
+                          : 'text-text-secondary hover:text-text-primary hover:bg-hover font-medium'
                       }`
                     }
                   >
@@ -127,17 +127,17 @@ export function AppLayout() {
           </nav>
 
           {/* Guided Demo Button in Sidebar */}
-          <div className="p-3 border-t border-slate-100">
+          <div className="p-3 border-t border-border-subtle">
             <button
               type="button"
               onClick={() => {
                 setMobileMenuOpen(false);
                 startDemo();
               }}
-              className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold rounded-md bg-blue-50 text-blue-800 border border-blue-200 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold rounded-md bg-surface text-accent-primary border border-border-subtle hover:bg-hover focus:outline-none focus:ring-2 focus:ring-accent-primary cursor-pointer"
               data-testid="start-guided-demo"
             >
-              <span className="w-2 h-2 rounded-full bg-blue-600" aria-hidden="true" />
+              <span className="w-2 h-2 rounded-full bg-accent-primary" aria-hidden="true" />
               Start guided demo
             </button>
           </div>

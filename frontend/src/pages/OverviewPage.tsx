@@ -195,7 +195,7 @@ export function OverviewPage() {
           label="Components at risk"
           value={
             riskLoading ? (
-              <span className="text-slate-400">...</span>
+              <span className="text-text-muted">...</span>
             ) : totalEvaluated > 0 ? (
               `${atRiskCount} of ${totalEvaluated}`
             ) : (
@@ -214,7 +214,7 @@ export function OverviewPage() {
           label="Soonest shortage"
           value={
             riskLoading ? (
-              <span className="text-slate-400">...</span>
+              <span className="text-text-muted">...</span>
             ) : earliestShortage ? (
               `${earliestShortage.days} days`
             ) : (
@@ -237,7 +237,7 @@ export function OverviewPage() {
           label="Late deliveries"
           value={
             poLoading ? (
-              <span className="text-slate-400">...</span>
+              <span className="text-text-muted">...</span>
             ) : (
               `${overdueCount + delayedCount}`
             )
@@ -254,7 +254,7 @@ export function OverviewPage() {
           label="Open alerts"
           value={
             alertsLoading ? (
-              <span className="text-slate-400">...</span>
+              <span className="text-text-muted">...</span>
             ) : (
               `${totalAlerts}`
             )
@@ -349,46 +349,46 @@ export function OverviewPage() {
       {/* Compatibility & Master Data Baseline Section */}
       <section
         aria-label="Master entity counts and system baseline metrics"
-        className="bg-white border border-slate-200 rounded-lg p-4 sm:p-5 shadow-xs space-y-4"
+        className="bg-surface border border-border-subtle rounded-lg p-4 sm:p-5 shadow-xs space-y-4"
         data-testid="master-counts-container"
       >
-        <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-text-secondary">
           Operational Baseline & Master Catalog
         </h2>
 
         {/* Master Catalog Counts */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="p-3 bg-slate-50 border border-slate-200 rounded text-center">
-            <span className="text-xs text-slate-500 font-medium block">Products</span>
-            <span data-testid="count-products" className="text-xl font-bold font-mono text-slate-900">
+          <div className="p-3 bg-elevated border border-border-subtle rounded text-center">
+            <span className="text-xs text-text-secondary font-medium block">Products</span>
+            <span data-testid="count-products" className="text-xl font-bold font-mono text-text-primary">
               {meta?.counts?.products ?? 0}
             </span>
           </div>
-          <div className="p-3 bg-slate-50 border border-slate-200 rounded text-center">
-            <span className="text-xs text-slate-500 font-medium block">Components</span>
-            <span data-testid="count-components" className="text-xl font-bold font-mono text-slate-900">
+          <div className="p-3 bg-elevated border border-border-subtle rounded text-center">
+            <span className="text-xs text-text-secondary font-medium block">Components</span>
+            <span data-testid="count-components" className="text-xl font-bold font-mono text-text-primary">
               {meta?.counts?.components ?? 0}
             </span>
           </div>
-          <div className="p-3 bg-slate-50 border border-slate-200 rounded text-center">
-            <span className="text-xs text-slate-500 font-medium block">Suppliers</span>
-            <span data-testid="count-suppliers" className="text-xl font-bold font-mono text-slate-900">
+          <div className="p-3 bg-elevated border border-border-subtle rounded text-center">
+            <span className="text-xs text-text-secondary font-medium block">Suppliers</span>
+            <span data-testid="count-suppliers" className="text-xl font-bold font-mono text-text-primary">
               {meta?.counts?.suppliers ?? 0}
             </span>
           </div>
-          <div className="p-3 bg-slate-50 border border-slate-200 rounded text-center">
-            <span className="text-xs text-slate-500 font-medium block">Warehouses</span>
-            <span data-testid="count-warehouses" className="text-xl font-bold font-mono text-slate-900">
+          <div className="p-3 bg-elevated border border-border-subtle rounded text-center">
+            <span className="text-xs text-text-secondary font-medium block">Warehouses</span>
+            <span data-testid="count-warehouses" className="text-xl font-bold font-mono text-text-primary">
               {meta?.counts?.warehouses ?? 0}
             </span>
           </div>
         </div>
 
         {/* Purchase Order Metrics Compatibility Elements */}
-        <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600 flex-wrap gap-2">
+        <div className="pt-2 border-t border-border-subtle flex items-center justify-between text-xs text-text-secondary flex-wrap gap-2">
           <div className="flex items-center gap-3">
             <span>
-              Open POs: <strong data-testid="count-open-pos" className="font-mono text-slate-900">{Number.isFinite(openTotals?.totalOpen) ? openTotals!.totalOpen : (Number.isFinite(poData?.total) ? poData!.total : 0)}</strong>
+              Open POs: <strong data-testid="count-open-pos" className="font-mono text-text-primary">{Number.isFinite(openTotals?.totalOpen) ? openTotals!.totalOpen : (Number.isFinite(poData?.total) ? poData!.total : 0)}</strong>
             </span>
             <span>
               Overdue POs: <strong data-testid="count-overdue-pos" className="font-mono text-red-700">{overdueCount}</strong>
@@ -396,7 +396,7 @@ export function OverviewPage() {
             <span data-testid="count-delayed-pos" className="font-medium text-amber-800">
               Delayed vs promise: {delayedCount} POs
             </span>
-            <span className="text-slate-400 text-[11px]">
+            <span className="text-text-muted text-[11px]">
               (whose latest estimated delivery date is strictly later than promised date)
             </span>
           </div>
@@ -531,8 +531,8 @@ export function OverviewPage() {
       )}
 
       {/* 8. Small Footer Line */}
-      <footer className="pt-4 border-t border-slate-200 text-center">
-        <p className="text-xs text-slate-500 font-medium">
+      <footer className="pt-4 border-t border-border-subtle text-center">
+        <p className="text-xs text-text-secondary font-medium">
           Decision support only. No orders are created.
         </p>
       </footer>

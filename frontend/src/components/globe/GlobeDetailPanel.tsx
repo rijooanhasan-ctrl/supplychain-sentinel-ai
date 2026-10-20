@@ -100,7 +100,7 @@ export const GlobeDetailPanel: React.FC<GlobeDetailPanelProps> = ({
               {entity.type === 'country' ? entity.item.country_name : entity.item.name}
             </h2>
             <div className="flex items-center gap-2">
-              <span className="font-mono text-xs text-slate-400 font-semibold">
+              <span className="font-mono text-xs text-text-muted font-semibold">
                 {entity.type === 'country' ? entity.item.country_code : entity.item.code}
               </span>
               {entity.type === 'supplier' && (
@@ -113,7 +113,7 @@ export const GlobeDetailPanel: React.FC<GlobeDetailPanelProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="text-slate-400 hover:text-white p-1 rounded hover:bg-slate-800/60 transition-colors"
+            className="text-text-muted hover:text-white p-1 rounded hover:bg-slate-800/60 transition-colors"
             aria-label="Close detail panel"
           >
             &times;
@@ -126,7 +126,7 @@ export const GlobeDetailPanel: React.FC<GlobeDetailPanelProps> = ({
             {/* Risk Badge and Score */}
             <div className="p-3 bg-slate-900/80 rounded-lg border border-slate-800 flex items-center justify-between">
               <div>
-                <span className="text-slate-400 block text-[11px]">Assessed Risk Band</span>
+                <span className="text-text-muted block text-[11px]">Assessed Risk Band</span>
                 <span
                   className="font-bold text-sm uppercase tracking-wide inline-block mt-0.5"
                   style={{ color: RISK_PALETTE[entity.item.risk_band]?.fillColor || '#94a3b8' }}
@@ -135,11 +135,11 @@ export const GlobeDetailPanel: React.FC<GlobeDetailPanelProps> = ({
                 </span>
               </div>
               <div className="text-right">
-                <span className="text-slate-400 block text-[11px]">On-Time Rate</span>
+                <span className="text-text-muted block text-[11px]">On-Time Rate</span>
                 <span className="font-mono font-bold text-slate-100 text-sm">
                   {(entity.item.on_time_rate * 100).toFixed(1)}%
                 </span>
-                <span className="text-[10px] text-slate-400 block">
+                <span className="text-[10px] text-text-muted block">
                   {entity.item.n_deliveries} deliveries ({entity.item.confidence} conf)
                 </span>
               </div>
@@ -153,7 +153,7 @@ export const GlobeDetailPanel: React.FC<GlobeDetailPanelProps> = ({
                   {entity.item.location?.precision || 'unresolved'}
                 </span>
               </div>
-              <p className="text-slate-400 text-[11px]">
+              <p className="text-text-muted text-[11px]">
                 {entity.item.location?.source || 'No coordinate mapping available'}
               </p>
               {entity.item.location?.lat != null && (
@@ -174,7 +174,7 @@ export const GlobeDetailPanel: React.FC<GlobeDetailPanelProps> = ({
 
             {/* In-depth formula explanation */}
             {loadingDetail && (
-              <div className="text-slate-400 italic text-[11px]">Loading evaluation notes...</div>
+              <div className="text-text-muted italic text-[11px]">Loading evaluation notes...</div>
             )}
             {detailError && (
               <div className="text-rose-400 text-[11px]">{detailError}</div>
@@ -293,18 +293,18 @@ export const GlobeDetailPanel: React.FC<GlobeDetailPanelProps> = ({
             {/* Role & Coordinates */}
             <div className="p-3 bg-slate-900/80 rounded-lg border border-slate-800 space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-slate-400">Warehouse Role</span>
+                <span className="text-text-muted">Warehouse Role</span>
                 <span className="font-mono uppercase font-bold text-cyan-300 px-2 py-0.5 rounded bg-cyan-950 border border-cyan-800">
                   {entity.item.role}
                 </span>
               </div>
               <div className="flex items-center justify-between pt-1">
-                <span className="text-slate-400">Location Source</span>
+                <span className="text-text-muted">Location Source</span>
                 <span className="text-slate-300 font-mono text-[11px]">
                   {entity.item.location?.precision || 'unresolved'}
                 </span>
               </div>
-              <p className="text-slate-400 text-[11px] leading-relaxed">
+              <p className="text-text-muted text-[11px] leading-relaxed">
                 {entity.item.location?.source || 'No location configured. Add coordinates to place on map.'}
               </p>
               {entity.item.location?.lat != null && (
@@ -328,13 +328,13 @@ export const GlobeDetailPanel: React.FC<GlobeDetailPanelProps> = ({
               <div className="p-3 bg-slate-900/80 rounded-lg border border-slate-800 space-y-2">
                 <span className="font-semibold text-slate-300 block">Inventory Position</span>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Total Stock On-Hand:</span>
+                  <span className="text-text-muted">Total Stock On-Hand:</span>
                   <span className="font-mono font-bold text-white">
                     {(entity.item.inventory_summary.total_on_hand ?? 0).toLocaleString()} units
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">SKUs Stocked:</span>
+                  <span className="text-text-muted">SKUs Stocked:</span>
                   <span className="font-mono text-white">
                     {entity.item.inventory_summary.components_held ?? 0}
                   </span>
@@ -390,22 +390,22 @@ export const GlobeDetailPanel: React.FC<GlobeDetailPanelProps> = ({
             </div>
 
             {/* Mandatory Static Lineage Notice */}
-            <div className="p-2.5 rounded bg-slate-900/60 border border-slate-800 text-[11px] text-slate-400 italic leading-normal">
+            <div className="p-2.5 rounded bg-slate-900/60 border border-slate-800 text-[11px] text-text-muted italic leading-normal">
               Calculated from loaded supplier data; not a live disruption feed.
             </div>
 
             {/* Metrics */}
             <div className="p-3 bg-slate-900/80 rounded-lg border border-slate-800 space-y-2">
               <div className="flex justify-between">
-                <span className="text-slate-400">Supplier Count:</span>
+                <span className="text-text-muted">Supplier Count:</span>
                 <span className="font-mono font-bold text-white">{entity.item.supplier_count}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Open Purchase Orders:</span>
+                <span className="text-text-muted">Open Purchase Orders:</span>
                 <span className="font-mono font-bold text-white">{entity.item.open_po_count}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Remaining Units:</span>
+                <span className="text-text-muted">Remaining Units:</span>
                 <span className="font-mono text-white">
                   {entity.item.remaining_qty.toLocaleString()} units
                 </span>

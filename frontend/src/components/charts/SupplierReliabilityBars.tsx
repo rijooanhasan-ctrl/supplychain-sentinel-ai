@@ -41,22 +41,22 @@ export const SupplierReliabilityBars: React.FC<SupplierReliabilityBarsProps> = (
           <Link
             key={s.supplier_id}
             to={`/supplier-risk?supplier_code=${s.supplier_code}`}
-            className="group block p-2.5 bg-slate-50 hover:bg-slate-100/90 border border-slate-200 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="group block p-2.5 bg-elevated hover:bg-hover border border-border-subtle rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-accent-primary"
             data-testid={`supplier-bar-row-${s.supplier_code}`}
           >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs mb-1.5">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-mono font-bold text-slate-900 group-hover:text-blue-700">
+                <span className="font-mono font-bold text-text-primary group-hover:text-accent-primary">
                   {s.supplier_code}
                 </span>
-                <span className="text-slate-600 font-medium truncate max-w-[180px]">
+                <span className="text-text-secondary font-medium truncate max-w-[180px]">
                   {s.supplier_name || (s as unknown as { name?: string }).name}
                 </span>
                 <RiskBadge level={s.risk_band as RiskLevel} />
                 {isLimited && (
                   <span
                     data-testid={`limited-history-${s.supplier_code}`}
-                    className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-slate-200 text-slate-700 border border-slate-300"
+                    className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-surface text-text-secondary border border-border-subtle"
                   >
                     limited history
                   </span>
@@ -64,17 +64,17 @@ export const SupplierReliabilityBars: React.FC<SupplierReliabilityBarsProps> = (
               </div>
 
               <div className="flex items-center gap-2 font-mono text-xs">
-                <span className="font-bold text-slate-900">
+                <span className="font-bold text-text-primary">
                   {rate != null ? `${(rate * 100).toFixed(1)}%` : '—'}
                 </span>
-                <span className="text-slate-500 font-normal">
+                <span className="text-text-secondary font-normal">
                   ({s.n_deliveries} {s.n_deliveries === 1 ? 'delivery' : 'deliveries'})
                 </span>
               </div>
             </div>
 
             {/* Horizontal Bar */}
-            <div className="w-full h-3 bg-slate-200 rounded-full overflow-hidden border border-slate-300">
+            <div className="w-full h-3 bg-surface rounded-full overflow-hidden border border-border-subtle">
               <div
                 className={`h-full ${barColor} ${barStroke} rounded-full transition-all duration-300`}
                 style={{ width: `${Math.max(2, Math.min(100, ratePercent))}%` }}
@@ -96,8 +96,8 @@ export const SupplierReliabilityTable: React.FC<{ suppliers: SupplierRiskItem[] 
   const sorted = [...suppliers].sort((a, b) => (a.on_time_rate ?? -1) - (b.on_time_rate ?? -1));
 
   return (
-    <table className="min-w-full divide-y divide-slate-200 text-xs">
-      <thead className="bg-slate-50 text-slate-700 font-semibold">
+    <table className="min-w-full divide-y divide-border-subtle text-xs bg-surface">
+      <thead className="bg-elevated text-text-secondary font-semibold">
         <tr>
           <th scope="col" className="px-3 py-2.5 text-left">Supplier</th>
           <th scope="col" className="px-3 py-2.5 text-left">Country</th>
@@ -108,32 +108,32 @@ export const SupplierReliabilityTable: React.FC<{ suppliers: SupplierRiskItem[] 
           <th scope="col" className="px-3 py-2.5 text-center">Action</th>
         </tr>
       </thead>
-      <tbody className="divide-y divide-slate-100 bg-white">
+      <tbody className="divide-y divide-border-subtle bg-surface">
         {sorted.map((s) => {
           const isLimited = s.confidence === 'low' || (s.n_deliveries ?? 0) < 10;
           return (
-            <tr key={s.supplier_id} className="hover:bg-slate-50/80">
+            <tr key={s.supplier_id} className="hover:bg-hover">
               <td className="px-3 py-2.5">
-                <span className="font-mono font-bold text-slate-900">{s.supplier_code}</span>
-                <span className="text-slate-500 ml-1.5">{s.supplier_name || (s as unknown as { name?: string }).name}</span>
+                <span className="font-mono font-bold text-text-primary">{s.supplier_code}</span>
+                <span className="text-text-secondary ml-1.5">{s.supplier_name || (s as unknown as { name?: string }).name}</span>
               </td>
-              <td className="px-3 py-2.5 text-slate-600 font-mono">{s.country || '—'}</td>
+              <td className="px-3 py-2.5 text-text-secondary font-mono">{s.country || '—'}</td>
               <td className="px-3 py-2.5 text-center">
                 <RiskBadge level={s.risk_band as RiskLevel} />
               </td>
-              <td className="px-3 py-2.5 text-right font-mono font-bold text-slate-900">
+              <td className="px-3 py-2.5 text-right font-mono font-bold text-text-primary">
                 {s.on_time_rate != null ? `${(s.on_time_rate * 100).toFixed(1)}%` : '—'}
               </td>
-              <td className="px-3 py-2.5 text-right font-mono text-slate-700">
+              <td className="px-3 py-2.5 text-right font-mono text-text-secondary">
                 {s.n_deliveries} deliveries
               </td>
               <td className="px-3 py-2.5 text-center">
                 {isLimited ? (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-slate-200 text-slate-700">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-surface text-text-secondary border border-border-subtle">
                     limited history
                   </span>
                 ) : (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold text-emerald-800">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold text-emerald-400">
                     sufficient
                   </span>
                 )}
@@ -141,7 +141,7 @@ export const SupplierReliabilityTable: React.FC<{ suppliers: SupplierRiskItem[] 
               <td className="px-3 py-2.5 text-center">
                 <Link
                   to={`/supplier-risk?supplier_code=${s.supplier_code}`}
-                  className="text-blue-600 hover:text-blue-800 font-semibold underline px-1 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded"
+                  className="text-accent-primary hover:text-sky-300 font-semibold underline px-1 focus:outline-none focus:ring-1 focus:ring-accent-primary rounded"
                 >
                   View Profile &rarr;
                 </Link>

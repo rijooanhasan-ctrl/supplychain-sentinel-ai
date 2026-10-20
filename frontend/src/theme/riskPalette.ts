@@ -3,7 +3,7 @@
  *
  * Requirements:
  * - Every risk level defines: label, text color, background color, stroke color, fill color, and patternId.
- * - WCAG AA contrast (>= 4.5:1) verified mathematically between textColor and bgColor.
+ * - WCAG AA contrast (>= 4.5:1) verified mathematically between textColor and bgColor, and against dark surfaces.
  * - Distinct SVG patterns allow charts and visual widgets to remain readable in greyscale or for color-blind users.
  */
 
@@ -24,8 +24,8 @@ export const RISK_PALETTE: Record<RiskLevelKey, RiskPaletteEntry> = {
   critical: {
     key: 'critical',
     label: 'Critical',
-    textColor: '#7f1d1d', // red-900
-    bgColor: '#fee2e2',   // red-100
+    textColor: '#fca5a5', // red-300
+    bgColor: '#3c1214',   // dark red
     strokeColor: '#dc2626', // red-600
     fillColor: '#ef4444',   // red-500
     patternId: 'pattern-risk-critical',
@@ -34,8 +34,8 @@ export const RISK_PALETTE: Record<RiskLevelKey, RiskPaletteEntry> = {
   high: {
     key: 'high',
     label: 'High',
-    textColor: '#7c2d12', // orange-900
-    bgColor: '#ffedd5',   // orange-100
+    textColor: '#fdba74', // orange-300
+    bgColor: '#431d09',   // dark orange
     strokeColor: '#ea580c', // orange-600
     fillColor: '#f97316',   // orange-500
     patternId: 'pattern-risk-high',
@@ -44,8 +44,8 @@ export const RISK_PALETTE: Record<RiskLevelKey, RiskPaletteEntry> = {
   medium: {
     key: 'medium',
     label: 'Medium',
-    textColor: '#713f12', // amber-900
-    bgColor: '#fef3c7',   // amber-100
+    textColor: '#fcd34d', // amber-300
+    bgColor: '#3f2905',   // dark amber
     strokeColor: '#d97706', // amber-600
     fillColor: '#f59e0b',   // amber-500
     patternId: 'pattern-risk-medium',
@@ -54,8 +54,8 @@ export const RISK_PALETTE: Record<RiskLevelKey, RiskPaletteEntry> = {
   low: {
     key: 'low',
     label: 'Low',
-    textColor: '#14532d', // emerald-900
-    bgColor: '#dcfce7',   // emerald-100
+    textColor: '#86efac', // emerald-300
+    bgColor: '#06341d',   // dark emerald
     strokeColor: '#16a34a', // emerald-600
     fillColor: '#22c55e',   // emerald-500
     patternId: 'pattern-risk-low',
@@ -64,20 +64,20 @@ export const RISK_PALETTE: Record<RiskLevelKey, RiskPaletteEntry> = {
   none: {
     key: 'none',
     label: 'None',
-    textColor: '#1e293b', // slate-800
-    bgColor: '#f1f5f9',   // slate-100
-    strokeColor: '#94a3b8', // slate-400
-    fillColor: '#cbd5e1',   // slate-300
+    textColor: '#cbd5e1', // slate-300
+    bgColor: '#161f2e',   // dark slate
+    strokeColor: '#64748b', // slate-500
+    fillColor: '#475569',   // slate-600
     patternId: 'pattern-risk-none',
     shapeDescription: 'Clean solid fill with subtle border',
   },
   unknown: {
     key: 'unknown',
     label: 'Unknown',
-    textColor: '#334155', // slate-700
-    bgColor: '#f8fafc',   // slate-50
+    textColor: '#cbd5e1', // slate-300
+    bgColor: '#1e242b',   // dark charcoal
     strokeColor: '#64748b', // slate-500
-    fillColor: '#94a3b8',   // slate-400
+    fillColor: '#475569',   // slate-600
     patternId: 'pattern-risk-unknown',
     shapeDescription: 'Vertical dashed lines with neutral badge',
   },

@@ -131,7 +131,7 @@ export const GlobeFilterSidebar: React.FC<GlobeFilterSidebarProps> = ({
           onClick={() => setIsCollapsed(!isCollapsed)}
           aria-expanded={!isCollapsed}
           aria-label={isCollapsed ? 'Expand control panel' : 'Collapse control panel'}
-          className="text-slate-400 hover:text-white p-1 rounded hover:bg-slate-800 focus:outline-hidden focus:ring-1 focus:ring-cyan-400"
+          className="text-text-muted hover:text-white p-1 rounded hover:bg-slate-800 focus:outline-hidden focus:ring-1 focus:ring-cyan-400"
         >
           {isCollapsed ? '&rarr;' : '&larr;'}
         </button>
@@ -186,7 +186,7 @@ export const GlobeFilterSidebar: React.FC<GlobeFilterSidebarProps> = ({
               className={`flex-1 py-2 text-center border-b-2 transition-colors ${
                 activeTab === 'filters'
                   ? 'border-cyan-400 text-cyan-300 bg-slate-800/40'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
+                  : 'border-transparent text-text-muted hover:text-slate-200'
               }`}
             >
               Controls
@@ -197,7 +197,7 @@ export const GlobeFilterSidebar: React.FC<GlobeFilterSidebarProps> = ({
               className={`flex-1 py-2 text-center border-b-2 transition-colors ${
                 activeTab === 'legend'
                   ? 'border-cyan-400 text-cyan-300 bg-slate-800/40'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
+                  : 'border-transparent text-text-muted hover:text-slate-200'
               }`}
             >
               Legend
@@ -208,7 +208,7 @@ export const GlobeFilterSidebar: React.FC<GlobeFilterSidebarProps> = ({
               className={`flex-1 py-2 text-center border-b-2 transition-colors relative ${
                 activeTab === 'unresolved'
                   ? 'border-cyan-400 text-cyan-300 bg-slate-800/40'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
+                  : 'border-transparent text-text-muted hover:text-slate-200'
               }`}
             >
               Needs Location
@@ -234,7 +234,7 @@ export const GlobeFilterSidebar: React.FC<GlobeFilterSidebarProps> = ({
                   value={filters.searchTerm}
                   onChange={(e) => onChangeFilters({ ...filters, searchTerm: e.target.value })}
                   placeholder="Code or name..."
-                  className="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-slate-100 placeholder:text-slate-500 focus:outline-hidden focus:border-cyan-400"
+                  className="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-slate-100 placeholder:text-text-secondary focus:outline-hidden focus:border-cyan-400"
                 />
                 {searchResults.length > 0 && (
                   <ul className="absolute top-full left-0 right-0 mt-1 bg-slate-900 border border-cyan-500/50 rounded shadow-xl z-30 max-h-40 overflow-y-auto divide-y divide-slate-800">
@@ -327,7 +327,7 @@ export const GlobeFilterSidebar: React.FC<GlobeFilterSidebarProps> = ({
                           className={`px-2 py-1 rounded text-[11px] font-semibold uppercase tracking-wider border transition-colors ${
                             active
                               ? 'bg-slate-800 text-white border-cyan-400 shadow-xs'
-                              : 'bg-slate-900/60 text-slate-400 border-slate-800 hover:text-slate-200'
+                              : 'bg-slate-900/60 text-text-muted border-slate-800 hover:text-slate-200'
                           }`}
                           style={{
                             borderLeftWidth: '4px',
@@ -491,7 +491,7 @@ export const GlobeFilterSidebar: React.FC<GlobeFilterSidebarProps> = ({
                     <span>Warehouse Plant (Diamond, larger)</span>
                   </div>
                   <div className="flex items-center gap-2.5">
-                    <div className="w-2.5 h-2.5 rotate-45 bg-indigo-400 border border-slate-300" />
+                    <div className="w-2.5 h-2.5 rotate-45 bg-indigo-400 border border-border-subtle" />
                     <span>Regional Warehouse Hub (Diamond, smaller)</span>
                   </div>
                   <div className="flex items-center gap-2.5">
@@ -531,7 +531,7 @@ export const GlobeFilterSidebar: React.FC<GlobeFilterSidebarProps> = ({
                     <span>Unknown / New</span>
                   </div>
                 </div>
-                <p className="text-[11px] text-slate-400 italic pt-1">
+                <p className="text-[11px] text-text-muted italic pt-1">
                   Note: Pulse animation indicates high/critical risk band, not live events.
                 </p>
               </div>
@@ -553,11 +553,11 @@ export const GlobeFilterSidebar: React.FC<GlobeFilterSidebarProps> = ({
             <div className="flex-1 overflow-y-auto p-4 space-y-3 text-xs">
               <div className="flex items-center justify-between">
                 <h3 className="font-bold text-white">Needs Location ({unresolved.length})</h3>
-                <span className="text-[11px] text-slate-400">Unmapped entities</span>
+                <span className="text-[11px] text-text-muted">Unmapped entities</span>
               </div>
 
               {unresolved.length === 0 ? (
-                <div className="p-4 text-center text-slate-400 italic bg-slate-900/60 rounded-lg border border-slate-800">
+                <div className="p-4 text-center text-text-muted italic bg-slate-900/60 rounded-lg border border-slate-800">
                   All suppliers and warehouses have resolved geographic coordinates.
                 </div>
               ) : (
@@ -569,14 +569,14 @@ export const GlobeFilterSidebar: React.FC<GlobeFilterSidebarProps> = ({
                     >
                       <div className="flex items-center justify-between">
                         <span className="font-mono font-bold text-cyan-300">{item.code}</span>
-                        <span className="text-[10px] uppercase font-mono px-1.5 py-0.2 rounded bg-slate-800 text-slate-400">
+                        <span className="text-[10px] uppercase font-mono px-1.5 py-0.2 rounded bg-slate-800 text-text-muted">
                           {item.entity_type}
                         </span>
                       </div>
                       <p className="text-slate-300 truncate" title={item.name}>
                         {item.name}
                       </p>
-                      <p className="text-[11px] text-slate-400 leading-normal">{item.reason}</p>
+                      <p className="text-[11px] text-text-muted leading-normal">{item.reason}</p>
                       <div className="pt-1">
                         <button
                           type="button"

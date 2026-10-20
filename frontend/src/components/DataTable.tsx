@@ -39,10 +39,10 @@ export function DataTable<T>({
   };
 
   return (
-    <div className={`overflow-x-auto border border-slate-200 rounded-lg bg-white shadow-xs ${className}`}>
-      <table className="min-w-full divide-y divide-slate-200 text-sm" data-testid={testId}>
+    <div className={`overflow-x-auto border border-border-subtle rounded-lg bg-surface shadow-xs ${className}`}>
+      <table className="min-w-full divide-y divide-border-subtle text-sm" data-testid={testId}>
         <caption className="sr-only">{caption}</caption>
-        <thead className={`bg-slate-50 text-slate-700 text-xs uppercase font-semibold tracking-wider ${stickyHeader ? 'sticky top-0 z-10' : ''}`}>
+        <thead className={`bg-elevated text-text-secondary text-xs uppercase font-semibold tracking-wider ${stickyHeader ? 'sticky top-0 z-10' : ''}`}>
           <tr>
             {columns.map((col) => (
               <th
@@ -55,12 +55,12 @@ export function DataTable<T>({
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100 bg-white">
+        <tbody className="divide-y divide-border-subtle bg-surface">
           {data.map((row, index) => {
             const rowKey = keyExtractor(row, index);
 
             return (
-              <tr key={rowKey} className="hover:bg-slate-50/80 transition-colors">
+              <tr key={rowKey} className="hover:bg-hover transition-colors">
                 {columns.map((col) => {
                   const alignment = alignClass[col.align || 'left'];
                   if (col.isRowHeader) {
@@ -68,7 +68,7 @@ export function DataTable<T>({
                       <th
                         key={col.key}
                         scope="row"
-                        className={`px-4 py-3 font-semibold text-slate-900 ${alignment} ${col.className || ''}`}
+                        className={`px-4 py-3 font-semibold text-text-primary ${alignment} ${col.className || ''}`}
                       >
                         {col.render(row, index)}
                       </th>
@@ -77,7 +77,7 @@ export function DataTable<T>({
                   return (
                     <td
                       key={col.key}
-                      className={`px-4 py-3 text-slate-700 ${alignment} ${col.className || ''}`}
+                      className={`px-4 py-3 text-text-primary ${alignment} ${col.className || ''}`}
                     >
                       {col.render(row, index)}
                     </td>
@@ -96,7 +96,7 @@ export function DataTable<T>({
           return (
             <div
               key={`${rowKey}-expansion`}
-              className="p-4 bg-slate-50 border-t border-slate-200"
+              className="p-4 bg-elevated border-t border-border-subtle"
             >
               {expandedRowRender(row)}
             </div>

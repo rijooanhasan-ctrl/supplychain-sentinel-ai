@@ -26,7 +26,7 @@ function SupplierRiskBandBadge({ band }: { band: SupplierRiskBand }) {
     high: 'bg-red-100 text-red-900 border-red-300',
     medium: 'bg-amber-100 text-amber-900 border-amber-300',
     low: 'bg-emerald-100 text-emerald-900 border-emerald-300',
-    unknown: 'bg-slate-100 text-slate-800 border-slate-300',
+    unknown: 'bg-elevated text-text-primary border-border-subtle',
   };
 
   const labels: Record<SupplierRiskBand, string> = {
@@ -49,7 +49,7 @@ function SupplierRiskBandBadge({ band }: { band: SupplierRiskBand }) {
 function SupplierConfidenceBadge({ confidence }: { confidence: string }) {
   const styles: Record<string, string> = {
     high: 'bg-blue-100 text-blue-900 border-blue-300',
-    medium: 'bg-slate-100 text-slate-800 border-slate-300',
+    medium: 'bg-elevated text-text-primary border-border-subtle',
     low: 'bg-amber-100 text-amber-900 border-amber-300',
     none: 'bg-zinc-100 text-zinc-700 border-zinc-300',
   };
@@ -80,7 +80,7 @@ function SupplierRiskDetailPanel({ supplierId }: DetailPanelProps) {
 
   if (loading) {
     return (
-      <div className="p-4 bg-slate-50 border-t border-slate-200">
+      <div className="p-4 bg-elevated border-t border-border-subtle">
         <LoadingView message="Loading detailed risk breakdown..." />
       </div>
     );
@@ -88,7 +88,7 @@ function SupplierRiskDetailPanel({ supplierId }: DetailPanelProps) {
 
   if (error || !detail) {
     return (
-      <div className="p-4 bg-slate-50 border-t border-slate-200">
+      <div className="p-4 bg-elevated border-t border-border-subtle">
         <ErrorView
           error={error || new Error('Failed to load supplier risk detail')}
           onRetry={reload}
@@ -102,32 +102,32 @@ function SupplierRiskDetailPanel({ supplierId }: DetailPanelProps) {
     <div
       id={`supplier-detail-${supplierId}`}
       data-testid={`supplier-detail-panel-${supplierId}`}
-      className="p-5 bg-slate-50 border-t border-slate-200 space-y-6 text-xs text-slate-800"
+      className="p-5 bg-elevated border-t border-border-subtle space-y-6 text-xs text-text-primary"
     >
       {/* 1. Factual Explanation */}
-      <section aria-labelledby={`exp-heading-${supplierId}`} className="bg-white p-4 rounded-lg border border-slate-200 shadow-xs">
-        <h3 id={`exp-heading-${supplierId}`} className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+      <section aria-labelledby={`exp-heading-${supplierId}`} className="bg-surface p-4 rounded-lg border border-border-subtle shadow-xs">
+        <h3 id={`exp-heading-${supplierId}`} className="text-xs font-bold uppercase tracking-wider text-text-secondary mb-2">
           Assessment Explanation
         </h3>
-        <p className="text-sm font-medium text-slate-900 leading-relaxed" data-testid={`supplier-explanation-${supplierId}`}>
+        <p className="text-sm font-medium text-text-primary leading-relaxed" data-testid={`supplier-explanation-${supplierId}`}>
           {detail.explanation}
         </p>
       </section>
 
       {/* 2. Transparent Metric Contribution Points */}
-      <section aria-labelledby={`metrics-heading-${supplierId}`} className="bg-white p-4 rounded-lg border border-slate-200 shadow-xs space-y-3">
+      <section aria-labelledby={`metrics-heading-${supplierId}`} className="bg-surface p-4 rounded-lg border border-border-subtle shadow-xs space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-          <h3 id={`metrics-heading-${supplierId}`} className="font-bold text-slate-700 uppercase tracking-wider">
+          <h3 id={`metrics-heading-${supplierId}`} className="font-bold text-text-primary uppercase tracking-wider">
             Risk Score Formula &amp; Metric Penalty Breakdown
           </h3>
-          <span className="text-[11px] text-slate-500">
+          <span className="text-[11px] text-text-secondary">
             Total Score = Sum of Contribution Points (Effective Weight &times; Penalty &times; 100)
           </span>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-200 text-xs" data-testid={`breakdown-table-${supplierId}`}>
-            <thead className="bg-slate-50 text-slate-600 font-semibold">
+          <table className="min-w-full divide-y divide-border-subtle text-xs" data-testid={`breakdown-table-${supplierId}`}>
+            <thead className="bg-elevated text-text-secondary font-semibold">
               <tr>
                 <th scope="col" className="px-3 py-2 text-left">Metric Name</th>
                 <th scope="col" className="px-3 py-2 text-right">Historical Value</th>
@@ -138,7 +138,7 @@ function SupplierRiskDetailPanel({ supplierId }: DetailPanelProps) {
                 <th scope="col" className="px-3 py-2 text-left">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-border-subtle">
               {detail.metrics_breakdown.map((m) => {
                 let formattedValue = '—';
                 if (m.raw_value != null) {
@@ -149,17 +149,17 @@ function SupplierRiskDetailPanel({ supplierId }: DetailPanelProps) {
                 }
 
                 return (
-                  <tr key={m.metric_name} className={m.dropped ? 'bg-slate-50 text-slate-400' : 'hover:bg-slate-50/80'}>
-                    <td className="px-3 py-2 font-mono font-bold text-slate-900 uppercase">{m.metric_name}</td>
-                    <td className="px-3 py-2 font-mono text-right text-slate-800">{formattedValue}</td>
-                    <td className="px-3 py-2 font-mono text-right text-slate-800">
+                  <tr key={m.metric_name} className={m.dropped ? 'bg-elevated text-text-muted' : 'hover:bg-elevated/80'}>
+                    <td className="px-3 py-2 font-mono font-bold text-text-primary uppercase">{m.metric_name}</td>
+                    <td className="px-3 py-2 font-mono text-right text-text-primary">{formattedValue}</td>
+                    <td className="px-3 py-2 font-mono text-right text-text-primary">
                       {m.penalty != null ? m.penalty.toFixed(3) : '—'}
                     </td>
-                    <td className="px-3 py-2 font-mono text-right text-slate-600">{(m.nominal_weight * 100).toFixed(0)}%</td>
-                    <td className="px-3 py-2 font-mono text-right font-medium text-slate-900">
+                    <td className="px-3 py-2 font-mono text-right text-text-secondary">{(m.nominal_weight * 100).toFixed(0)}%</td>
+                    <td className="px-3 py-2 font-mono text-right font-medium text-text-primary">
                       {(m.effective_weight * 100).toFixed(1)}%
                     </td>
-                    <td className="px-3 py-2 font-mono text-right font-bold text-slate-900">
+                    <td className="px-3 py-2 font-mono text-right font-bold text-text-primary">
                       {m.dropped ? '0.0' : m.contribution_points.toFixed(1)} pts
                     </td>
                     <td className="px-3 py-2">
@@ -178,25 +178,25 @@ function SupplierRiskDetailPanel({ supplierId }: DetailPanelProps) {
       </section>
 
       {/* 3. Monthly Performance Breakdown */}
-      <section aria-labelledby={`monthly-heading-${supplierId}`} className="bg-white p-4 rounded-lg border border-slate-200 shadow-xs space-y-3">
-        <h3 id={`monthly-heading-${supplierId}`} className="font-bold text-slate-700 uppercase tracking-wider">
+      <section aria-labelledby={`monthly-heading-${supplierId}`} className="bg-surface p-4 rounded-lg border border-border-subtle shadow-xs space-y-3">
+        <h3 id={`monthly-heading-${supplierId}`} className="font-bold text-text-primary uppercase tracking-wider">
           Historical Monthly Trend (Last 12 Months)
         </h3>
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-200 text-xs" data-testid={`monthly-table-${supplierId}`}>
-            <thead className="bg-slate-50 text-slate-600 font-semibold">
+          <table className="min-w-full divide-y divide-border-subtle text-xs" data-testid={`monthly-table-${supplierId}`}>
+            <thead className="bg-elevated text-text-secondary font-semibold">
               <tr>
                 <th scope="col" className="px-3 py-2 text-left">Month</th>
                 <th scope="col" className="px-3 py-2 text-right">Deliveries Count</th>
                 <th scope="col" className="px-3 py-2 text-right">On-Time Rate</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-border-subtle">
               {detail.monthly_breakdown.map((mo) => (
-                <tr key={mo.month} className="hover:bg-slate-50/80">
-                  <td className="px-3 py-2 font-mono font-semibold text-slate-900">{mo.month}</td>
-                  <td className="px-3 py-2 font-mono text-right text-slate-800">{mo.n_deliveries}</td>
-                  <td className="px-3 py-2 font-mono text-right font-bold text-slate-900">
+                <tr key={mo.month} className="hover:bg-elevated/80">
+                  <td className="px-3 py-2 font-mono font-semibold text-text-primary">{mo.month}</td>
+                  <td className="px-3 py-2 font-mono text-right text-text-primary">{mo.n_deliveries}</td>
+                  <td className="px-3 py-2 font-mono text-right font-bold text-text-primary">
                     {mo.on_time_rate != null ? `${(mo.on_time_rate * 100).toFixed(1)}%` : '— (No deliveries)'}
                   </td>
                 </tr>
@@ -208,11 +208,11 @@ function SupplierRiskDetailPanel({ supplierId }: DetailPanelProps) {
 
       {/* 4. Assumptions */}
       {detail.assumptions.length > 0 && (
-        <section aria-labelledby={`assumptions-heading-${supplierId}`} className="p-4 bg-slate-100/70 rounded-lg border border-slate-200">
-          <h3 id={`assumptions-heading-${supplierId}`} className="text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-2">
+        <section aria-labelledby={`assumptions-heading-${supplierId}`} className="p-4 bg-elevated/70 rounded-lg border border-border-subtle">
+          <h3 id={`assumptions-heading-${supplierId}`} className="text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-2">
             Assessment Conventions &amp; Modeling Assumptions
           </h3>
-          <ul className="space-y-1 list-disc list-inside text-[11px] text-slate-600">
+          <ul className="space-y-1 list-disc list-inside text-[11px] text-text-secondary">
             {detail.assumptions.map((a, idx) => (
               <li key={idx}>{a}</li>
             ))}
@@ -303,27 +303,27 @@ export function SupplierRiskPage() {
         <section aria-labelledby="summary-kpis-heading" className="space-y-2">
           <h2 id="summary-kpis-heading" className="sr-only">Supplier Risk Summary</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="bg-white p-3.5 rounded-lg border border-red-200 bg-red-50/20 shadow-xs">
+            <div className="bg-surface p-3.5 rounded-lg border border-red-200 bg-red-50/20 shadow-xs">
               <span className="text-[11px] font-bold text-red-900 uppercase tracking-wider block">High Risk (&ge; 50)</span>
               <span className="text-2xl font-bold text-red-700 mt-1 block" data-testid="count-high-band">
                 {formatInteger(data.summary.counts_by_band.high || 0)}
               </span>
             </div>
-            <div className="bg-white p-3.5 rounded-lg border border-amber-200 bg-amber-50/20 shadow-xs">
+            <div className="bg-surface p-3.5 rounded-lg border border-amber-200 bg-amber-50/20 shadow-xs">
               <span className="text-[11px] font-bold text-amber-900 uppercase tracking-wider block">Medium Risk (25..49.9)</span>
               <span className="text-2xl font-bold text-amber-800 mt-1 block" data-testid="count-medium-band">
                 {formatInteger(data.summary.counts_by_band.medium || 0)}
               </span>
             </div>
-            <div className="bg-white p-3.5 rounded-lg border border-emerald-200 bg-emerald-50/20 shadow-xs">
+            <div className="bg-surface p-3.5 rounded-lg border border-emerald-200 bg-emerald-50/20 shadow-xs">
               <span className="text-[11px] font-bold text-emerald-900 uppercase tracking-wider block">Low Risk (&lt; 25)</span>
               <span className="text-2xl font-bold text-emerald-700 mt-1 block" data-testid="count-low-band">
                 {formatInteger(data.summary.counts_by_band.low || 0)}
               </span>
             </div>
-            <div className="bg-white p-3.5 rounded-lg border border-slate-200 shadow-xs">
-              <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider block">Unknown (0 Deliveries)</span>
-              <span className="text-2xl font-bold text-slate-700 mt-1 block" data-testid="count-unknown-band">
+            <div className="bg-surface p-3.5 rounded-lg border border-border-subtle shadow-xs">
+              <span className="text-[11px] font-bold text-text-primary uppercase tracking-wider block">Unknown (0 Deliveries)</span>
+              <span className="text-2xl font-bold text-text-primary mt-1 block" data-testid="count-unknown-band">
                 {formatInteger(data.summary.counts_by_band.unknown || 0)}
               </span>
             </div>
@@ -332,18 +332,18 @@ export function SupplierRiskPage() {
       )}
 
       {/* Filter Toolbar */}
-      <section aria-labelledby="supplier-filters-heading" className="flex flex-wrap items-center gap-3 bg-white p-3.5 rounded-lg border border-slate-200 shadow-xs text-xs">
+      <section aria-labelledby="supplier-filters-heading" className="flex flex-wrap items-center gap-3 bg-surface p-3.5 rounded-lg border border-border-subtle shadow-xs text-xs">
         <h2 id="supplier-filters-heading" className="sr-only">Filter Suppliers</h2>
 
         <div className="flex items-center gap-2">
-          <label htmlFor={bandFilterId} className="font-semibold text-slate-700">
+          <label htmlFor={bandFilterId} className="font-semibold text-text-primary">
             Risk Band:
           </label>
           <select
             id={bandFilterId}
             value={selectedBand}
             onChange={(e) => handleBandChange(e.target.value as SupplierRiskBand | '')}
-            className="border border-slate-300 rounded px-2.5 py-1.5 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="border border-border-subtle rounded px-2.5 py-1.5 bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
             data-testid="filter-band"
           >
             {BAND_OPTIONS.map((opt) => (
@@ -355,7 +355,7 @@ export function SupplierRiskPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <label htmlFor={countryFilterId} className="font-semibold text-slate-700">
+          <label htmlFor={countryFilterId} className="font-semibold text-text-primary">
             Country:
           </label>
           <input
@@ -364,7 +364,7 @@ export function SupplierRiskPage() {
             placeholder="e.g. DE, US, TW"
             value={selectedCountry}
             onChange={(e) => handleCountryChange(e.target.value)}
-            className="border border-slate-300 rounded px-2.5 py-1.5 bg-white text-slate-900 w-28 uppercase focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="border border-border-subtle rounded px-2.5 py-1.5 bg-surface text-text-primary w-28 uppercase focus:outline-none focus:ring-2 focus:ring-accent-primary"
             data-testid="filter-country"
           />
         </div>
@@ -406,11 +406,11 @@ export function SupplierRiskPage() {
                 message="No suppliers matched the selected risk band or country filter."
               />
             ) : (
-              <div className="bg-white border border-slate-200 rounded-lg shadow-xs overflow-hidden">
+              <div className="bg-surface border border-border-subtle rounded-lg shadow-xs overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-slate-200 text-sm" data-testid="supplier-risk-table">
+                  <table className="min-w-full divide-y divide-border-subtle text-sm" data-testid="supplier-risk-table">
                     <caption className="sr-only">Suppliers scored by delivery performance</caption>
-                    <thead className="bg-slate-50 text-slate-700 text-xs uppercase font-semibold">
+                    <thead className="bg-elevated text-text-primary text-xs uppercase font-semibold">
                       <tr>
                         <th scope="col" className="px-4 py-3 text-left">Supplier</th>
                         <th scope="col" className="px-4 py-3 text-left">Country</th>
@@ -424,22 +424,22 @@ export function SupplierRiskPage() {
                         <th scope="col" className="px-4 py-3 text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 bg-white">
+                    <tbody className="divide-y divide-border-subtle bg-surface">
                       {data.items.map((item: SupplierRiskItem) => {
                         const isExpanded = expandedIds.has(item.supplier_id);
 
                         return (
                           <React.Fragment key={item.supplier_id}>
                             <tr
-                              className="hover:bg-slate-50/80 transition-colors"
+                              className="hover:bg-elevated/80 transition-colors"
                               data-testid={`supplier-row-${item.supplier_code}`}
                             >
                               <th scope="row" className="px-4 py-3 text-left font-normal">
-                                <span className="font-mono font-bold text-slate-900 block">{item.supplier_code}</span>
-                                <span className="text-xs text-slate-500 block">{item.supplier_name}</span>
+                                <span className="font-mono font-bold text-text-primary block">{item.supplier_code}</span>
+                                <span className="text-xs text-text-secondary block">{item.supplier_name}</span>
                               </th>
-                              <td className="px-4 py-3 font-mono text-slate-700 font-semibold">{item.country}</td>
-                              <td className="px-4 py-3 font-mono text-right font-bold text-slate-900">
+                              <td className="px-4 py-3 font-mono text-text-primary font-semibold">{item.country}</td>
+                              <td className="px-4 py-3 font-mono text-right font-bold text-text-primary">
                                 {item.risk_score != null ? item.risk_score.toFixed(1) : '—'}
                               </td>
                               <td className="px-4 py-3">
@@ -451,31 +451,31 @@ export function SupplierRiskPage() {
                               <td className="px-4 py-3 text-xs">
                                 {item.on_time_rate != null ? (
                                   <div>
-                                    <span className="font-mono font-semibold text-slate-900">
+                                    <span className="font-mono font-semibold text-text-primary">
                                       {(item.on_time_rate * 100).toFixed(1)}%
                                     </span>
                                     {item.on_time_ci_lower != null && item.on_time_ci_upper != null && (
-                                      <span className="text-[11px] text-slate-500 block font-mono">
+                                      <span className="text-[11px] text-text-secondary block font-mono">
                                         [{(item.on_time_ci_lower * 100).toFixed(1)}%, {(item.on_time_ci_upper * 100).toFixed(1)}%]
                                       </span>
                                     )}
                                   </div>
                                 ) : (
-                                  <span className="text-slate-400 italic">—</span>
+                                  <span className="text-text-muted italic">—</span>
                                 )}
                               </td>
-                              <td className="px-4 py-3 font-mono text-right text-slate-800">
+                              <td className="px-4 py-3 font-mono text-right text-text-primary">
                                 {item.avg_delay_days_when_late != null
                                   ? `${item.avg_delay_days_when_late.toFixed(1)} d`
                                   : '—'}
                               </td>
-                              <td className="px-4 py-3 font-mono text-right text-slate-800">
+                              <td className="px-4 py-3 font-mono text-right text-text-primary">
                                 {item.rejection_rate != null ? `${(item.rejection_rate * 100).toFixed(2)}%` : '—'}
                               </td>
                               <td className="px-4 py-3 text-xs">
                                 {item.open_po_count > 0 ? (
                                   <div>
-                                    <span className="font-semibold text-slate-900">
+                                    <span className="font-semibold text-text-primary">
                                       {item.open_po_count} PO ({formatInteger(item.open_remaining_qty)} units)
                                     </span>
                                     {(item.open_pos_slipped_count > 0 || item.open_pos_overdue_count > 0) && (
@@ -485,7 +485,7 @@ export function SupplierRiskPage() {
                                     )}
                                   </div>
                                 ) : (
-                                  <span className="text-slate-400 italic">None</span>
+                                  <span className="text-text-muted italic">None</span>
                                 )}
                               </td>
                               <td className="px-4 py-3 text-right space-x-2">
@@ -501,7 +501,7 @@ export function SupplierRiskPage() {
                                   onClick={() => toggleExpand(item.supplier_id)}
                                   aria-expanded={isExpanded}
                                   aria-controls={`supplier-detail-${item.supplier_id}`}
-                                  className="text-xs font-semibold px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
+                                  className="text-xs font-semibold px-2.5 py-1 rounded bg-elevated hover:bg-surface text-text-primary transition-colors"
                                   data-testid={`toggle-supplier-${item.supplier_code}`}
                                 >
                                   {isExpanded ? 'Hide Details' : 'View Formula'}

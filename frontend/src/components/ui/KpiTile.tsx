@@ -37,15 +37,15 @@ export const KpiTile: React.FC<KpiTileProps> = ({
   const content = (
     <div
       data-testid={testId}
-      className={`bg-white border border-slate-200 rounded-lg p-4 sm:p-5 shadow-xs flex flex-col justify-between h-full transition-all duration-150 ${
+      className={`bg-surface border border-border-subtle rounded-lg p-4 sm:p-5 shadow-xs flex flex-col justify-between h-full transition-all duration-150 ${
         to
-          ? 'hover:border-blue-300 hover:shadow-md focus-within:ring-2 focus-within:ring-blue-500 cursor-pointer group'
+          ? 'hover:border-accent-primary hover:shadow-md focus-within:ring-2 focus-within:ring-accent-primary cursor-pointer group'
           : ''
       } ${className}`}
     >
       <div>
         <div className="flex items-center justify-between gap-2 mb-2">
-          <div className="flex items-center text-xs font-semibold uppercase tracking-wider text-slate-500">
+          <div className="flex items-center text-xs font-semibold uppercase tracking-wider text-text-secondary">
             <span>{label}</span>
             {infoTerm && infoDescription && (
               <InfoTip term={infoTerm} description={infoDescription} />
@@ -54,17 +54,17 @@ export const KpiTile: React.FC<KpiTileProps> = ({
           {badge}
         </div>
 
-        <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-mono tracking-tight my-1">
+        <div className="text-2xl sm:text-3xl font-extrabold text-text-primary font-mono tracking-tight my-1">
           {value}
         </div>
       </div>
 
-      <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between">
-        <p className="text-xs text-slate-600 font-medium leading-snug">{explanation}</p>
+      <div className="mt-2 pt-2 border-t border-border-subtle flex items-center justify-between">
+        <p className="text-xs text-text-secondary font-medium leading-snug">{explanation}</p>
         {to && (
           <span
             aria-hidden="true"
-            className="text-xs text-blue-600 font-semibold ml-2 group-hover:translate-x-0.5 transition-transform shrink-0"
+            className="text-xs text-accent-primary font-semibold ml-2 group-hover:translate-x-0.5 transition-transform shrink-0"
           >
             &rarr;
           </span>
@@ -77,7 +77,7 @@ export const KpiTile: React.FC<KpiTileProps> = ({
     return (
       <Link
         to={to}
-        className="block focus:outline-none rounded-lg focus-visible:ring-2 focus-visible:ring-blue-500"
+        className="block focus:outline-none rounded-lg focus-visible:ring-2 focus-visible:ring-accent-primary"
       >
         {content}
       </Link>

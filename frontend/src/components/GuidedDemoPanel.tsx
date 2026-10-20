@@ -90,18 +90,18 @@ export function GuidedDemoPanel() {
       role="dialog"
       aria-label="Guided Demo"
       aria-modal="false"
-      className="fixed bottom-5 right-5 z-50 w-96 max-w-[calc(100vw-2.5rem)] bg-white border-2 border-blue-500 rounded-xl shadow-2xl p-5 text-slate-900 transition-all"
+      className="fixed bottom-5 right-5 z-50 w-96 max-w-[calc(100vw-2.5rem)] bg-elevated border-2 border-accent-primary rounded-xl shadow-2xl p-5 text-text-primary transition-all"
       data-testid="guided-demo-panel"
     >
       {/* Header with Step Counter and Exit */}
-      <div className="flex items-center justify-between border-b border-slate-100 pb-2.5 mb-3">
+      <div className="flex items-center justify-between border-b border-border-subtle pb-2.5 mb-3">
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" aria-hidden="true" />
-          <span className="font-bold text-xs uppercase tracking-wider text-blue-900">
+          <span className="w-2 h-2 rounded-full bg-accent-primary animate-pulse" aria-hidden="true" />
+          <span className="font-bold text-xs uppercase tracking-wider text-accent-primary">
             Guided Demo Mode
           </span>
           <span
-            className="text-[11px] font-mono px-2 py-0.5 rounded bg-blue-50 text-blue-800 font-semibold border border-blue-200"
+            className="text-[11px] font-mono px-2 py-0.5 rounded bg-blue-950/80 text-blue-300 font-semibold border border-blue-700/60"
             data-testid="guided-demo-step-counter"
           >
             {step}/{totalSteps}
@@ -111,7 +111,7 @@ export function GuidedDemoPanel() {
           type="button"
           onClick={exitDemo}
           aria-label="Exit guided demo"
-          className="text-xs text-slate-500 hover:text-slate-800 font-medium px-1.5 py-0.5 rounded hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+          className="text-xs text-text-secondary hover:text-text-primary font-medium px-1.5 py-0.5 rounded hover:bg-hover focus:outline-none focus:ring-2 focus:ring-accent-primary cursor-pointer"
           data-testid="guided-demo-exit"
         >
           Exit demo
@@ -120,10 +120,10 @@ export function GuidedDemoPanel() {
 
       {/* Step Title & Instruction Content */}
       <div className="space-y-2 mb-4">
-        <h3 className="font-bold text-sm text-slate-900" data-testid="guided-demo-title">
+        <h3 className="font-bold text-sm text-text-primary" data-testid="guided-demo-title">
           {content.title}
         </h3>
-        <p className="text-xs text-slate-600 leading-relaxed" data-testid="guided-demo-instruction">
+        <p className="text-xs text-text-secondary leading-relaxed" data-testid="guided-demo-instruction">
           {content.body}
         </p>
       </div>
@@ -134,7 +134,7 @@ export function GuidedDemoPanel() {
           <button
             type="button"
             onClick={() => goToStep(5)}
-            className="w-full text-xs py-1.5 px-3 bg-amber-50 text-amber-900 border border-amber-300 rounded font-medium hover:bg-amber-100 cursor-pointer"
+            className="w-full text-xs py-1.5 px-3 bg-amber-950/60 text-amber-200 border border-amber-700/60 rounded font-medium hover:bg-amber-900/60 cursor-pointer"
             data-testid="guided-demo-no-risk-simulator-btn"
           >
             Jump to What-If Simulator &rarr;
@@ -143,25 +143,25 @@ export function GuidedDemoPanel() {
       )}
 
       {/* Navigation Controls */}
-      <div className="flex items-center justify-between pt-2 border-t border-slate-100 gap-2">
+      <div className="flex items-center justify-between pt-2 border-t border-border-subtle gap-2">
         <button
           type="button"
           onClick={prevStep}
           disabled={step <= 1}
-          className="px-3 py-1.5 rounded text-xs font-semibold border border-slate-300 text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+          className="px-3 py-1.5 rounded text-xs font-semibold border border-border-subtle text-text-primary hover:bg-hover disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-accent-primary cursor-pointer"
           data-testid="guided-demo-back"
         >
           &larr; Back
         </button>
 
-        <span className="text-[11px] text-slate-600 font-mono">
-          Press <kbd className="px-1 py-0.5 bg-slate-100 border border-slate-300 rounded text-[10px]">Esc</kbd> to exit
+        <span className="text-[11px] text-text-secondary font-mono">
+          Press <kbd className="px-1 py-0.5 bg-surface border border-border-subtle rounded text-[10px]">Esc</kbd> to exit
         </span>
 
         <button
           type="button"
           onClick={nextStep}
-          className="px-3.5 py-1.5 rounded text-xs font-semibold bg-blue-600 text-white hover:bg-blue-700 shadow-xs focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+          className="px-3.5 py-1.5 rounded text-xs font-semibold bg-accent-primary text-text-primary hover:bg-sky-400 shadow-xs focus:outline-none focus:ring-2 focus:ring-accent-primary cursor-pointer"
           data-testid="guided-demo-next"
         >
           {step === totalSteps ? 'Finish' : 'Next \u2192'}
