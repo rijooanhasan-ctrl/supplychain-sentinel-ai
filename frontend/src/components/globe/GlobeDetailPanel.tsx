@@ -13,7 +13,21 @@ import { RISK_PALETTE } from '../../theme/riskPalette';
 export type SelectedEntity =
   | { type: 'supplier'; item: GlobeSupplier }
   | { type: 'warehouse'; item: GlobeWarehouse }
-  | { type: 'country'; item: GlobeConcentration };
+  | {
+      type: 'country';
+      item?: GlobeConcentration | null;
+      countryName?: string;
+      countryCode?: string;
+    }
+  | {
+      type: 'state';
+      stateName: string;
+      countryName: string;
+      countryCode: string;
+      matchedSuppliers: GlobeSupplier[];
+      matchedWarehouses: GlobeWarehouse[];
+      hasApproximateInCountry: boolean;
+    };
 
 interface GlobeDetailPanelProps {
   entity: SelectedEntity | null;
@@ -94,14 +108,24 @@ export const GlobeDetailPanel: React.FC<GlobeDetailPanelProps> = ({
                 ? 'Supplier Entity'
                 : entity.type === 'warehouse'
                 ? 'Warehouse Node'
+                : entity.type === 'state'
+                ? 'State / Province'
                 : 'Country Concentration'}
             </span>
             <h2 className="text-base font-bold text-white tracking-tight break-words">
-              {entity.type === 'country' ? entity.item.country_name : entity.item.name}
+              {entity.type === 'country'
+                ? entity.countryName || entity.item?.country_name || 'Unknown Region'
+                : entity.type === 'state'
+                ? entity.stateName
+                : entity.item.name}
             </h2>
             <div className="flex items-center gap-2">
               <span className="font-mono text-xs text-text-muted font-semibold">
-                {entity.type === 'country' ? entity.item.country_code : entity.item.code}
+                {entity.type === 'country'
+                  ? entity.countryCode || entity.item?.country_code || ''
+                  : entity.type === 'state'
+                  ? `${entity.countryName} (${entity.countryCode})`
+                  : entity.item.code}
               </span>
               {entity.type === 'supplier' && (
                 <span className="text-[11px] font-mono px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 border border-slate-700">
@@ -362,99 +386,184 @@ export const GlobeDetailPanel: React.FC<GlobeDetailPanelProps> = ({
         {/* ----------------- COUNTRY CONCENTRATION CONTENT ----------------- */}
         {entity.type === 'country' && (
           <div className="space-y-4 text-xs">
-            {/* Concentration Flag Notice */}
-            <div
-              className={`p-3 rounded-lg border space-y-1.5 ${
-                entity.item.flagged
-                  ? 'bg-amber-950/80 border-amber-600 text-amber-200'
-                  : 'bg-slate-900/80 border-slate-700 text-slate-300'
-              }`}
-            >
-              <div className="flex items-center justify-between font-bold">
-                <span>Concentration Status</span>
-                <span
-                  className={`px-2 py-0.5 rounded text-[10px] uppercase font-mono border ${
+            {entity.item && (entity.item.supplier_count > 0 || entity.item.flagged) ? (
+              <>
+                {/* Concentration Flag Notice */}
+                <div
+                  className={`p-3 rounded-lg border space-y-1.5 ${
                     entity.item.flagged
-                      ? 'bg-amber-900 text-amber-100 border-amber-400'
-                      : 'bg-slate-800 text-slate-300 border-slate-600'
+                      ? 'bg-amber-950/80 border-amber-600 text-amber-200'
+                      : 'bg-slate-900/80 border-slate-700 text-slate-300'
                   }`}
                 >
-                  {entity.item.flagged ? 'Flagged Concentration' : 'Balanced'}
-                </span>
-              </div>
-              {entity.item.reason && (
-                <p className="text-[11px] leading-relaxed pt-1 text-amber-100/90 font-medium">
-                  {entity.item.reason}
-                </p>
-              )}
-            </div>
-
-            {/* Mandatory Static Lineage Notice */}
-            <div className="p-2.5 rounded bg-slate-900/60 border border-slate-800 text-[11px] text-text-muted italic leading-normal">
-              Calculated from loaded supplier data; not a live disruption feed.
-            </div>
-
-            {/* Metrics */}
-            <div className="p-3 bg-slate-900/80 rounded-lg border border-slate-800 space-y-2">
-              <div className="flex justify-between">
-                <span className="text-text-muted">Supplier Count:</span>
-                <span className="font-mono font-bold text-white">{entity.item.supplier_count}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-text-muted">Open Purchase Orders:</span>
-                <span className="font-mono font-bold text-white">{entity.item.open_po_count}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-text-muted">Remaining Units:</span>
-                <span className="font-mono text-white">
-                  {entity.item.remaining_qty.toLocaleString()} units
-                </span>
-              </div>
-            </div>
-
-            {/* Risk Distribution in this country */}
-            <div className="p-3 bg-slate-900/80 rounded-lg border border-slate-800 space-y-1.5">
-              <span className="font-semibold text-slate-300 block">Risk Distribution</span>
-              <div className="grid grid-cols-2 gap-1.5 text-[11px]">
-                <div className="p-1.5 rounded bg-slate-800/80 flex justify-between">
-                  <span className="text-rose-400">Critical:</span>
-                  <span className="font-mono font-bold">{entity.item.risk_distribution.critical || 0}</span>
-                </div>
-                <div className="p-1.5 rounded bg-slate-800/80 flex justify-between">
-                  <span className="text-orange-400">High:</span>
-                  <span className="font-mono font-bold">{entity.item.risk_distribution.high || 0}</span>
-                </div>
-                <div className="p-1.5 rounded bg-slate-800/80 flex justify-between">
-                  <span className="text-amber-400">Medium:</span>
-                  <span className="font-mono font-bold">{entity.item.risk_distribution.medium || 0}</span>
-                </div>
-                <div className="p-1.5 rounded bg-slate-800/80 flex justify-between">
-                  <span className="text-emerald-400">Low:</span>
-                  <span className="font-mono font-bold">{entity.item.risk_distribution.low || 0}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Single country sourced components */}
-            {entity.item.single_country_components.length > 0 && (
-              <div className="p-3 bg-amber-950/40 rounded-lg border border-amber-800/60 space-y-1.5">
-                <span className="font-bold text-amber-300 block">
-                  Exclusively Sourced Components ({entity.item.single_country_components.length})
-                </span>
-                <p className="text-[11px] text-amber-200/80">
-                  100% of vendor offers for these items originate from {entity.item.country_name}:
-                </p>
-                <div className="flex flex-wrap gap-1 pt-1">
-                  {entity.item.single_country_components.map((sku) => (
+                  <div className="flex items-center justify-between font-bold">
+                    <span>Concentration Status</span>
                     <span
-                      key={sku}
-                      className="px-2 py-0.5 rounded bg-amber-900/70 border border-amber-700 text-amber-200 font-mono text-[10px]"
+                      className={`px-2 py-0.5 rounded text-[10px] uppercase font-mono border ${
+                        entity.item.flagged
+                          ? 'bg-amber-900 text-amber-100 border-amber-400'
+                          : 'bg-slate-800 text-slate-300 border-slate-600'
+                      }`}
                     >
-                      {sku}
+                      {entity.item.flagged ? 'Flagged Concentration' : 'Balanced'}
                     </span>
-                  ))}
+                  </div>
+                  {entity.item.reason && (
+                    <p className="text-[11px] leading-relaxed pt-1 text-amber-100/90 font-medium">
+                      {entity.item.reason}
+                    </p>
+                  )}
                 </div>
+
+                {/* Mandatory Static Lineage Notice */}
+                <div className="p-2.5 rounded bg-slate-900/60 border border-slate-800 text-[11px] text-text-muted italic leading-normal">
+                  Calculated from loaded supplier data; not a live disruption feed.
+                </div>
+
+                {/* Metrics */}
+                <div className="p-3 bg-slate-900/80 rounded-lg border border-slate-800 space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-text-muted">Supplier Count:</span>
+                    <span className="font-mono font-bold text-white">{entity.item.supplier_count}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-text-muted">Open Purchase Orders:</span>
+                    <span className="font-mono font-bold text-white">{entity.item.open_po_count}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-text-muted">Remaining Units:</span>
+                    <span className="font-mono text-white">
+                      {entity.item.remaining_qty.toLocaleString()} units
+                    </span>
+                  </div>
+                </div>
+
+                {/* Risk Distribution in this country */}
+                <div className="p-3 bg-slate-900/80 rounded-lg border border-slate-800 space-y-1.5">
+                  <span className="font-semibold text-slate-300 block">Risk Distribution</span>
+                  <div className="grid grid-cols-2 gap-1.5 text-[11px]">
+                    <div className="p-1.5 rounded bg-slate-800/80 flex justify-between">
+                      <span className="text-rose-400">Critical:</span>
+                      <span className="font-mono font-bold">{entity.item.risk_distribution?.critical || 0}</span>
+                    </div>
+                    <div className="p-1.5 rounded bg-slate-800/80 flex justify-between">
+                      <span className="text-orange-400">High:</span>
+                      <span className="font-mono font-bold">{entity.item.risk_distribution?.high || 0}</span>
+                    </div>
+                    <div className="p-1.5 rounded bg-slate-800/80 flex justify-between">
+                      <span className="text-amber-400">Medium:</span>
+                      <span className="font-mono font-bold">{entity.item.risk_distribution?.medium || 0}</span>
+                    </div>
+                    <div className="p-1.5 rounded bg-slate-800/80 flex justify-between">
+                      <span className="text-emerald-400">Low:</span>
+                      <span className="font-mono font-bold">{entity.item.risk_distribution?.low || 0}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Single country sourced components */}
+                {entity.item.single_country_components && entity.item.single_country_components.length > 0 && (
+                  <div className="p-3 bg-amber-950/40 rounded-lg border border-amber-800/60 space-y-1.5">
+                    <span className="font-bold text-amber-300 block">
+                      Exclusively Sourced Components ({entity.item.single_country_components.length})
+                    </span>
+                    <p className="text-[11px] text-amber-200/80">
+                      100% of vendor offers for these items originate from {entity.item.country_name}:
+                    </p>
+                    <div className="flex flex-wrap gap-1 pt-1">
+                      {entity.item.single_country_components.map((sku) => (
+                        <span
+                          key={sku}
+                          className="px-2 py-0.5 rounded bg-amber-900/70 border border-amber-700 text-amber-200 font-mono text-[10px]"
+                        >
+                          {sku}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="p-4 bg-slate-900/60 rounded-lg border border-slate-800 text-center py-6">
+                <p className="text-text-muted text-xs">No supply-chain data available for this region.</p>
               </div>
+            )}
+          </div>
+        )}
+
+        {/* ----------------- STATE / PROVINCE CONTENT ----------------- */}
+        {entity.type === 'state' && (
+          <div className="space-y-4 text-xs">
+            <div className="p-3 bg-slate-900/80 rounded-lg border border-slate-800 space-y-1">
+              <span className="text-[10px] uppercase font-bold text-cyan-400">Regional Jurisdiction</span>
+              <div className="text-sm font-bold text-white">{entity.stateName}</div>
+              <div className="text-xs text-text-muted">{entity.countryName} ({entity.countryCode})</div>
+            </div>
+
+            {entity.matchedSuppliers.length === 0 && entity.matchedWarehouses.length === 0 ? (
+              <div className="p-4 bg-slate-900/60 rounded-lg border border-slate-800 text-center py-6">
+                <p className="text-text-muted text-xs">No supply-chain data available for this region.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {entity.matchedSuppliers.length > 0 && (
+                  <div className="space-y-2">
+                    <span className="font-semibold text-slate-300 block">
+                      Suppliers Located Here ({entity.matchedSuppliers.length})
+                    </span>
+                    <ul className="space-y-1.5 max-h-48 overflow-y-auto divide-y divide-slate-800">
+                      {entity.matchedSuppliers.map((s) => (
+                        <li key={s.code} className="pt-1.5 first:pt-0 flex items-center justify-between">
+                          <div>
+                            <Link to={`/suppliers?search=${encodeURIComponent(s.code)}`} className="font-semibold text-cyan-400 hover:underline">
+                              {s.name}
+                            </Link>
+                            <div className="text-[10px] text-text-muted font-mono">{s.code}</div>
+                          </div>
+                          <span
+                            className="px-1.5 py-0.5 rounded text-[10px] uppercase font-bold border"
+                            style={{
+                              color: RISK_PALETTE[s.risk_band]?.fillColor || '#94a3b8',
+                              borderColor: RISK_PALETTE[s.risk_band]?.fillColor || '#94a3b8',
+                            }}
+                          >
+                            {s.risk_band}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {entity.matchedWarehouses.length > 0 && (
+                  <div className="space-y-2 pt-2 border-t border-slate-800">
+                    <span className="font-semibold text-slate-300 block">
+                      Warehouses ({entity.matchedWarehouses.length})
+                    </span>
+                    <ul className="space-y-1.5">
+                      {entity.matchedWarehouses.map((w) => (
+                        <li key={w.code} className="flex items-center justify-between">
+                          <div>
+                            <Link to="/inventory" className="font-semibold text-sky-400 hover:underline">
+                              {w.name}
+                            </Link>
+                            <div className="text-[10px] text-text-muted font-mono">{w.code} &bull; {w.role}</div>
+                          </div>
+                          <span className="text-[11px] font-mono text-slate-300">
+                            {w.inventory_summary.total_on_hand.toLocaleString()} units
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {entity.hasApproximateInCountry && (
+              <p className="text-[11px] text-text-muted italic pt-2 border-t border-slate-800 leading-normal">
+                Approximate (country-level) suppliers are not placed in states.
+              </p>
             )}
           </div>
         )}

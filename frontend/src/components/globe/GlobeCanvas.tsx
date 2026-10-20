@@ -7,12 +7,22 @@ import type {
   GlobeWarehouse,
 } from '../../api/types';
 import { RISK_PALETTE, type RiskLevelKey } from '../../theme/riskPalette';
+import { computePointOnPolygon, declutterLabels, isFarSide } from '../../lib/geo';
+import {
+  ADMIN1_REGISTRY,
+  isCameraOverCountry,
+  loadAdmin1Data,
+  selectCountryLabels,
+  type GlobeLabelItem,
+} from '../../lib/geoLabels';
 import { escapeHtml } from './escapeHtml';
 
 export interface GlobeCanvasHandle {
   pointOfView: (pov: { lat?: number; lng?: number; altitude?: number }, duration?: number) => void;
   fitToLocations: (locations: { lat: number; lon: number }[]) => void;
   resetView: () => void;
+  zoomIn: () => void;
+  zoomOut: () => void;
 }
 
 export interface GroupedPoint {
@@ -39,6 +49,8 @@ interface GlobeCanvasProps {
   showWarehouses: boolean;
   showRoutes: boolean;
   showConcentration: boolean;
+  showLabels?: boolean;
+  showStateLabels?: boolean;
   selectedEntityCode?: string | null;
   onSelectEntity: (
     entity:
@@ -46,10 +58,14 @@ interface GlobeCanvasProps {
       | { type: 'warehouse'; item: GlobeWarehouse }
   ) => void;
   onSelectCluster: (cluster: GroupedPoint) => void;
-  onSelectCountry: (country: GlobeConcentration) => void;
+  onSelectCountry: (country: GlobeConcentration | { country_code: string; country_name: string; [key: string]: any }) => void;
+  onSelectState?: (stateName: string, countryName: string, countryCode: string, feature: any) => void;
   isClickToPlaceActive?: boolean;
   onGlobeClickCoords?: (coords: { lat: number; lon: number }) => void;
   onWebGLFailure?: () => void;
+  scrollGuard?: boolean;
+  isGlobeActive?: boolean;
+  onActivateGlobe?: () => void;
 }
 
 export const GlobeCanvas = React.forwardRef<GlobeCanvasHandle, GlobeCanvasProps>(
@@ -63,35 +79,49 @@ export const GlobeCanvas = React.forwardRef<GlobeCanvasHandle, GlobeCanvasProps>
       showWarehouses,
       showRoutes,
       showConcentration,
+      showLabels = true,
+      showStateLabels = true,
       selectedEntityCode,
       onSelectEntity,
       onSelectCluster,
       onSelectCountry,
+      onSelectState,
       isClickToPlaceActive = false,
       onGlobeClickCoords,
+      scrollGuard = false,
+      isGlobeActive = false,
+      onActivateGlobe,
     }: GlobeCanvasProps,
     ref
   ) => {
-  const globeEl = useRef<GlobeMethods | undefined>(undefined);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [dimensions, setDimensions] = useState<{ width: number; height: number }>({
-    width: 800,
-    height: 600,
-  });
-  const [countriesGeoJson, setCountriesGeoJson] = useState<any[]>([]);
-  const [isReducedMotion, setIsReducedMotion] = useState<boolean>(() => {
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
-    return Boolean(window.matchMedia('(prefers-reduced-motion: reduce)')?.matches);
-  });
+    const globeEl = useRef<GlobeMethods | undefined>(undefined);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [dimensions, setDimensions] = useState<{ width: number; height: number }>({
+      width: 800,
+      height: 600,
+    });
+    const [countriesGeoJson, setCountriesGeoJson] = useState<any[]>([]);
+    const [countryLabelsRaw, setCountryLabelsRaw] = useState<any[]>([]);
+    const [admin1Features, setAdmin1Features] = useState<any[]>([]);
+    const [admin1Country, setAdmin1Country] = useState<string | null>(null);
+    const [cameraPov, setCameraPov] = useState<{ lat: number; lng: number; altitude: number }>({
+      lat: 20,
+      lng: 0,
+      altitude: 2.5,
+    });
+    const [isReducedMotion, setIsReducedMotion] = useState<boolean>(() => {
+      if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
+      return Boolean(window.matchMedia('(prefers-reduced-motion: reduce)')?.matches);
+    });
 
-  // Detect prefers-reduced-motion changes
-  useEffect(() => {
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const listener = (e: MediaQueryListEvent) => setIsReducedMotion(e.matches);
-    mediaQuery?.addEventListener?.('change', listener);
-    return () => mediaQuery?.removeEventListener?.('change', listener);
-  }, []);
+    // Detect prefers-reduced-motion changes
+    useEffect(() => {
+      if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+      const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+      const listener = (e: MediaQueryListEvent) => setIsReducedMotion(e.matches);
+      mediaQuery?.addEventListener?.('change', listener);
+      return () => mediaQuery?.removeEventListener?.('change', listener);
+    }, []);
 
     // Resize handling
     useEffect(() => {
@@ -119,13 +149,189 @@ export const GlobeCanvas = React.forwardRef<GlobeCanvasHandle, GlobeCanvasProps>
             setCountriesGeoJson(data.features);
           }
         })
-        .catch(() => {
-          // Fallback gracefully without polygon layer
-        });
+        .catch(() => {});
       return () => {
         isMounted = false;
       };
     }, []);
+
+    // Load country labels dataset
+    useEffect(() => {
+      let isMounted = true;
+      fetch('/globe/country-labels.json')
+        .then((res) => (res.ok ? res.json() : []))
+        .then((data) => {
+          if (isMounted && Array.isArray(data)) {
+            setCountryLabelsRaw(data);
+          }
+        })
+        .catch(() => {});
+      return () => {
+        isMounted = false;
+      };
+    }, []);
+
+    // Track camera POV throttled on orbit controls change
+    useEffect(() => {
+      if (!globeEl.current) return;
+      const controls = (globeEl.current as any).controls?.();
+      if (!controls) return;
+
+      let timeoutId: any = null;
+      const handleChange = () => {
+        if (timeoutId) clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+          if (globeEl.current) {
+            const pov = globeEl.current.pointOfView();
+            if (pov) {
+              setCameraPov(pov);
+            }
+          }
+        }, 120);
+      };
+
+      controls.addEventListener('end', handleChange);
+      return () => {
+        controls.removeEventListener('end', handleChange);
+        if (timeoutId) clearTimeout(timeoutId);
+      };
+    }, []);
+
+    // Scroll guard configuration on OrbitControls
+    useEffect(() => {
+      if (!scrollGuard || !globeEl.current) return;
+      const controls = (globeEl.current as any).controls?.();
+      if (controls) {
+        controls.enableZoom = Boolean(isGlobeActive);
+      }
+    }, [scrollGuard, isGlobeActive]);
+
+    // Check camera over India or USA and lazily load Admin-1 when altitude < 1.5
+    useEffect(() => {
+      if (cameraPov.altitude >= 1.5) {
+        if (admin1Features.length > 0) {
+          setAdmin1Features([]);
+          setAdmin1Country(null);
+        }
+        return;
+      }
+
+      const matchedCountry = ADMIN1_REGISTRY.find((c) => isCameraOverCountry(cameraPov, c, 1.5));
+      if (!matchedCountry) {
+        if (admin1Features.length > 0) {
+          setAdmin1Features([]);
+          setAdmin1Country(null);
+        }
+        return;
+      }
+
+      if (admin1Country === matchedCountry.code && admin1Features.length > 0) {
+        return;
+      }
+
+      let isMounted = true;
+      loadAdmin1Data(matchedCountry.code)
+        .then((data) => {
+          if (isMounted && data && Array.isArray(data.features)) {
+            setAdmin1Features(data.features);
+            setAdmin1Country(matchedCountry.code);
+          }
+        })
+        .catch(() => {});
+
+      return () => {
+        isMounted = false;
+      };
+    }, [cameraPov, admin1Country, admin1Features.length]);
+
+    // Extract Admin-1 boundary paths for lines on globe
+    const admin1Paths = useMemo(() => {
+      if (!admin1Features || admin1Features.length === 0) return [];
+      const paths: Array<{ coords: [number, number][]; name: string }> = [];
+      for (const feat of admin1Features) {
+        const geom = feat.geometry;
+        if (!geom) continue;
+        if (geom.type === 'Polygon') {
+          for (const ring of geom.coordinates) {
+            paths.push({
+              coords: ring.map(([lon, lat]: [number, number]) => [lat, lon]),
+              name: feat.properties?.name || '',
+            });
+          }
+        } else if (geom.type === 'MultiPolygon') {
+          for (const poly of geom.coordinates) {
+            for (const ring of poly) {
+              paths.push({
+                coords: ring.map(([lon, lat]: [number, number]) => [lat, lon]),
+                name: feat.properties?.name || '',
+              });
+            }
+          }
+        }
+      }
+      return paths;
+    }, [admin1Features]);
+
+    // Active Labels (Countries + States/Provinces with LOD and Screen-space declutter)
+    const candidateLabels = useMemo(() => {
+      if (showLabels === false) return [];
+
+      // 1. Country candidates filtered by altitude and far-side
+      const candidateCountries = selectCountryLabels(countryLabelsRaw, cameraPov);
+
+      // 2. State candidates if camera is zoomed over country
+      const candidateStates: GlobeLabelItem[] = [];
+      if (showStateLabels !== false && admin1Features.length > 0 && admin1Country) {
+        const cfg = ADMIN1_REGISTRY.find((c) => c.code === admin1Country);
+        for (const feat of admin1Features) {
+          const lat = feat.properties?.latitude ?? computePointOnPolygon(feat.geometry).lat;
+          const lng = feat.properties?.longitude ?? computePointOnPolygon(feat.geometry).lon;
+          if (!isFarSide(cameraPov, { lat, lng }, 80)) {
+            candidateStates.push({
+              id: `state-${feat.properties?.name || lat}`,
+              name: feat.properties?.name_en || feat.properties?.name || '',
+              lat,
+              lng,
+              rank: (feat.properties?.labelrank ?? 4) + 1,
+              type: 'state',
+              countryCode: cfg?.iso2 || '',
+              countryName: cfg?.name || '',
+              feature: feat,
+              fontSize: 10,
+            });
+          }
+        }
+      }
+
+      return [...candidateCountries, ...candidateStates];
+    }, [
+      showLabels,
+      showStateLabels,
+      countryLabelsRaw,
+      cameraPov,
+      admin1Features,
+      admin1Country,
+    ]);
+
+    const [activeLabels, setActiveLabels] = useState<any[]>(candidateLabels);
+
+    useEffect(() => {
+      if (candidateLabels.length === 0) {
+        setActiveLabels([]);
+        return;
+      }
+
+      if (globeEl.current && typeof (globeEl.current as any).getScreenCoords === 'function') {
+        const decluttered = declutterLabels(
+          candidateLabels,
+          (lat, lng) => (globeEl.current as any).getScreenCoords(lat, lng, 0.01),
+          dimensions
+        );
+        setActiveLabels(decluttered);
+      } else {
+        setActiveLabels(candidateLabels);
+      }
+    }, [candidateLabels, dimensions]);
 
     // Map concentration data keyed by ISO alpha-2 and name
     const concentrationMap = useMemo(() => {
@@ -166,7 +372,6 @@ export const GlobeCanvas = React.forwardRef<GlobeCanvasHandle, GlobeCanvasProps>
       if (showSuppliers) {
         suppliers.forEach((s) => {
           if (!s.location || s.location.lat == null || s.location.lon == null) return;
-          // Group by coordinate rounded to 3 decimals (~100m)
           const key = `${s.location.lat.toFixed(3)},${s.location.lon.toFixed(3)}`;
           const isApprox = s.location.precision === 'country_centroid';
           const hasDelays = s.overdue_po_count > 0 || s.slipped_po_count > 0;
@@ -191,7 +396,6 @@ export const GlobeCanvas = React.forwardRef<GlobeCanvasHandle, GlobeCanvasProps>
           g.openPoCount += s.open_po_count;
           if (hasDelays) g.hasOverdueOrSlipped = true;
           if (isApprox) g.isApproximate = true;
-          // Elevate primary risk if worse
           if (s.risk_band === 'critical') g.primaryRisk = 'critical';
           else if (s.risk_band === 'high' && g.primaryRisk !== 'critical') g.primaryRisk = 'high';
           if (g.count > 1) g.type = 'cluster';
@@ -245,7 +449,6 @@ export const GlobeCanvas = React.forwardRef<GlobeCanvasHandle, GlobeCanvasProps>
         const startColor = RISK_PALETTE[suppRisk]?.fillColor || '#94a3b8';
         const endColor = '#38bdf8'; // warehouse accent
 
-        // Thicker and vibrant red-orange for routes with delays or critical suppliers
         const isProblematic =
           r.any_overdue || r.any_slipped || suppRisk === 'critical' || suppRisk === 'high';
 
@@ -297,13 +500,37 @@ export const GlobeCanvas = React.forwardRef<GlobeCanvasHandle, GlobeCanvasProps>
           globeEl.current.pointOfView({ lat: 20, lng: 0, altitude: 2.5 }, dur);
         }
       },
+      zoomIn: () => {
+        if (globeEl.current) {
+          const pov = globeEl.current.pointOfView();
+          const dur = isReducedMotion ? 0 : 400;
+          globeEl.current.pointOfView({ ...pov, altitude: Math.max(0.5, pov.altitude * 0.7) }, dur);
+        }
+      },
+      zoomOut: () => {
+        if (globeEl.current) {
+          const pov = globeEl.current.pointOfView();
+          const dur = isReducedMotion ? 0 : 400;
+          globeEl.current.pointOfView({ ...pov, altitude: Math.min(5.0, pov.altitude * 1.4) }, dur);
+        }
+      },
     }));
 
     return (
       <div
         ref={containerRef}
         data-testid="globe-canvas-container"
-        className="relative w-full h-full flex-1 bg-[#070b14] overflow-hidden select-none"
+        onClick={() => {
+          if (scrollGuard && !isGlobeActive && onActivateGlobe) {
+            onActivateGlobe();
+          }
+        }}
+        onWheel={(e) => {
+          if (scrollGuard && !isGlobeActive && (e.ctrlKey || e.metaKey)) {
+            onActivateGlobe?.();
+          }
+        }}
+        className="relative w-full h-full flex-1 bg-[#070b14] overflow-hidden select-none outline-none"
       >
         <Globe
           ref={globeEl as any}
@@ -333,8 +560,8 @@ export const GlobeCanvas = React.forwardRef<GlobeCanvasHandle, GlobeCanvasProps>
           }}
           pointColor={(d: any) => {
             const p = d as GroupedPoint;
-            if (p.type === 'cluster') return '#22d3ee'; // cyan cluster
-            if (p.type === 'warehouse') return '#38bdf8'; // warehouse accent
+            if (p.type === 'cluster') return '#22d3ee';
+            if (p.type === 'warehouse') return '#38bdf8';
             const band = p.primaryRisk || 'unknown';
             return RISK_PALETTE[band]?.fillColor || '#94a3b8';
           }}
@@ -422,7 +649,7 @@ export const GlobeCanvas = React.forwardRef<GlobeCanvasHandle, GlobeCanvasProps>
             const cCode = d.properties?.ISO_A2 || d.properties?.ADM0_A3 || '';
             const cData = concentrationMap.get(cCode.toUpperCase()) || concentrationMap.get((d.properties?.NAME || '').toLowerCase());
             if (cData && cData.flagged) {
-              return '#f59e0b'; // amber outline for flagged
+              return '#f59e0b';
             }
             return 'rgba(56, 189, 248, 0.2)';
           }}
@@ -433,9 +660,8 @@ export const GlobeCanvas = React.forwardRef<GlobeCanvasHandle, GlobeCanvasProps>
               return 'rgba(15, 23, 42, 0.2)';
             }
             if (cData.flagged) {
-              return 'rgba(245, 158, 11, 0.35)'; // amber tint for flagged concentration
+              return 'rgba(245, 158, 11, 0.35)';
             }
-            // Graduated cyan based on supplier count
             const alpha = Math.min(0.4, 0.15 + cData.supplier_count * 0.08);
             return `rgba(56, 189, 248, ${alpha})`;
           }}
@@ -475,15 +701,82 @@ export const GlobeCanvas = React.forwardRef<GlobeCanvasHandle, GlobeCanvasProps>
             const cData = concentrationMap.get(cCode.toUpperCase()) || concentrationMap.get((d.properties?.NAME || '').toLowerCase());
             if (cData) {
               onSelectCountry(cData);
+            } else {
+              onSelectCountry({
+                country_code: cCode,
+                country_name: d.properties?.NAME || cCode,
+                supplier_count: 0,
+                flagged: false,
+                risk_distribution: {},
+                high_risk_suppliers: [],
+                single_country_components: [],
+                open_po_count: 0,
+                remaining_qty: 0,
+                reason: null,
+              });
             }
           }}
-          // Globe surface click (used for "Click on globe to place" mode)
+          // Geographic Labels Layer
+          labelsData={activeLabels}
+          labelLat="lat"
+          labelLng="lng"
+          labelText="name"
+          labelSize={(d: any) => (d.type === 'state' ? 0.65 : 0.8)}
+          labelColor={() => 'rgba(241, 245, 249, 0.95)'}
+          labelAltitude={0.01}
+          labelResolution={2}
+          labelDotRadius={0}
+          onLabelClick={(d: any) => {
+            if (d.type === 'state') {
+              onSelectState?.(d.name, d.countryName, d.countryCode, d.feature);
+            } else {
+              const cCode = d.countryCode || '';
+              const cData =
+                concentrationMap.get(cCode.toUpperCase()) ||
+                concentrationMap.get((d.countryName || d.name).toLowerCase());
+              if (cData) {
+                onSelectCountry(cData);
+              } else {
+                onSelectCountry({
+                  country_code: cCode,
+                  country_name: d.countryName || d.name,
+                  supplier_count: 0,
+                  flagged: false,
+                  risk_distribution: {},
+                  high_risk_suppliers: [],
+                  single_country_components: [],
+                  open_po_count: 0,
+                  remaining_qty: 0,
+                  reason: null,
+                });
+              }
+            }
+          }}
+          // Admin-1 State Boundary Paths Layer
+          pathsData={admin1Paths}
+          pathPoints="coords"
+          pathColor={() => 'rgba(148, 163, 184, 0.4)'}
+          pathStroke={0.6}
+          pathPointAlt={0.003}
+          // Globe surface click
           onGlobeClick={({ lat, lng }) => {
             if (isClickToPlaceActive && onGlobeClickCoords) {
               onGlobeClickCoords({ lat, lon: lng });
             }
           }}
         />
+
+        {/* Scroll Guard Notice */}
+        {scrollGuard && !isGlobeActive && (
+          <div
+            className="absolute inset-x-0 bottom-3 flex justify-center pointer-events-none z-10"
+            aria-live="polite"
+          >
+            <span className="bg-slate-900/90 text-slate-200 text-xs px-3 py-1.5 rounded-full border border-slate-700 shadow-md backdrop-blur-xs">
+              Click the globe to zoom with the mouse wheel
+            </span>
+          </div>
+        )}
 
         {/* Click to place indicator banner */}
         {isClickToPlaceActive && (

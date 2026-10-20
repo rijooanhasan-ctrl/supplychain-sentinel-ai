@@ -85,3 +85,20 @@ If the user's browser or device does not support WebGL hardware acceleration:
 - The page seamlessly switches to `GlobeListFallback`, presenting all suppliers, warehouses, coordinates, and open order pipelines in an accessible, sortable table.
 - Users can toggle between the 3D Globe and Locations List at any time using the top floating view switcher.
 - Respects `prefers-reduced-motion`: Disables smooth camera animation pans and point pulsing when the operating system requests reduced motion.
+
+---
+
+## 7. Geographic Labels, Admin-1 Boundaries & Licensing
+
+Geographic labels and state/province boundary datasets are bundled locally and operate 100% offline:
+
+| Dataset | File | Features | Source & License |
+|---|---|---|---|
+| Country Labels | `country-labels.json` | 177 countries | Natural Earth 110m Admin-0 Countries (Public Domain) |
+| India Admin-1 | `admin1/IND.geojson` | 36 States & UTs | Natural Earth 50m Admin-1 States & Provinces (Public Domain) |
+| United States Admin-1 | `admin1/USA.geojson` | 51 States & DC | Natural Earth 50m Admin-1 States & Provinces (Public Domain) |
+
+- **Source URL:** [Natural Earth Vector](https://github.com/nvkelso/natural-earth-vector/blob/master/geojson/ne_50m_admin_1_states_provinces.geojson)
+- **License:** Public Domain. Free for use in any project without restriction.
+- **Generation Script:** `frontend/scripts/build-geo-data.mjs` regenerates the filtered per-country files and country label centroid index using only standard Node built-ins.
+- **Disclaimer:** Boundaries and names are shown strictly as provided by Natural Earth and do not imply any political endorsement or territorial opinion by the application or its developers.

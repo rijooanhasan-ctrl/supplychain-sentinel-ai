@@ -13,14 +13,14 @@ export const GlobeBottomStrip: React.FC<GlobeBottomStripProps> = ({
   dataset,
   as_of,
   coverage,
-  suppliers,
+  suppliers = [],
 }) => {
   const isUploaded = dataset?.active_dataset === 'uploaded';
   const label = dataset?.label || (isUploaded ? 'UPLOADED DATA' : 'DEMO DATA');
   const genAt = dataset?.generated_at ? String(dataset.generated_at).replace('T', ' ').substring(0, 19) : '—';
 
   // Compute risk distribution
-  const riskCounts = suppliers.reduce<Record<string, number>>((acc, s) => {
+  const riskCounts = (suppliers || []).reduce<Record<string, number>>((acc, s) => {
     const band = s.risk_band || 'unknown';
     acc[band] = (acc[band] || 0) + 1;
     return acc;

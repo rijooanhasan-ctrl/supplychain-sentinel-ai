@@ -20,6 +20,8 @@ export interface GlobeFilterState {
   showWarehouses: boolean;
   showRoutes: boolean;
   showConcentration: boolean;
+  showLabels?: boolean;
+  showStateLabels?: boolean;
 }
 
 interface GlobeFilterSidebarProps {
@@ -309,6 +311,32 @@ export const GlobeFilterSidebar: React.FC<GlobeFilterSidebarProps> = ({
                       Supplier Risk Concentration ({concentration.filter((c) => c.flagged).length} flagged)
                     </span>
                   </label>
+                  <label className="flex items-center gap-2 cursor-pointer select-none pt-1 border-t border-slate-800">
+                    <input
+                      type="checkbox"
+                      checked={filters.showLabels !== false}
+                      aria-label="Toggle Geographic Labels layer"
+                      onChange={(e) =>
+                        onChangeFilters({ ...filters, showLabels: e.target.checked })
+                      }
+                      className="rounded accent-cyan-500"
+                    />
+                    <span className="text-slate-300 font-medium">Geographic Labels</span>
+                  </label>
+                  {filters.showLabels !== false && (
+                    <label className="flex items-center gap-2 cursor-pointer select-none pl-6 text-[11px]">
+                      <input
+                        type="checkbox"
+                        checked={filters.showStateLabels !== false}
+                        aria-label="Toggle State and Province Names"
+                        onChange={(e) =>
+                          onChangeFilters({ ...filters, showStateLabels: e.target.checked })
+                        }
+                        className="rounded accent-cyan-500"
+                      />
+                      <span className="text-slate-400">State/province names</span>
+                    </label>
+                  )}
                 </div>
               </div>
 
@@ -503,6 +531,12 @@ export const GlobeFilterSidebar: React.FC<GlobeFilterSidebarProps> = ({
                       3
                     </div>
                     <span>Grouped Marker (Multiple entities at same coordinate)</span>
+                  </div>
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-4 text-center font-sans font-bold text-xs text-slate-300">
+                      Aa
+                    </span>
+                    <span>Geographic labels (Country &amp; state boundaries)</span>
                   </div>
                 </div>
               </div>

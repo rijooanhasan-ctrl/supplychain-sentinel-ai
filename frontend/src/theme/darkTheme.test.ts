@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import indexCssContent from '../index.css?raw';
+import fs from 'node:fs';
+import path from 'node:path';
 import { RISK_PALETTE, getContrastRatio, type RiskLevelKey } from './riskPalette';
+
+const indexCssContent = fs.readFileSync(path.resolve(__dirname, '../index.css'), 'utf8');
 
 describe('App-Wide Dark Theme & Accessibility Tokens', () => {
   it('declares dark design tokens on :root and color-scheme: dark', () => {
