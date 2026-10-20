@@ -318,8 +318,15 @@ export const SupplyChainGlobe: React.FC<SupplyChainGlobeProps> = ({
   const filteredRoutes = useMemo(() => {
     if (!data?.routes) return [];
     if (mode === 'compact') return compactShowRoutes ? data.routes : [];
-    return filters.showRoutes ? data.routes : [];
-  }, [data, filters.showRoutes, mode, compactShowRoutes]);
+    if (!filters.showRoutes) return [];
+
+    return data.routes.filter((r) => {
+      if (filters.poStatus === 'overdue' && !r.any_overdue) return false;
+      if (filters.poStatus === 'slipped' && !r.any_slipped) return false;
+      if (filters.selectedWarehouse && r.warehouse_code !== filters.selectedWarehouse) return false;
+      return true;
+    });
+  }, [data, filters.showRoutes, filters.poStatus, filters.selectedWarehouse, mode, compactShowRoutes]);
 
   // Top 5 locations for compact WebGL fallback
   const topLocations = useMemo(() => {
@@ -468,7 +475,7 @@ export const SupplyChainGlobe: React.FC<SupplyChainGlobeProps> = ({
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full border border-amber-400 bg-amber-950/60" />
-            <span>Concentration</span>
+            <span>Areas With the Most Problems</span>
           </div>
         </div>
 
@@ -577,7 +584,7 @@ export const SupplyChainGlobe: React.FC<SupplyChainGlobeProps> = ({
                     type: 'supplier',
                     riskBand: s.risk_band,
                     riskScore: s.risk_score,
-                    details: `${s.country} &bull; ${(s.on_time_rate * 100).toFixed(0)}% on-time &bull; ${s.open_po_count} open POs`,
+                    details: `${s.country} • ${(s.on_time_rate * 100).toFixed(0)}% on-time • ${s.open_po_count} open POs`,
                     linkUrl: `/globe?supplier=${encodeURIComponent(s.code)}`,
                   });
                 } else {
@@ -586,7 +593,7 @@ export const SupplyChainGlobe: React.FC<SupplyChainGlobeProps> = ({
                     title: w.name,
                     code: w.code,
                     type: 'warehouse',
-                    details: `${w.role} &bull; ${w.inventory_summary.total_on_hand.toLocaleString()} units`,
+                    details: `${w.role} • ${w.inventory_summary.total_on_hand.toLocaleString()} units`,
                     linkUrl: '/inventory',
                   });
                 }
@@ -655,10 +662,9 @@ export const SupplyChainGlobe: React.FC<SupplyChainGlobeProps> = ({
                 )}
 
                 {compactPopover.details && (
-                  <p
-                    className="text-slate-300 text-[11px]"
-                    dangerouslySetInnerHTML={{ __html: compactPopover.details }}
-                  />
+                  <p className="text-slate-300 text-[11px]">
+                    {compactPopover.details}
+                  </p>
                 )}
 
                 {compactPopover.linkUrl && (

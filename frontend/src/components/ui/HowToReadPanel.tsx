@@ -31,19 +31,19 @@ export const HowToReadPanel: React.FC<{ className?: string }> = ({ className = '
         <div id="how-to-read-content" className="space-y-4 pt-2 border-t border-border-subtle text-xs text-text-secondary leading-relaxed">
           <ul className="space-y-2 list-disc list-inside">
             <li>
-              <strong>Executive Headline:</strong> Highlights the single most pressing supply chain disruption derived from live inventory models, giving immediate situational awareness.
+              <strong>Overall Status Badge:</strong> Pre-registered assessment based on component stockouts, critical alerts, late deliveries, and supplier performance with a plain-language summary of counts.
             </li>
             <li>
-              <strong>Runway Chart (Stock Duration):</strong> The solid colored bar shows how many days current usable plant inventory will last under average consumption.
+              <strong>Where the Problems Are (Compact Globe):</strong> Geospatial view of vendors, warehouses, and delayed routes. Click to activate wheel zoom and select entities to view details or jump to the Global Map.
             </li>
             <li>
-              <strong>Shortage Gap & Red Hatching:</strong> When stock runs out before the next shipment arrives, a red hatched bar depicts the gap days along with the unmet component deficit.
+              <strong>What You Should Do Next:</strong> Plain-language prioritized decision guidance and urgent disruption alerts linking directly to evaluated recommendations.
             </li>
             <li>
-              <strong>Delivery Markers (▼):</strong> Inbound purchase order arrival dates are marked along the timeline with their order quantities and date basis (promised vs estimated).
+              <strong>Runway Chart (Stock Duration):</strong> The solid colored bar shows how many days current usable stock will last under average consumption. Red hatched bars depict stockout gaps before replenishment.
             </li>
             <li>
-              <strong>Accessibility & Greyscale Patterns:</strong> Colors are reinforced with distinct geometric SVG patterns so charts remain clearly readable across monochrome screens and for color-blind viewers.
+              <strong>Suppliers Needing Attention & Delivery Schedule:</strong> Track vendor on-time fulfillment rates and expand the incoming delivery schedule for chronological purchase order details.
             </li>
           </ul>
 

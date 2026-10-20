@@ -80,4 +80,29 @@ export const GLOSSARY: Record<string, GlossaryTerm> = {
     definition:
       'An open purchase order whose expected delivery date has already passed relative to the system snapshot date without confirmation of receipt.',
   },
+  what_you_should_do_next: {
+    term: 'What You Should Do Next',
+    shortLabel: 'Recommended next actions',
+    definition:
+      'Prioritized decision guidance and tactical recovery steps derived from active stockout risks and disruption alerts.',
+  },
+  areas_with_problems: {
+    term: 'Areas With the Most Problems',
+    shortLabel: 'Geographic risk concentration',
+    definition:
+      'Calculated from loaded supplier data, not a live disruption feed. Highlights regions hosting 40% or more of component suppliers or single-source critical vendors.',
+  },
+  parts_that_may_run_out: {
+    term: 'Parts That May Run Out',
+    shortLabel: 'Components at stockout risk',
+    definition:
+      'Catalog components evaluated as critical, high, or medium risk based on projected days of usable stock remaining.',
+  },
+  suppliers_at_risk: {
+    term: 'Suppliers at Risk',
+    shortLabel: 'Vendors with reliability issues',
+    definition:
+      'Active suppliers whose delivery punctuality, delay frequency, or historical fulfillment accuracy places them in high or medium risk bands.',
+  },
 };
+

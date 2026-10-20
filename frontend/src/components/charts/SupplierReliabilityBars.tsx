@@ -39,10 +39,10 @@ export const SupplierReliabilityBars: React.FC<SupplierReliabilityBarsProps> = (
 
         return (
           <Link
-            key={s.supplier_id}
-            to={`/supplier-risk?supplier_code=${s.supplier_code}`}
+            key={s.supplier_id ?? s.supplier_code ?? (s as any).code}
+            to={`/supplier-risk?supplier_code=${s.supplier_code || (s as any).code}`}
             className="group block p-2.5 bg-elevated hover:bg-hover border border-border-subtle rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-accent-primary"
-            data-testid={`supplier-bar-row-${s.supplier_code}`}
+            data-testid={`supplier-bar-row-${s.supplier_code || (s as any).code}`}
           >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs mb-1.5">
               <div className="flex items-center gap-2 flex-wrap">

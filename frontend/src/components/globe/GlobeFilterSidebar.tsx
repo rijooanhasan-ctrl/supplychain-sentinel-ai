@@ -301,6 +301,7 @@ export const GlobeFilterSidebar: React.FC<GlobeFilterSidebarProps> = ({
                   <label className="flex items-center gap-2 cursor-pointer select-none pt-1 border-t border-slate-800">
                     <input
                       type="checkbox"
+                      aria-label="Areas With the Most Problems (Supplier Risk Concentration)"
                       checked={filters.showConcentration}
                       onChange={(e) =>
                         onChangeFilters({ ...filters, showConcentration: e.target.checked })
@@ -308,7 +309,10 @@ export const GlobeFilterSidebar: React.FC<GlobeFilterSidebarProps> = ({
                       className="rounded accent-amber-500"
                     />
                     <span className="text-amber-300 font-semibold">
-                      Supplier Risk Concentration ({concentration.filter((c) => c.flagged).length} flagged)
+                      Areas With the Most Problems ({concentration.filter((c) => c.flagged).length} flagged)
+                    </span>
+                    <span className="text-[10px] text-text-muted block">
+                      Calculated from loaded supplier data, not a live disruption feed
                     </span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer select-none pt-1 border-t border-slate-800">
@@ -571,7 +575,7 @@ export const GlobeFilterSidebar: React.FC<GlobeFilterSidebarProps> = ({
               </div>
 
               <div className="space-y-2 pt-2 border-t border-slate-700/60">
-                <h3 className="font-bold text-white text-sm">Routes &amp; Concentration</h3>
+                <h3 className="font-bold text-white text-sm">Routes &amp; Areas With the Most Problems</h3>
                 <p className="text-[11px] leading-relaxed text-slate-300">
                   Arced routes indicate planned purchase orders connecting a vendor to a receiving facility. Red-orange arcs signify open purchase orders with delivery delays or high-risk suppliers.
                 </p>
