@@ -258,6 +258,10 @@ export interface ReplenishmentInfo {
 export interface InventoryRiskSummary {
   counts_by_risk_level: Record<RiskLevel, number>;
   components_evaluated: number;
+  high_risk_count?: number;
+  critical_impact_count?: number;
+  runout_before_replenishment_count?: number;
+  data_attention_count?: number;
 }
 
 export interface ShortageEpisode {
@@ -292,6 +296,14 @@ export interface InventoryRiskItem {
   risk_reason: string;
   forecast_status: string;
   flags: RiskFlag[];
+  recommended_action?: string;
+  recommended_action_type?: string;
+  supply_gap_days?: number | null;
+  data_confidence?: 'high' | 'medium' | 'low' | 'insufficient';
+  primary_supplier_code?: string | null;
+  primary_supplier_name?: string | null;
+  primary_supplier_country?: string | null;
+  plant_warehouse_name?: string | null;
 }
 
 export interface InventoryRiskListResponse {

@@ -452,19 +452,42 @@ export const GlobeCanvas = React.forwardRef<GlobeCanvasHandle, GlobeCanvasProps>
         const isProblematic =
           r.any_overdue || r.any_slipped || suppRisk === 'critical' || suppRisk === 'high';
 
+        let sLat = sCoord.lat;
+        let sLng = sCoord.lng;
+        let eLat = wCoord.lat;
+        let eLng = wCoord.lng;
+
+        const dLat = Math.abs(sLat - eLat);
+        const dLng = Math.abs(sLng - eLng);
+        const isLocal = dLat < 0.25 && dLng < 0.25;
+
+        if (isLocal) {
+          // Provide distinct separation for co-located or intra-city facility routes
+          sLat -= 0.15;
+          sLng -= 0.15;
+          eLat += 0.15;
+          eLng += 0.15;
+        }
+
+        const approxDegDist = Math.hypot(sLat - eLat, sLng - eLng);
+        const arcAlt = isLocal
+          ? 0.06
+          : Math.max(0.08, Math.min(0.38, (approxDegDist / 120) * 0.22 + Math.min(0.08, (r.remaining_qty / 5000) * 0.03)));
+
         arcs.push({
-          startLat: sCoord.lat,
-          startLng: sCoord.lng,
-          endLat: wCoord.lat,
-          endLng: wCoord.lng,
+          startLat: sLat,
+          startLng: sLng,
+          endLat: eLat,
+          endLng: eLng,
           color: isProblematic
             ? ['#ea580c', '#f43f5e']
             : [startColor, endColor],
-          stroke: isHighlighted ? (isProblematic ? 1.8 : 1.2) : 0.4,
-          altitude: 0.18 + Math.min(0.2, (r.remaining_qty / 1000) * 0.05),
+          stroke: isHighlighted ? (isProblematic ? 2.0 : 1.4) : 0.5,
+          altitude: arcAlt,
           raw: r,
           supplierName: sCoord.s.name,
           warehouseName: wCoord.w.name,
+          isProblematic,
         });
       });
 
@@ -631,8 +654,10 @@ export const GlobeCanvas = React.forwardRef<GlobeCanvasHandle, GlobeCanvasProps>
           arcColor="color"
           arcAltitude="altitude"
           arcStroke="stroke"
-          arcDashLength={0}
-          arcDashGap={0}
+          arcDashLength={isReducedMotion ? 0 : 0.4}
+          arcDashGap={isReducedMotion ? 0 : 0.25}
+          arcDashInitialGap={(d: any) => (d.isProblematic ? 0.3 : 0)}
+          arcDashAnimateTime={isReducedMotion ? 0 : 2200}
           arcLabel={(d: any) => `
             <div style="background:#0b1329;border:1px solid #38bdf8;padding:6px 10px;border-radius:6px;color:#fff;font-family:sans-serif;font-size:11px;">
               <strong style="color:#38bdf8;">${escapeHtml(d.supplierName)} &rarr; ${escapeHtml(d.warehouseName)}</strong><br/>

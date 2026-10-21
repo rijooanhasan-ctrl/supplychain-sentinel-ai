@@ -13,6 +13,7 @@ import type {
   ValidationErrorItem,
 } from '../api/types';
 import { useMeta } from '../hooks/useMeta';
+import { clearGlobeCache } from '../components/globe/useGlobeData';
 
 interface SelectedFile {
   file: File;
@@ -243,6 +244,8 @@ export function ImportPage() {
       const res = await loadImport({ as_of: asOfDate, files: fileData, replace_uploaded: true });
       if (res.valid) {
         setLoadSuccessMessage(`Now viewing: ${res.label}`);
+        // Clear cached globe data so it reflects the new dataset immediately
+        clearGlobeCache();
         // Reload global metadata and status
         reloadMeta();
         await loadStatus();
@@ -268,6 +271,7 @@ export function ImportPage() {
     try {
       const updated = await activateDataset(target);
       setStatus(updated);
+      clearGlobeCache();
       reloadMeta();
     } catch (err) {
       if (err instanceof ApiError || err instanceof NetworkError) {

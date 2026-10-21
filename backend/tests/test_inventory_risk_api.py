@@ -333,10 +333,72 @@ def test_determinism_and_multiple_seeds(tmp_path):
     json_b = seed_and_fetch(db_file2, seed=42)
     assert json_a == json_b, "Inventory risk API output is non-deterministic for identical seed!"
 
-    # 2. Run for seeds 1..5: no exceptions, CPU-X7 is still critical
     for s in range(1, 6):
         db_file_s = tmp_path / f"seed_{s}.db"
         data_s = seed_and_fetch(db_file_s, seed=s)
         cpu_items = [it for it in data_s["items"] if it["sku"] == "CPU-X7"]
         assert len(cpu_items) == 1
         assert cpu_items[0]["risk_level"] == "critical"
+
+
+def test_search_and_sorting(test_db_setup):
+    client, _, _, _ = test_db_setup
+
+    # Search by SKU
+    res = client.get("/api/inventory-risk?search=CPU-X7")
+    assert res.status_code == 200
+    data = res.json()
+    assert len(data["items"]) == 1
+    assert data["items"][0]["sku"] == "CPU-X7"
+
+    # Search by partial component name case-insensitive
+    res_name = client.get("/api/inventory-risk?search=processor")
+    assert res_name.status_code == 200
+    data_name = res_name.json()
+    assert any("processor" in item["name"].lower() for item in data_name["items"])
+
+    # Sorting by coverage_days asc
+    res_cov = client.get("/api/inventory-risk?sort_by=coverage_days&sort_dir=asc&limit=20")
+    assert res_cov.status_code == 200
+    items_cov = res_cov.json()["items"]
+    valid_covs = [it["coverage_days"] for it in items_cov if it["coverage_days"] is not None]
+    assert valid_covs == sorted(valid_covs)
+
+    # Sorting by shortage_date asc
+    res_short = client.get("/api/inventory-risk?sort_by=shortage_date&sort_dir=asc&limit=20")
+    assert res_short.status_code == 200
+    items_short = res_short.json()["items"]
+    valid_dates = [it["shortage_date"] for it in items_short if it["shortage_date"] is not None]
+    assert valid_dates == sorted(valid_dates)
+
+
+def test_recommendations_and_kpis(test_db_setup):
+    client, _, _, _ = test_db_setup
+
+    res = client.get("/api/inventory-risk?limit=50")
+    assert res.status_code == 200
+    data = res.json()
+
+    # Check KPI metrics
+    summary = data["summary"]
+    assert "high_risk_count" in summary
+    assert "critical_impact_count" in summary
+    assert "runout_before_replenishment_count" in summary
+    assert "data_attention_count" in summary
+    assert summary["high_risk_count"] >= 1
+
+    # Check recommendations on items
+    for item in data["items"]:
+        assert "recommended_action" in item
+        assert "recommended_action_type" in item
+        assert len(item["recommended_action"]) > 0
+        assert item["data_confidence"] in ("high", "medium", "low", "insufficient")
+        assert item["plant_warehouse_name"] is not None
+
+    # Check detail endpoint returns recommendations and location
+    cpu_item = next(it for it in data["items"] if it["sku"] == "CPU-X7")
+    detail_res = client.get(f"/api/inventory-risk/{cpu_item['component_id']}")
+    assert detail_res.status_code == 200
+    detail = detail_res.json()
+    assert detail["recommended_action_type"] in ("expedite_po", "alt_supplier", "regional_transfer", "issue_po")
+    assert detail["plant_warehouse_name"] is not None

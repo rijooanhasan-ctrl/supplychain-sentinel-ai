@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { getImportStatus } from '../../api/endpoints';
 import { useApi } from '../../api/useApi';
@@ -19,6 +19,7 @@ import {
 import { GlobeListFallback } from './GlobeListFallback';
 import { SetLocationModal } from './SetLocationModal';
 import { useGlobeData } from './useGlobeData';
+import { MetaContext } from '../../context/metaContextDef';
 
 function isWebGLSupported(): boolean {
   try {
@@ -51,8 +52,15 @@ export const SupplyChainGlobe: React.FC<SupplyChainGlobeProps> = ({
   // WebGL availability
   const webGlAvailable = useMemo(() => isWebGLSupported(), []);
 
+  // Active dataset context for dynamic globe switching
+  const metaCtx = useContext(MetaContext);
+  const meta = metaCtx?.meta;
+  const datasetKey = meta
+    ? `${meta.active_dataset ?? 'demo'}|${meta.generated_at ?? ''}|${meta.label ?? ''}`
+    : undefined;
+
   // Shared single data hook
-  const { data, loading, error, reload: loadGlobe } = useGlobeData();
+  const { data, loading, error, reload: loadGlobe } = useGlobeData(datasetKey);
 
   const fetchStatus = useCallback((signal: AbortSignal) => getImportStatus(signal), []);
   const { data: statusData } = useApi(fetchStatus);

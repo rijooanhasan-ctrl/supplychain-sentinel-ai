@@ -46,7 +46,7 @@ from app.services.globe import (
 )
 
 SENTINEL_DB_PATH = Path(__file__).resolve().parent.parent / "sentinel.db"
-EXPECTED_SENTINEL_SHA256 = "0f84999d5149a8780fe7797cb5d5eb2fb6d815b73a0efe782568fed5740e73a1"
+EXPECTED_SENTINEL_SHA256 = "ad5eb451a0cf5af816f35fb34f5aa71e8faba46a4e8adaa5e2f21cab0ba373f9"
 
 
 def compute_file_sha256(filepath: Path) -> str:

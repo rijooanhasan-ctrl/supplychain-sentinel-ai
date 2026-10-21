@@ -50,6 +50,10 @@ class ReplenishmentInfoSchema(BaseModel):
 class InventoryRiskSummary(BaseModel):
     counts_by_risk_level: Dict[str, int]
     components_evaluated: int
+    high_risk_count: int = 0
+    critical_impact_count: int = 0
+    runout_before_replenishment_count: int = 0
+    data_attention_count: int = 0
 
 
 class UsableStockBreakdownSchema(BaseModel):
@@ -130,6 +134,14 @@ class InventoryRiskItem(BaseModel):
     risk_reason: str
     forecast_status: str
     flags: List[RiskFlagSchema] = Field(default_factory=list)
+    recommended_action: str = ""
+    recommended_action_type: str = "monitor"
+    supply_gap_days: Optional[int] = None
+    data_confidence: str = "high"
+    primary_supplier_code: Optional[str] = None
+    primary_supplier_name: Optional[str] = None
+    primary_supplier_country: Optional[str] = None
+    plant_warehouse_name: Optional[str] = None
 
 
 class InventoryRiskListResponse(BaseModel):

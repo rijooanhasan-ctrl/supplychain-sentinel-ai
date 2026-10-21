@@ -166,6 +166,9 @@ export function getInventoryRisk(
     category?: string;
     criticality?: string;
     include_inactive?: boolean;
+    search?: string;
+    sort_by?: string;
+    sort_dir?: 'asc' | 'desc';
     limit?: number;
     offset?: number;
   },
@@ -177,6 +180,9 @@ export function getInventoryRisk(
       risk_level: params?.risk_level || undefined,
       category: params?.category || undefined,
       criticality: params?.criticality || undefined,
+      search: params?.search ? params.search.trim() : undefined,
+      sort_by: params?.sort_by || undefined,
+      sort_dir: params?.sort_dir || undefined,
     },
     signal,
   });

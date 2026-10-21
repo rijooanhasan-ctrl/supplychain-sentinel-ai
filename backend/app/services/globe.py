@@ -240,7 +240,11 @@ def build_globe_data(session: Session, settings: Settings) -> Dict[str, Any]:
     unresolved_list: List[Dict[str, Any]] = []
     approx_count = 0
 
+    supp_country_counts: Dict[str, int] = defaultdict(int)
     for s in suppliers:
+        c_key = (s.country or "unknown").strip().upper()
+        c_idx = supp_country_counts[c_key]
+        supp_country_counts[c_key] += 1
         loc_res = resolve_location(
             entity_type="supplier",
             code=s.code,
@@ -248,6 +252,8 @@ def build_globe_data(session: Session, settings: Settings) -> Dict[str, Any]:
             overrides=overrides,
             fixtures=demo_locations,
             country_centroids=country_centroids,
+            name=s.name,
+            index_in_country=c_idx,
         )
 
         r_item = risk_results.get(s.id)
@@ -310,6 +316,7 @@ def build_globe_data(session: Session, settings: Settings) -> Dict[str, Any]:
         inv_by_wh[inv.warehouse_id].append(inv)
 
     resolved_warehouses: List[Dict[str, Any]] = []
+    wh_counts: Dict[str, int] = defaultdict(int)
     for w in warehouses:
         loc_res = resolve_location(
             entity_type="warehouse",
@@ -318,7 +325,10 @@ def build_globe_data(session: Session, settings: Settings) -> Dict[str, Any]:
             overrides=overrides,
             fixtures=demo_locations,
             country_centroids=country_centroids,
+            name=w.name,
+            index_in_country=wh_counts["wh"],
         )
+        wh_counts["wh"] += 1
 
         w_levels = inv_by_wh.get(w.id, [])
         total_oh = sum(lv.on_hand for lv in w_levels)

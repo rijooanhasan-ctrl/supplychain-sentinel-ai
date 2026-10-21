@@ -210,38 +210,253 @@ def resolve_country(
     return None
 
 
+GLOBAL_SUPPLY_CHAIN_HUBS: Dict[str, Dict[str, Any]] = {
+    # India (Key manufacturing, assembly, and tech hubs)
+    "pune": {"lat": 18.5204, "lon": 73.8567, "city": "Pune", "state": "Maharashtra", "country_code": "IN"},
+    "pimpri": {"lat": 18.6298, "lon": 73.7997, "city": "Pimpri-Chinchwad", "state": "Maharashtra", "country_code": "IN"},
+    "chinchwad": {"lat": 18.6298, "lon": 73.7997, "city": "Pimpri-Chinchwad", "state": "Maharashtra", "country_code": "IN"},
+    "delhi": {"lat": 28.6139, "lon": 77.2090, "city": "Delhi", "state": "Delhi", "country_code": "IN"},
+    "newdelhi": {"lat": 28.6139, "lon": 77.2090, "city": "New Delhi", "state": "Delhi", "country_code": "IN"},
+    "ncr": {"lat": 28.6139, "lon": 77.2090, "city": "Delhi NCR", "state": "Delhi", "country_code": "IN"},
+    "gurgaon": {"lat": 28.4595, "lon": 77.0266, "city": "Gurugram", "state": "Haryana", "country_code": "IN"},
+    "gurugram": {"lat": 28.4595, "lon": 77.0266, "city": "Gurugram", "state": "Haryana", "country_code": "IN"},
+    "noida": {"lat": 28.5355, "lon": 77.3910, "city": "Noida", "state": "Uttar Pradesh", "country_code": "IN"},
+    "chennai": {"lat": 13.0827, "lon": 80.2707, "city": "Chennai", "state": "Tamil Nadu", "country_code": "IN"},
+    "madras": {"lat": 13.0827, "lon": 80.2707, "city": "Chennai", "state": "Tamil Nadu", "country_code": "IN"},
+    "mumbai": {"lat": 19.0760, "lon": 72.8777, "city": "Mumbai", "state": "Maharashtra", "country_code": "IN"},
+    "bombay": {"lat": 19.0760, "lon": 72.8777, "city": "Mumbai", "state": "Maharashtra", "country_code": "IN"},
+    "bangalore": {"lat": 12.9716, "lon": 77.5946, "city": "Bengaluru", "state": "Karnataka", "country_code": "IN"},
+    "bengaluru": {"lat": 12.9716, "lon": 77.5946, "city": "Bengaluru", "state": "Karnataka", "country_code": "IN"},
+    "hyderabad": {"lat": 17.3850, "lon": 78.4867, "city": "Hyderabad", "state": "Telangana", "country_code": "IN"},
+    "ahmedabad": {"lat": 23.0225, "lon": 72.5714, "city": "Ahmedabad", "state": "Gujarat", "country_code": "IN"},
+    "kolkata": {"lat": 22.5726, "lon": 88.3639, "city": "Kolkata", "state": "West Bengal", "country_code": "IN"},
+    "calcutta": {"lat": 22.5726, "lon": 88.3639, "city": "Kolkata", "state": "West Bengal", "country_code": "IN"},
+    "surat": {"lat": 21.1702, "lon": 72.8311, "city": "Surat", "state": "Gujarat", "country_code": "IN"},
+    "jaipur": {"lat": 26.9124, "lon": 75.7873, "city": "Jaipur", "state": "Rajasthan", "country_code": "IN"},
+    # China
+    "shenzhen": {"lat": 22.5431, "lon": 114.0579, "city": "Shenzhen", "state": "Guangdong", "country_code": "CN"},
+    "dongguan": {"lat": 23.0207, "lon": 113.7518, "city": "Dongguan", "state": "Guangdong", "country_code": "CN"},
+    "guangzhou": {"lat": 23.1291, "lon": 113.2644, "city": "Guangzhou", "state": "Guangdong", "country_code": "CN"},
+    "canton": {"lat": 23.1291, "lon": 113.2644, "city": "Guangzhou", "state": "Guangdong", "country_code": "CN"},
+    "suzhou": {"lat": 31.2989, "lon": 120.5853, "city": "Suzhou", "state": "Jiangsu", "country_code": "CN"},
+    "chengdu": {"lat": 30.5728, "lon": 104.0668, "city": "Chengdu", "state": "Sichuan", "country_code": "CN"},
+    "shanghai": {"lat": 31.2304, "lon": 121.4737, "city": "Shanghai", "state": "Shanghai", "country_code": "CN"},
+    "beijing": {"lat": 39.9042, "lon": 116.4074, "city": "Beijing", "state": "Beijing", "country_code": "CN"},
+    "wuhan": {"lat": 30.5928, "lon": 114.3055, "city": "Wuhan", "state": "Hubei", "country_code": "CN"},
+    "hangzhou": {"lat": 30.2741, "lon": 120.1551, "city": "Hangzhou", "state": "Zhejiang", "country_code": "CN"},
+    "tianjin": {"lat": 39.3434, "lon": 117.3616, "city": "Tianjin", "state": "Tianjin", "country_code": "CN"},
+    "chongqing": {"lat": 29.5630, "lon": 106.5516, "city": "Chongqing", "state": "Chongqing", "country_code": "CN"},
+    "xian": {"lat": 34.3416, "lon": 108.9398, "city": "Xi'an", "state": "Shaanxi", "country_code": "CN"},
+    "zhengzhou": {"lat": 34.7466, "lon": 113.6253, "city": "Zhengzhou", "state": "Henan", "country_code": "CN"},
+    "ningbo": {"lat": 29.8683, "lon": 121.5440, "city": "Ningbo", "state": "Zhejiang", "country_code": "CN"},
+    "nanjing": {"lat": 32.0603, "lon": 118.7969, "city": "Nanjing", "state": "Jiangsu", "country_code": "CN"},
+    "wuxi": {"lat": 31.4912, "lon": 120.3119, "city": "Wuxi", "state": "Jiangsu", "country_code": "CN"},
+    "kunshan": {"lat": 31.3846, "lon": 120.9814, "city": "Kunshan", "state": "Jiangsu", "country_code": "CN"},
+    "hefei": {"lat": 31.8206, "lon": 117.2272, "city": "Hefei", "state": "Anhui", "country_code": "CN"},
+    "foshan": {"lat": 23.0215, "lon": 113.1214, "city": "Foshan", "state": "Guangdong", "country_code": "CN"},
+    # Taiwan
+    "taipei": {"lat": 25.0330, "lon": 121.5654, "city": "Taipei", "state": "Taiwan", "country_code": "TW"},
+    "hsinchu": {"lat": 24.8138, "lon": 120.9675, "city": "Hsinchu", "state": "Taiwan", "country_code": "TW"},
+    "taichung": {"lat": 24.1477, "lon": 120.6736, "city": "Taichung", "state": "Taiwan", "country_code": "TW"},
+    "tainan": {"lat": 22.9997, "lon": 120.2270, "city": "Tainan", "state": "Taiwan", "country_code": "TW"},
+    "kaohsiung": {"lat": 22.6273, "lon": 120.3014, "city": "Kaohsiung", "state": "Taiwan", "country_code": "TW"},
+    "taoyuan": {"lat": 24.9936, "lon": 121.3010, "city": "Taoyuan", "state": "Taiwan", "country_code": "TW"},
+    # USA
+    "austin": {"lat": 30.2672, "lon": -97.7431, "city": "Austin", "state": "Texas", "country_code": "US"},
+    "sanjose": {"lat": 37.3382, "lon": -121.8863, "city": "San Jose", "state": "California", "country_code": "US"},
+    "santaclara": {"lat": 37.3541, "lon": -121.9552, "city": "Santa Clara", "state": "California", "country_code": "US"},
+    "sanfrancisco": {"lat": 37.7749, "lon": -122.4194, "city": "San Francisco", "state": "California", "country_code": "US"},
+    "losangeles": {"lat": 34.0522, "lon": -118.2437, "city": "Los Angeles", "state": "California", "country_code": "US"},
+    "seattle": {"lat": 47.6062, "lon": -122.3321, "city": "Seattle", "state": "Washington", "country_code": "US"},
+    "dallas": {"lat": 32.7767, "lon": -96.7970, "city": "Dallas", "state": "Texas", "country_code": "US"},
+    "houston": {"lat": 29.7604, "lon": -95.3698, "city": "Houston", "state": "Texas", "country_code": "US"},
+    "chicago": {"lat": 41.8781, "lon": -87.6298, "city": "Chicago", "state": "Illinois", "country_code": "US"},
+    "newyork": {"lat": 40.7128, "lon": -74.0060, "city": "New York", "state": "New York", "country_code": "US"},
+    "boston": {"lat": 42.3601, "lon": -71.0589, "city": "Boston", "state": "Massachusetts", "country_code": "US"},
+    "columbus": {"lat": 39.9612, "lon": -82.9988, "city": "Columbus", "state": "Ohio", "country_code": "US"},
+    "reno": {"lat": 39.5296, "lon": -119.8138, "city": "Reno", "state": "Nevada", "country_code": "US"},
+    "phoenix": {"lat": 33.4484, "lon": -112.0740, "city": "Phoenix", "state": "Arizona", "country_code": "US"},
+    "atlanta": {"lat": 33.7490, "lon": -84.3880, "city": "Atlanta", "state": "Georgia", "country_code": "US"},
+    # Germany
+    "stuttgart": {"lat": 48.7758, "lon": 9.1829, "city": "Stuttgart", "state": "Baden-Württemberg", "country_code": "DE"},
+    "munich": {"lat": 48.1351, "lon": 11.5820, "city": "Munich", "state": "Bavaria", "country_code": "DE"},
+    "muenchen": {"lat": 48.1351, "lon": 11.5820, "city": "Munich", "state": "Bavaria", "country_code": "DE"},
+    "frankfurt": {"lat": 50.1109, "lon": 8.6821, "city": "Frankfurt", "state": "Hesse", "country_code": "DE"},
+    "berlin": {"lat": 52.5200, "lon": 13.4050, "city": "Berlin", "state": "Berlin", "country_code": "DE"},
+    "hamburg": {"lat": 53.5511, "lon": 9.9937, "city": "Hamburg", "state": "Hamburg", "country_code": "DE"},
+    "cologne": {"lat": 50.9375, "lon": 6.9603, "city": "Cologne", "state": "North Rhine-Westphalia", "country_code": "DE"},
+    "koeln": {"lat": 50.9375, "lon": 6.9603, "city": "Cologne", "state": "North Rhine-Westphalia", "country_code": "DE"},
+    "dresden": {"lat": 51.0504, "lon": 13.7373, "city": "Dresden", "state": "Saxony", "country_code": "DE"},
+    "nuremberg": {"lat": 49.4521, "lon": 11.0767, "city": "Nuremberg", "state": "Bavaria", "country_code": "DE"},
+    # Japan
+    "osaka": {"lat": 34.6937, "lon": 135.5023, "city": "Osaka", "state": "Kansai", "country_code": "JP"},
+    "tokyo": {"lat": 35.6762, "lon": 139.6503, "city": "Tokyo", "state": "Kanto", "country_code": "JP"},
+    "kyoto": {"lat": 35.0116, "lon": 135.7681, "city": "Kyoto", "state": "Kansai", "country_code": "JP"},
+    "yokohama": {"lat": 35.4437, "lon": 139.6380, "city": "Yokohama", "state": "Kanagawa", "country_code": "JP"},
+    "nagoya": {"lat": 35.1815, "lon": 136.9066, "city": "Nagoya", "state": "Aichi", "country_code": "JP"},
+    "fukuoka": {"lat": 33.5904, "lon": 130.4017, "city": "Fukuoka", "state": "Kyushu", "country_code": "JP"},
+    # South Korea
+    "seoul": {"lat": 37.5665, "lon": 126.9780, "city": "Seoul", "state": "Gyeonggi", "country_code": "KR"},
+    "suwon": {"lat": 37.2636, "lon": 127.0286, "city": "Suwon", "state": "Gyeonggi", "country_code": "KR"},
+    "incheon": {"lat": 37.4563, "lon": 126.7052, "city": "Incheon", "state": "Gyeonggi", "country_code": "KR"},
+    "busan": {"lat": 35.1796, "lon": 129.0756, "city": "Busan", "state": "Gyeongsang", "country_code": "KR"},
+    "paju": {"lat": 37.7599, "lon": 126.7799, "city": "Paju", "state": "Gyeonggi", "country_code": "KR"},
+    # Vietnam
+    "hanoi": {"lat": 21.0285, "lon": 105.8542, "city": "Hanoi", "state": "Red River Delta", "country_code": "VN"},
+    "hochiminh": {"lat": 10.8231, "lon": 106.6297, "city": "Ho Chi Minh City", "state": "Southeast", "country_code": "VN"},
+    "saigon": {"lat": 10.8231, "lon": 106.6297, "city": "Ho Chi Minh City", "state": "Southeast", "country_code": "VN"},
+    "bacninh": {"lat": 21.1861, "lon": 106.0763, "city": "Bac Ninh", "state": "Red River Delta", "country_code": "VN"},
+    "danang": {"lat": 16.0544, "lon": 108.2022, "city": "Da Nang", "state": "South Central Coast", "country_code": "VN"},
+    # Singapore & Malaysia
+    "singapore": {"lat": 1.3521, "lon": 103.8198, "city": "Singapore", "state": "Singapore", "country_code": "SG"},
+    "penang": {"lat": 5.4141, "lon": 100.3288, "city": "Penang", "state": "Penang", "country_code": "MY"},
+    "kualalumpur": {"lat": 3.1390, "lon": 101.6869, "city": "Kuala Lumpur", "state": "Kuala Lumpur", "country_code": "MY"},
+}
+
+
+# Common 3-letter IATA/hub codes mapping to supply chain hub keys
+AIRPORT_OR_HUB_CODE_MAP: Dict[str, str] = {
+    "del": "delhi",
+    "che": "chennai",
+    "maa": "chennai",
+    "pun": "pune",
+    "pnq": "pune",
+    "bom": "mumbai",
+    "blr": "bangalore",
+    "hyd": "hyderabad",
+    "ccu": "kolkata",
+    "amd": "ahmedabad",
+    "jai": "jaipur",
+    "sjc": "sanjose",
+    "aus": "austin",
+    "dfw": "dallas",
+    "sea": "seattle",
+    "sfo": "sanfrancisco",
+    "lax": "losangeles",
+    "ord": "chicago",
+    "jfk": "newyork",
+    "nyc": "newyork",
+    "bos": "boston",
+    "cmh": "columbus",
+    "rno": "reno",
+    "tpe": "taipei",
+    "szx": "shenzhen",
+    "can": "guangzhou",
+    "sha": "shanghai",
+    "pvg": "shanghai",
+    "pek": "beijing",
+    "ctu": "chengdu",
+    "str": "stuttgart",
+    "muc": "munich",
+    "fra": "frankfurt",
+    "ber": "berlin",
+    "ham": "hamburg",
+    "hnd": "tokyo",
+    "nrt": "tokyo",
+    "tyo": "tokyo",
+    "kix": "osaka",
+    "osa": "osaka",
+    "icn": "seoul",
+    "sel": "seoul",
+    "pus": "busan",
+    "sin": "singapore",
+    "kul": "kualalumpur",
+    "pen": "penang",
+    "han": "hanoi",
+    "sgn": "hochiminh",
+}
+
+
+def match_city_or_hub(
+    text: Optional[str],
+    code: Optional[str] = None,
+    country_hint: Optional[str] = None,
+) -> Optional[Dict[str, Any]]:
+    """Scan entity name, code, or description for recognized global supply-chain cities/hubs."""
+    sorted_hubs = sorted(GLOBAL_SUPPLY_CHAIN_HUBS.keys(), key=lambda k: len(k), reverse=True)
+
+    # 1. Check code tokens (e.g. WH-REG-DEL -> 'del', WH-REG-CHE -> 'che')
+    if code:
+        code_tokens = [re.sub(r"[^a-z0-9]", "", tok.lower()) for tok in re.split(r"[-_\s/.]+", str(code))]
+        for token in code_tokens:
+            if not token:
+                continue
+            if token in AIRPORT_OR_HUB_CODE_MAP:
+                hub_key = AIRPORT_OR_HUB_CODE_MAP[token]
+                hub_data = GLOBAL_SUPPLY_CHAIN_HUBS.get(hub_key)
+                if hub_data and (not country_hint or hub_data["country_code"] == country_hint.strip().upper()):
+                    return hub_data
+            if token in GLOBAL_SUPPLY_CHAIN_HUBS:
+                hub_data = GLOBAL_SUPPLY_CHAIN_HUBS[token]
+                if not country_hint or hub_data["country_code"] == country_hint.strip().upper():
+                    return hub_data
+
+    # 2. Check entity text (name / description)
+    if text:
+        text_str = str(text).lower()
+        norm_text = re.sub(r"[^a-z0-9]", "", text_str)
+
+        for hub_key in sorted_hubs:
+            hub_data = GLOBAL_SUPPLY_CHAIN_HUBS[hub_key]
+            pattern = rf"\b{re.escape(hub_key)}\b"
+            if re.search(pattern, text_str) or hub_key in norm_text:
+                if not country_hint or hub_data["country_code"] == country_hint.strip().upper():
+                    return hub_data
+
+        # Fallback if country_hint was specified but didn't match directly
+        if country_hint:
+            for hub_key in sorted_hubs:
+                hub_data = GLOBAL_SUPPLY_CHAIN_HUBS[hub_key]
+                pattern = rf"\b{re.escape(hub_key)}\b"
+                if re.search(pattern, text_str) or hub_key in norm_text:
+                    return hub_data
+
+    return None
+
+
 def resolve_location(
     entity_type: str,  # "supplier" | "warehouse"
     code: str,
-    country_text: Optional[str],
-    overrides: Dict[str, Any],  # keyed by entity_type -> code -> {lat, lon, note, ...} or flat
-    fixtures: Dict[str, Any],  # keyed by "suppliers" | "warehouses" -> code -> {lat, lon, ...} or flat
+    country_text: Optional[str] = None,
+    overrides: Optional[Dict[str, Any]] = None,
+    fixtures: Optional[Dict[str, Any]] = None,
     country_centroids: Optional[List[Dict[str, Any]]] = None,
+    name: Optional[str] = None,
+    index_in_country: int = 0,
 ) -> LocationResult:
     """Resolve entity location with strictly defined precedence order:
 
-    1. Validated manual override (precision="manual", source="Manually set by user")
+    1. Explicit manual override (exact lat/lon saved by user or location CSV)
     2. Fixture entry for the code (precision="exact", source="Illustrative demo location")
-    3. Country centroid (suppliers only; precision="country_centroid", source="Country centre (approximate)")
-    4. Unresolved (precision="unresolved", source="Unresolved: ...")
+    3. Auto-detected City/State/Hub matching from name or code (precision="exact")
+    4. Manual country-level fallback (if override was coarse country selection)
+    5. Country centroid (suppliers only; precision="country_centroid")
+    6. Unresolved (warehouses without location or suppliers without recognized country)
     """
     clean_code = str(code).strip()
     type_key = f"{entity_type.lower()}s"
+    if overrides is None:
+        overrides = {}
+    if fixtures is None:
+        fixtures = {}
 
-    # 1. Manual override
     type_overrides = overrides.get(entity_type.lower(), overrides)
+
+    # 1. Check for manual override with explicit coordinates
     if clean_code in type_overrides:
         ov = type_overrides[clean_code]
         lat, lon = ov.get("lat"), ov.get("lon")
         ok, _ = validate_lat_lon(lat, lon)
-        if ok:
+        note = ov.get("note") or ""
+        # If it was an explicit exact placement (not a coarse country fallback), return immediately
+        if ok and note != "Manually set (country)":
             return LocationResult(
                 lat=float(lat),
                 lon=float(lon),
                 precision="manual",
                 source="Manually set by user",
                 country_code=ov.get("country_code"),
-                label=ov.get("note") or f"{clean_code} (manual)",
+                label=note or f"{clean_code} (manual)",
             )
 
     # 2. Fixture entry (support nested "suppliers" dict or flat dict)
@@ -260,12 +475,47 @@ def resolve_location(
                 label=fix.get("city") or clean_code,
             )
 
-    # 3. Country centroid (suppliers only; warehouses have no country column)
+    # 3. Smart City / State / Hub Auto-Resolver (checks entity name and code)
+    matched_hub = match_city_or_hub(name, clean_code, country_text)
+    if matched_hub:
+        return LocationResult(
+            lat=float(matched_hub["lat"]),
+            lon=float(matched_hub["lon"]),
+            precision="exact",
+            source=f"Auto-resolved: {matched_hub['city']}, {matched_hub['state']}",
+            country_code=matched_hub["country_code"],
+            label=f"{matched_hub['city']}, {matched_hub['country_code']}",
+        )
+
+    # 4. If manual override was set via coarse country picker, use it now if city wasn't matched
+    if clean_code in type_overrides:
+        ov = type_overrides[clean_code]
+        lat, lon = ov.get("lat"), ov.get("lon")
+        ok, _ = validate_lat_lon(lat, lon)
+        if ok:
+            return LocationResult(
+                lat=float(lat),
+                lon=float(lon),
+                precision="manual",
+                source="Manually set (country)",
+                country_code=ov.get("country_code"),
+                label=ov.get("note") or f"{clean_code} (manual)",
+            )
+
+    # 5. Country centroid (suppliers only; warehouses have no country column)
     if entity_type.lower() == "supplier" and country_text:
         country_match = resolve_country(country_text, country_centroids)
         if country_match:
             lat = country_match.lat
             lon = country_match.lon
+            # Deterministic radial dispersion: space multiple entities in the same country
+            if index_in_country > 0:
+                radius = 0.35 + 0.1 * (index_in_country % 4)
+                angle = (index_in_country * 137.5) * (math.pi / 180.0)
+                lat += radius * math.sin(angle)
+                cos_lat = max(0.2, math.cos(math.radians(lat)))
+                lon += (radius / cos_lat) * math.cos(angle)
+
             ok, _ = validate_lat_lon(lat, lon)
             if ok:
                 return LocationResult(
@@ -277,7 +527,7 @@ def resolve_location(
                     label=f"{country_match.name} (approximate)",
                 )
 
-    # 4. Unresolved
+    # 6. Unresolved fallback
     reason = (
         f"Unresolved: Warehouse without location data"
         if entity_type.lower() == "warehouse"
@@ -290,8 +540,6 @@ def resolve_location(
         lon=None,
         precision="unresolved",
         source=reason,
-        country_code=None,
-        label=None,
     )
 
 

@@ -60,7 +60,7 @@ export function useGlobeData(activeDatasetKey?: string): UseGlobeDataReturn {
   }, []);
 
   const loadData = useCallback(
-    async (force = false, signal?: AbortSignal): Promise<GlobeResponse | null> => {
+    async (force = false): Promise<GlobeResponse | null> => {
       // Check cache key validity
       if (
         !force &&
@@ -77,7 +77,7 @@ export function useGlobeData(activeDatasetKey?: string): UseGlobeDataReturn {
 
       try {
         if (!moduleInFlight || force) {
-          moduleInFlight = getGlobe(signal);
+          moduleInFlight = getGlobe();
         }
 
         const res = await moduleInFlight;
@@ -95,9 +95,6 @@ export function useGlobeData(activeDatasetKey?: string): UseGlobeDataReturn {
         return res;
       } catch (err: any) {
         moduleInFlight = null;
-        if (err?.name === 'AbortError') {
-          return null;
-        }
         const errMsg = err instanceof Error ? err.message : 'Failed to load globe data';
         setError(errMsg);
         setLoading(false);
@@ -108,18 +105,15 @@ export function useGlobeData(activeDatasetKey?: string): UseGlobeDataReturn {
   );
 
   useEffect(() => {
-    const abortCtrl = new AbortController();
-
     // If cache key mismatched with activeDatasetKey, force refetch
     if (activeDatasetKey && moduleCacheKey && moduleCacheKey !== activeDatasetKey) {
-      loadData(true, abortCtrl.signal);
+      loadData(true);
     } else if (!moduleCachedGlobe) {
-      loadData(false, abortCtrl.signal);
+      loadData(false);
+    } else {
+      setData(moduleCachedGlobe);
+      setLoading(false);
     }
-
-    return () => {
-      abortCtrl.abort();
-    };
   }, [activeDatasetKey, loadData]);
 
   const reload = useCallback(() => {

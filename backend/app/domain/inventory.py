@@ -141,6 +141,23 @@ class DemandHistoryRecordInput:
 
 
 @dataclass(frozen=True)
+class SupplierOfferDomainInput:
+    """Domain representation of a supplier procurement agreement for a component."""
+
+    supplier_id: int
+    supplier_code: str
+    supplier_name: str
+    supplier_country: str
+    lead_time_days: int
+    min_order_qty: int
+    max_weekly_capacity: Optional[int]
+    is_preferred: bool
+    expedite_available: bool
+    expedite_lead_time_days: Optional[int]
+    unit_cost: float
+
+
+@dataclass(frozen=True)
 class ComponentEvaluationInput:
     """Complete typed domain input for evaluating a single component."""
 
@@ -154,6 +171,8 @@ class ComponentEvaluationInput:
     regional_inventories: List[RegionalInventoryInput] = field(default_factory=list)
     demand_records: List[DemandHistoryRecordInput] = field(default_factory=list)
     inbound_lines: List[InboundLineInput] = field(default_factory=list)
+    supplier_offers: List[SupplierOfferDomainInput] = field(default_factory=list)
+    plant_warehouse_name: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -278,6 +297,14 @@ class ComponentRiskResult:
     regional_usable_stock: List[RegionalStockItem]
     regional_total_usable: int
     daily_projection: List[DailyProjectionItem]
+    recommended_action: str = ""
+    recommended_action_type: str = "monitor"
+    supply_gap_days: Optional[int] = None
+    data_confidence: str = "high"
+    primary_supplier_code: Optional[str] = None
+    primary_supplier_name: Optional[str] = None
+    primary_supplier_country: Optional[str] = None
+    plant_warehouse_name: Optional[str] = None
 
 
 WEEKDAY_NAMES = [
@@ -790,6 +817,115 @@ def evaluate_component(
             risk_level = "low"
             risk_reason = f"No shortage projected within {config.horizon_days}-day planning horizon."
 
+    # 6.5 Calculate Supply Gap, Data Confidence, and Actionable Recommendations
+    supply_gap_days: Optional[int] = None
+    if shortage_date is not None:
+        if next_replenishment is not None:
+            if next_replenishment.date > shortage_date:
+                supply_gap_days = (next_replenishment.date - shortage_date).days
+            else:
+                supply_gap_days = 0
+        else:
+            supply_gap_days = None
+
+    data_confidence: str
+    if forecast_status in ("insufficient_history", "no_plant_inventory"):
+        data_confidence = "insufficient"
+    elif any(f.code in ("overdue_inbound_excluded", "reserved_exceeds_on_hand") for f in flags):
+        data_confidence = "low"
+    elif any(f.code in ("inbound_promise_only", "weekday_fallback") for f in flags):
+        data_confidence = "medium"
+    else:
+        data_confidence = "high"
+
+    # Primary supplier resolution
+    primary_supplier_code: Optional[str] = None
+    primary_supplier_name: Optional[str] = None
+    primary_supplier_country: Optional[str] = None
+
+    pref_offer = next((o for o in inputs.supplier_offers if o.is_preferred), None)
+    first_offer = inputs.supplier_offers[0] if inputs.supplier_offers else None
+    inbound_sup = counted_inbound[0].supplier_code if counted_inbound else None
+
+    if pref_offer:
+        primary_supplier_code = pref_offer.supplier_code
+        primary_supplier_name = pref_offer.supplier_name
+        primary_supplier_country = pref_offer.supplier_country
+    elif first_offer:
+        primary_supplier_code = first_offer.supplier_code
+        primary_supplier_name = first_offer.supplier_name
+        primary_supplier_country = first_offer.supplier_country
+    elif inbound_sup:
+        primary_supplier_code = inbound_sup
+        primary_supplier_name = inbound_sup
+
+    plant_warehouse_name = inputs.plant_warehouse_name or "Main Plant Warehouse"
+
+    # Actionable replenishment recommendation
+    recommended_action: str
+    recommended_action_type: str
+
+    if forecast_status == "insufficient_history":
+        recommended_action_type = "review_forecast"
+        recommended_action = (
+            f"Review demand forecast: insufficient transaction history "
+            f"({distinct_dates_count}/{config.min_history_days} days) to calculate reliable baseline."
+        )
+    elif forecast_status == "no_plant_inventory":
+        recommended_action_type = "audit_inventory"
+        recommended_action = "Audit plant stock: no physical inventory record recorded at plant warehouse."
+    elif forecast_status == "no_demand":
+        recommended_action_type = "monitor"
+        recommended_action = "Monitor component: zero consumption recorded in recent lookback period."
+    elif shortage_date is not None:
+        if next_replenishment is not None and next_replenishment.date > shortage_date:
+            gap = (next_replenishment.date - shortage_date).days
+            gap_desc = f"{gap}d" if gap != 1 else "1d"
+            matching_offer = next(
+                (o for o in inputs.supplier_offers if any(i.supplier_code == o.supplier_code for i in counted_inbound)),
+                None,
+            )
+            if matching_offer and matching_offer.expedite_available and matching_offer.expedite_lead_time_days is not None:
+                recommended_action_type = "expedite_po"
+                recommended_action = (
+                    f"Expedite PO #{next_replenishment.po_number}: {matching_offer.supplier_name} offers expedite "
+                    f"({matching_offer.expedite_lead_time_days}d lead time) to close {gap_desc} supply gap."
+                )
+            else:
+                recommended_action_type = "expedite_po"
+                recommended_action = (
+                    f"Expedite PO #{next_replenishment.po_number}: arrival on {next_replenishment.date} "
+                    f"is {gap_desc} after projected stockout ({shortage_date})."
+                )
+        elif regional_total_usable > 0:
+            recommended_action_type = "regional_transfer"
+            recommended_action = (
+                f"Initiate regional transfer: {regional_total_usable} usable units available across regional hubs."
+            )
+        elif inputs.supplier_offers:
+            alt_offer = next((o for o in inputs.supplier_offers if not o.is_preferred), None) or inputs.supplier_offers[0]
+            recommended_action_type = "alt_supplier"
+            cap_str = f", capacity {alt_offer.max_weekly_capacity}/wk" if alt_offer.max_weekly_capacity else ""
+            recommended_action = (
+                f"Evaluate supplier {alt_offer.supplier_name} ({alt_offer.supplier_code}): "
+                f"lead time {alt_offer.lead_time_days}d, MOQ {alt_offer.min_order_qty}{cap_str}."
+            )
+        else:
+            recommended_action_type = "issue_po"
+            recommended_action = f"Issue replenishment PO: projected stockout on {shortage_date} with no active inbound supply."
+    else:
+        if coverage_days is not None and coverage_days >= 30:
+            recommended_action_type = "maintain"
+            recommended_action = f"Maintain schedule: stock coverage is healthy at {coverage_days:.0f} days."
+        elif next_replenishment is not None:
+            recommended_action_type = "monitor"
+            cov_str = f"{coverage_days:.0f}d" if coverage_days is not None else "sufficient"
+            recommended_action = f"Monitor inbound: coverage {cov_str}; next arrival on {next_replenishment.date}."
+        else:
+            recommended_action_type = "monitor"
+            cov_str = f"{coverage_days:.0f} days" if coverage_days is not None else "sufficient"
+            recommended_action = f"Monitor stock: current coverage is {cov_str} with no open inbound orders."
+
     # 7. Explanation string Generation
     explanation = _build_explanation(
         sku=inputs.sku,
@@ -810,6 +946,7 @@ def evaluate_component(
         unmet_before_next_inbound=unmet_before_next_inbound,
         distinct_dates_count=distinct_dates_count,
         config=config,
+        risk_level=risk_level,
     )
 
     return ComponentRiskResult(
@@ -849,6 +986,14 @@ def evaluate_component(
         regional_usable_stock=regional_usable_stock,
         regional_total_usable=regional_total_usable,
         daily_projection=daily_projection,
+        recommended_action=recommended_action,
+        recommended_action_type=recommended_action_type,
+        supply_gap_days=supply_gap_days,
+        data_confidence=data_confidence,
+        primary_supplier_code=primary_supplier_code,
+        primary_supplier_name=primary_supplier_name,
+        primary_supplier_country=primary_supplier_country,
+        plant_warehouse_name=plant_warehouse_name,
     )
 
 
@@ -871,6 +1016,7 @@ def _build_explanation(
     unmet_before_next_inbound: Optional[float],
     distinct_dates_count: int,
     config: InventoryRiskConfig,
+    risk_level: str = "unknown",
 ) -> str:
     """Builds a plain-language explanation strictly from computed evidence."""
     if forecast_status == "no_plant_inventory":

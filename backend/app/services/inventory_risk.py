@@ -19,6 +19,7 @@ from app.db.models import (
     PurchaseOrder,
     PurchaseOrderLine,
     Supplier,
+    SupplierComponent,
     Warehouse,
 )
 from app.domain.inventory import (
@@ -29,6 +30,7 @@ from app.domain.inventory import (
     InventoryRiskConfig,
     PlantInventoryInput,
     RegionalInventoryInput,
+    SupplierOfferDomainInput,
     evaluate_component,
     WEEKDAY_NAMES,
 )
@@ -173,6 +175,36 @@ def build_component_evaluation_inputs(
             )
         )
 
+    # Bulk load supplier offers
+    supplier_offers_records = db.scalars(
+        select(SupplierComponent)
+        .options(selectinload(SupplierComponent.supplier))
+        .where(SupplierComponent.component_id.in_(comp_ids))
+    ).all()
+
+    offers_by_comp: Dict[int, List[SupplierOfferDomainInput]] = defaultdict(list)
+    for so in supplier_offers_records:
+        if so.supplier:
+            offers_by_comp[so.component_id].append(
+                SupplierOfferDomainInput(
+                    supplier_id=so.supplier_id,
+                    supplier_code=so.supplier.code,
+                    supplier_name=so.supplier.name,
+                    supplier_country=so.supplier.country,
+                    lead_time_days=so.lead_time_days,
+                    min_order_qty=so.min_order_qty,
+                    max_weekly_capacity=so.max_weekly_capacity,
+                    is_preferred=so.is_preferred,
+                    expedite_available=so.expedite_available,
+                    expedite_lead_time_days=so.expedite_lead_time_days,
+                    unit_cost=float(so.unit_cost),
+                )
+            )
+
+    # Fetch plant warehouse name
+    plant_wh = db.scalar(select(Warehouse).where(Warehouse.role == "plant").limit(1))
+    plant_wh_name = plant_wh.name if plant_wh else "Main Plant Warehouse"
+
     result: Dict[int, ComponentEvaluationInput] = {}
     for comp in components:
         result[comp.id] = ComponentEvaluationInput(
@@ -186,6 +218,8 @@ def build_component_evaluation_inputs(
             regional_inventories=reg_inv_by_comp.get(comp.id, []),
             demand_records=demand_by_comp.get(comp.id, []),
             inbound_lines=inbound_by_comp.get(comp.id, []),
+            supplier_offers=offers_by_comp.get(comp.id, []),
+            plant_warehouse_name=plant_wh_name,
         )
     return result
 
@@ -197,6 +231,9 @@ def list_inventory_risk(
     category: Optional[str] = None,
     criticality: Optional[str] = None,
     include_inactive: bool = False,
+    search: Optional[str] = None,
+    sort_by: Optional[str] = None,
+    sort_dir: Optional[str] = "asc",
     limit: int = 50,
     offset: int = 0,
 ) -> InventoryRiskListResponse:
@@ -230,6 +267,10 @@ def list_inventory_risk(
                     "unknown": 0,
                 },
                 components_evaluated=0,
+                high_risk_count=0,
+                critical_impact_count=0,
+                runout_before_replenishment_count=0,
+                data_attention_count=0,
             ),
             items=[],
             total=0,
@@ -262,6 +303,10 @@ def list_inventory_risk(
                     "unknown": 0,
                 },
                 components_evaluated=0,
+                high_risk_count=0,
+                critical_impact_count=0,
+                runout_before_replenishment_count=0,
+                data_attention_count=0,
             ),
             items=[],
             total=0,
@@ -281,6 +326,10 @@ def list_inventory_risk(
         "none": 0,
         "unknown": 0,
     }
+    high_risk_count = 0
+    critical_impact_count = 0
+    runout_before_replenishment_count = 0
+    data_attention_count = 0
 
     for comp in components:
         domain_input = comp_inputs[comp.id]
@@ -288,15 +337,26 @@ def list_inventory_risk(
         evaluated_results.append(result)
         summary_counts[result.risk_level] = summary_counts.get(result.risk_level, 0) + 1
 
+        if result.risk_level in ("critical", "high"):
+            high_risk_count += 1
+        if result.criticality == "critical" and result.risk_level in ("critical", "high", "medium"):
+            critical_impact_count += 1
+        if result.shortage_date is not None and (
+            result.next_replenishment is None or result.next_replenishment.date > result.shortage_date
+        ):
+            runout_before_replenishment_count += 1
+        if result.data_confidence in ("low", "insufficient") or result.risk_level == "unknown":
+            data_attention_count += 1
+
     # 6. Sort according to specified criteria:
-    # Severity (critical..none), shortage_date asc (nulls last), criticality (critical first), sku
-    def sort_key(r: ComponentRiskResult):
+    # Default: Severity (critical..none), shortage_date asc (nulls last), criticality (critical first), sku
+    def default_sort_key(r: ComponentRiskResult):
         severity_rank = RISK_SEVERITY_ORDER.get(r.risk_level, 99)
         shortage_null_last = (r.shortage_date is None, r.shortage_date)
         crit_rank = CRITICALITY_ORDER.get(r.criticality, 99)
         return (severity_rank, shortage_null_last, crit_rank, r.sku)
 
-    evaluated_results.sort(key=sort_key)
+    evaluated_results.sort(key=default_sort_key)
 
     # 7. Apply filters
     filtered_results = evaluated_results
@@ -307,6 +367,35 @@ def list_inventory_risk(
         filtered_results = [r for r in filtered_results if r.category.lower() == category.lower()]
     if criticality is not None:
         filtered_results = [r for r in filtered_results if r.criticality.lower() == criticality.lower()]
+    if search:
+        s = search.strip().lower()
+        filtered_results = [r for r in filtered_results if s in r.sku.lower() or s in r.name.lower()]
+
+    # Apply custom sorting if requested
+    if sort_by:
+        reverse = (sort_dir or "asc").lower() == "desc"
+        if sort_by == "coverage_days":
+            filtered_results.sort(
+                key=lambda r: (r.coverage_days is None, r.coverage_days if r.coverage_days is not None else 0.0),
+                reverse=reverse,
+            )
+        elif sort_by == "shortage_date":
+            filtered_results.sort(
+                key=lambda r: (r.shortage_date is None, r.shortage_date or date.max),
+                reverse=reverse,
+            )
+        elif sort_by in ("usable_stock", "plant_usable_stock"):
+            filtered_results.sort(
+                key=lambda r: (r.plant_usable_stock is None, r.plant_usable_stock if r.plant_usable_stock is not None else 0),
+                reverse=reverse,
+            )
+        elif sort_by == "severity":
+            filtered_results.sort(
+                key=lambda r: RISK_SEVERITY_ORDER.get(r.risk_level, 99),
+                reverse=reverse,
+            )
+        elif sort_by == "sku":
+            filtered_results.sort(key=lambda r: r.sku, reverse=reverse)
 
     total = len(filtered_results)
     paginated = filtered_results[offset : offset + limit]
@@ -322,6 +411,10 @@ def list_inventory_risk(
         summary=InventoryRiskSummary(
             counts_by_risk_level=summary_counts,
             components_evaluated=len(evaluated_results),
+            high_risk_count=high_risk_count,
+            critical_impact_count=critical_impact_count,
+            runout_before_replenishment_count=runout_before_replenishment_count,
+            data_attention_count=data_attention_count,
         ),
         items=items,
         total=total,
@@ -485,6 +578,14 @@ def get_inventory_risk_detail(
             for ep in result.shortage_episodes
         ],
         assumptions=result.assumptions,
+        recommended_action=result.recommended_action,
+        recommended_action_type=result.recommended_action_type,
+        supply_gap_days=result.supply_gap_days,
+        data_confidence=result.data_confidence,
+        primary_supplier_code=result.primary_supplier_code,
+        primary_supplier_name=result.primary_supplier_name,
+        primary_supplier_country=result.primary_supplier_country,
+        plant_warehouse_name=result.plant_warehouse_name,
     )
 
 
@@ -521,4 +622,12 @@ def _to_list_item(r: ComponentRiskResult) -> InventoryRiskItem:
         risk_reason=r.risk_reason,
         forecast_status=r.forecast_status,
         flags=[RiskFlagSchema(code=f.code, message=f.message) for f in r.flags],
+        recommended_action=r.recommended_action,
+        recommended_action_type=r.recommended_action_type,
+        supply_gap_days=r.supply_gap_days,
+        data_confidence=r.data_confidence,
+        primary_supplier_code=r.primary_supplier_code,
+        primary_supplier_name=r.primary_supplier_name,
+        primary_supplier_country=r.primary_supplier_country,
+        plant_warehouse_name=r.plant_warehouse_name,
     )

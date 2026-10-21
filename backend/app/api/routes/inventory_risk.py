@@ -37,6 +37,18 @@ def get_inventory_risks(
         default=False,
         description="Include inactive catalog components in evaluation",
     ),
+    search: Optional[str] = Query(
+        default=None,
+        description="Search by component SKU or name",
+    ),
+    sort_by: Optional[str] = Query(
+        default=None,
+        description="Sort by field: coverage_days, shortage_date, plant_usable_stock, severity, sku",
+    ),
+    sort_dir: Optional[str] = Query(
+        default="asc",
+        description="Sort direction: asc or desc",
+    ),
     limit: int = Query(default=50, ge=1, le=200, description="Items per page"),
     offset: int = Query(default=0, ge=0, description="Items offset"),
     db: Session = Depends(get_db),
@@ -50,6 +62,9 @@ def get_inventory_risks(
         category=category,
         criticality=criticality,
         include_inactive=include_inactive,
+        search=search,
+        sort_by=sort_by,
+        sort_dir=sort_dir,
         limit=limit,
         offset=offset,
     )

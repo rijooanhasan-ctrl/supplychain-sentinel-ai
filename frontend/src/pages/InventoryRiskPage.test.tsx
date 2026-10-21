@@ -513,4 +513,70 @@ describe('InventoryRiskPage', () => {
     const riskSelect = screen.getByLabelText(/risk level:/i) as HTMLSelectElement;
     expect(riskSelect.value).toBe('critical');
   });
+
+  it('renders summary KPI cards, handles search input, and displays recommended action', async () => {
+    let capturedUrl = '';
+
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+      const urlStr = url.toString();
+      if (urlStr.includes('/api/meta')) {
+        return { ok: true, status: 200, json: async () => mockMeta } as Response;
+      }
+      if (urlStr.includes('/api/components')) {
+        return { ok: true, status: 200, json: async () => ({ items: [] }) } as Response;
+      }
+      if (urlStr.includes('/api/inventory-risk')) {
+        capturedUrl = urlStr;
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            ...mockRiskList,
+            items: [
+              {
+                ...mockRiskList.items[0],
+                recommended_action: 'Expedite PO #PO-CPU-701: arrival is 3d after shortage.',
+                recommended_action_type: 'expedite_po',
+                supply_gap_days: 3,
+                plant_warehouse_name: 'Main Plant Warehouse',
+                primary_supplier_name: 'Apex Aerospace Precision',
+                primary_supplier_country: 'United States',
+                primary_supplier_code: 'SUP-001',
+              },
+            ],
+          }),
+        } as Response;
+      }
+      return { ok: true, status: 200, json: async () => ({ items: [] }) } as Response;
+    });
+
+    render(
+      <MemoryRouter>
+        <MetaProvider>
+          <InventoryRiskPage />
+        </MetaProvider>
+      </MemoryRouter>
+    );
+
+    // Verify 4 KPI cards render
+    await waitFor(() => {
+      expect(screen.getByTestId('kpi-high-risk')).toBeInTheDocument();
+      expect(screen.getByTestId('kpi-critical-priority')).toBeInTheDocument();
+      expect(screen.getByTestId('kpi-runout-before-inbound')).toBeInTheDocument();
+      expect(screen.getByTestId('kpi-data-attention')).toBeInTheDocument();
+    });
+
+    // Verify search input
+    const searchInput = screen.getByTestId('search-input');
+    expect(searchInput).toBeInTheDocument();
+    fireEvent.change(searchInput, { target: { value: 'CPU-X7' } });
+
+    await waitFor(() => {
+      expect(capturedUrl).toContain('search=CPU-X7');
+    });
+
+    // Verify recommended action badge and text render
+    expect(screen.getByText('Expedite PO')).toBeInTheDocument();
+    expect(screen.getByText(/Expedite PO #PO-CPU-701/i)).toBeInTheDocument();
+  });
 });
