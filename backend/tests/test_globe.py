@@ -29,6 +29,7 @@ from starlette.testclient import TestClient
 from app.core.config import Settings
 from app.db.models import Base, Component, DatasetMeta, PurchaseOrder, PurchaseOrderLine, Supplier, SupplierComponent, Warehouse
 from app.db.session import create_engine_and_sessionmaker
+from app.integrations.demo_adapter import DemoAdapter
 from app.domain.geo import (
     compute_concentration,
     group_by_country,
@@ -326,90 +327,101 @@ def test_locations_override_route(tmp_path, monkeypatch):
     import app.services.globe as globe_srv
     monkeypatch.setattr(globe_srv, "OVERRIDES_PATH", overrides_file)
 
+    # Use an isolated temp database seeded with demo data
+    temp_db_file = tmp_path / "override_demo.db"
+    temp_db_url = f"sqlite:///{temp_db_file.as_posix()}"
+    engine, session_factory = create_engine_and_sessionmaker(temp_db_url)
+    Base.metadata.create_all(engine)
+    adapter = DemoAdapter(seed=42, as_of=date(2026, 10, 17))
+    from app.services.ingest import load_dataset
+    with session_factory() as session:
+        load_dataset(session, adapter.fetch_dataset(), reset=True)
+    engine.dispose()
+
     # 1. 403 when ENABLE_WEB_IMPORT is False
-    disabled_settings = Settings(ENABLE_WEB_IMPORT=False)
-    client_disabled = TestClient(create_app(disabled_settings))
-    res_403 = client_disabled.post("/api/locations/override", json={
-        "entity_type": "supplier",
-        "code": "SUP-HELIX",
-        "lat": 24.5,
-        "lon": 120.5,
-    })
-    assert res_403.status_code == 403
-    assert res_403.json()["detail"] == "Web import is disabled"
+    disabled_settings = Settings(ENABLE_WEB_IMPORT=False, DATABASE_URL=temp_db_url)
+    with TestClient(create_app(disabled_settings)) as client_disabled:
+        res_403 = client_disabled.post("/api/locations/override", json={
+            "entity_type": "supplier",
+            "code": "SUP-HELIX",
+            "lat": 24.5,
+            "lon": 120.5,
+        })
+        assert res_403.status_code == 403
+        assert res_403.json()["detail"] == "Web import is disabled"
 
     # 2. Enabled client
-    enabled_settings = Settings(ENABLE_WEB_IMPORT=True)
-    client = TestClient(create_app(enabled_settings))
+    enabled_settings = Settings(ENABLE_WEB_IMPORT=True, DATABASE_URL=temp_db_url)
+    app = create_app(enabled_settings)
+    with TestClient(app) as client:
+        # 404 for unknown entity
+        res_404 = client.post("/api/locations/override", json={
+            "entity_type": "supplier",
+            "code": "UNKNOWN-SUPPLIER-CODE",
+            "lat": 24.5,
+            "lon": 120.5,
+        })
+        assert res_404.status_code == 404
+        assert "not found" in res_404.json()["detail"]
 
-    # 404 for unknown entity
-    res_404 = client.post("/api/locations/override", json={
-        "entity_type": "supplier",
-        "code": "UNKNOWN-SUPPLIER-CODE",
-        "lat": 24.5,
-        "lon": 120.5,
-    })
-    assert res_404.status_code == 404
-    assert "not found" in res_404.json()["detail"]
+        # 422 for invalid coordinates
+        res_422 = client.post("/api/locations/override", json={
+            "entity_type": "supplier",
+            "code": "SUP-HELIX",
+            "lat": 95.0,  # invalid latitude > 90
+            "lon": 120.5,
+        })
+        assert res_422.status_code == 422
+        assert "Latitude must be between" in res_422.json()["detail"]
 
-    # 422 for invalid coordinates
-    res_422 = client.post("/api/locations/override", json={
-        "entity_type": "supplier",
-        "code": "SUP-HELIX",
-        "lat": 95.0,  # invalid latitude > 90
-        "lon": 120.5,
-    })
-    assert res_422.status_code == 422
-    assert "Latitude must be between" in res_422.json()["detail"]
+        # 422 for Null Island (0,0)
+        res_null = client.post("/api/locations/override", json={
+            "entity_type": "supplier",
+            "code": "SUP-HELIX",
+            "lat": 0.0,
+            "lon": 0.0,
+        })
+        assert res_null.status_code == 422
+        assert "Null Island" in res_null.json()["detail"]
 
-    # 422 for Null Island (0,0)
-    res_null = client.post("/api/locations/override", json={
-        "entity_type": "supplier",
-        "code": "SUP-HELIX",
-        "lat": 0.0,
-        "lon": 0.0,
-    })
-    assert res_null.status_code == 422
-    assert "Null Island" in res_null.json()["detail"]
+        # 3. Successful override write
+        res_ok = client.post("/api/locations/override", json={
+            "entity_type": "supplier",
+            "code": "SUP-HELIX",
+            "lat": 24.77,
+            "lon": 120.99,
+            "note": "Test override for Hsinchu",
+        })
+        assert res_ok.status_code == 200
+        ret = res_ok.json()
+        assert ret["status"] == "saved"
+        assert ret["location"]["lat"] == 24.77
+        assert ret["location"]["precision"] == "manual"
+        assert "Manually set by user" in ret["location"]["source"]
 
-    # 3. Successful override write
-    res_ok = client.post("/api/locations/override", json={
-        "entity_type": "supplier",
-        "code": "SUP-HELIX",
-        "lat": 24.77,
-        "lon": 120.99,
-        "note": "Test override for Hsinchu",
-    })
-    assert res_ok.status_code == 200
-    ret = res_ok.json()
-    assert ret["status"] == "saved"
-    assert ret["location"]["lat"] == 24.77
-    assert ret["location"]["precision"] == "manual"
-    assert "Manually set by user" in ret["location"]["source"]
+        # Verify GET /api/globe reflects this manual override
+        globe_res = client.get("/api/globe").json()
+        helix = next(s for s in globe_res["suppliers"] if s["code"] == "SUP-HELIX")
+        assert helix["location"]["lat"] == 24.77
+        assert helix["location"]["precision"] == "manual"
 
-    # Verify GET /api/globe reflects this manual override
-    globe_res = client.get("/api/globe").json()
-    helix = next(s for s in globe_res["suppliers"] if s["code"] == "SUP-HELIX")
-    assert helix["location"]["lat"] == 24.77
-    assert helix["location"]["precision"] == "manual"
+        # 4. Clear override
+        res_clear = client.post("/api/locations/override", json={
+            "entity_type": "supplier",
+            "code": "SUP-HELIX",
+            "clear": True,
+        })
+        assert res_clear.status_code == 200
+        assert res_clear.json()["status"] == "cleared"
 
-    # 4. Clear override
-    res_clear = client.post("/api/locations/override", json={
-        "entity_type": "supplier",
-        "code": "SUP-HELIX",
-        "clear": True,
-    })
-    assert res_clear.status_code == 200
-    assert res_clear.json()["status"] == "cleared"
+        globe_res2 = client.get("/api/globe").json()
+        helix2 = next(s for s in globe_res2["suppliers"] if s["code"] == "SUP-HELIX")
+        assert helix2["location"]["precision"] == "exact"  # restored to fixture
 
-    globe_res2 = client.get("/api/globe").json()
-    helix2 = next(s for s in globe_res2["suppliers"] if s["code"] == "SUP-HELIX")
-    assert helix2["location"]["precision"] == "exact"  # restored to fixture
-
-    # 5. Corrupt override file handled gracefully (does not crash)
-    overrides_file.write_text("NOT_VALID_JSON{:::}")
-    globe_corrupt = client.get("/api/globe").json()
-    assert globe_corrupt["seeded"] is True
+        # 5. Corrupt override file handled gracefully (does not crash)
+        overrides_file.write_text("NOT_VALID_JSON{:::}")
+        globe_corrupt = client.get("/api/globe").json()
+        assert globe_corrupt["seeded"] is True
 
 
 # ---------------------------------------------------------------------------
