@@ -251,7 +251,7 @@ export const SetLocationModal: React.FC<SetLocationModalProps> = ({
         code,
         lat: finalLat,
         lon: finalLon,
-        note: note.trim() || `Manually set (${method})`,
+        note: finalNote || `Manually set (${method})`,
       });
       if (onDisableClickToPlace) onDisableClickToPlace();
       onSaved();
