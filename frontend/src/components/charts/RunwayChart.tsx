@@ -232,18 +232,20 @@ export const RunwayChart: React.FC<RunwayChartProps> = ({ items, asOf, className
                         height="14"
                         fill="url(#pattern-unscheduled-gap)"
                       />
-                      <text
-                        x={stockBarWidth + 6}
-                        y="29"
-                        fill="#fca5a5"
-                        fontSize="8.5"
-                        fontStyle="italic"
-                        fontWeight="bold"
-                        fontFamily="sans-serif"
-                      >
-                        no delivery scheduled
-                        <title>No purchase orders currently scheduled for this component</title>
-                      </text>
+                      {unscheduledGapWidth >= 50 && (
+                        <text
+                          x={stockBarWidth + 6}
+                          y="29"
+                          fill="#fca5a5"
+                          fontSize="8.5"
+                          fontStyle="italic"
+                          fontWeight="bold"
+                          fontFamily="sans-serif"
+                        >
+                          {unscheduledGapWidth >= 95 ? 'no delivery scheduled' : 'no delivery'}
+                          <title>No purchase orders currently scheduled for this component</title>
+                        </text>
+                      )}
                     </g>
                   )}
 
@@ -261,7 +263,7 @@ export const RunwayChart: React.FC<RunwayChartProps> = ({ items, asOf, className
                         stroke="#101214"
                         strokeWidth="1.2"
                       />
-                      {/* Date tick text placed cleanly above the bar */}
+                      {/* Date tick text placed cleanly above the bar with edge awareness */}
                       <text
                         x="0"
                         y="-8"
@@ -269,7 +271,13 @@ export const RunwayChart: React.FC<RunwayChartProps> = ({ items, asOf, className
                         fontSize="8"
                         fontWeight="bold"
                         fontFamily="monospace"
-                        textAnchor="middle"
+                        textAnchor={
+                          clampedDeliveryDays * pxPerDay < 35
+                            ? 'start'
+                            : clampedDeliveryDays * pxPerDay > CHART_WIDTH - 35
+                            ? 'end'
+                            : 'middle'
+                        }
                       >
                         {formatDate(item.next_replenishment!.date).slice(5)} ({item.next_replenishment!.qty}u)
                       </text>
