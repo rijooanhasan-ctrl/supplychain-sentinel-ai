@@ -492,6 +492,7 @@ export const SupplyChainGlobe: React.FC<SupplyChainGlobeProps> = ({
           <div
             className="relative h-[420px] sm:h-[460px] w-full rounded-lg overflow-hidden border border-border-subtle bg-[#070b14]"
             data-testid="compact-globe-canvas-wrapper"
+            onMouseLeave={() => setIsGlobeActive(false)}
           >
             {/* Compact Toolbar */}
             <div

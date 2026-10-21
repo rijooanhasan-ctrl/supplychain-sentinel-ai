@@ -199,11 +199,20 @@ export const GlobeCanvas = React.forwardRef<GlobeCanvasHandle, GlobeCanvasProps>
 
     // Scroll guard configuration on OrbitControls
     useEffect(() => {
-      if (!scrollGuard || !globeEl.current) return;
-      const controls = (globeEl.current as any).controls?.();
-      if (controls) {
-        controls.enableZoom = Boolean(isGlobeActive);
-      }
+      if (!scrollGuard) return;
+      const applyGuard = () => {
+        const controls = (globeEl.current as any)?.controls?.();
+        if (controls) {
+          controls.enableZoom = Boolean(isGlobeActive);
+        }
+      };
+      applyGuard();
+      const t1 = setTimeout(applyGuard, 150);
+      const t2 = setTimeout(applyGuard, 500);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+      };
     }, [scrollGuard, isGlobeActive]);
 
     // Check camera over India or USA and lazily load Admin-1 when altitude < 1.5
