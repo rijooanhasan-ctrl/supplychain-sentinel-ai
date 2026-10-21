@@ -2,6 +2,7 @@ from decimal import Decimal
 import json
 import os
 from functools import lru_cache
+from pathlib import Path
 from typing import Any, List, Optional, Union
 from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -281,6 +282,17 @@ class Settings(BaseSettings):
             )
         if not self.UPLOAD_DB_PATH or not str(self.UPLOAD_DB_PATH).strip():
             raise ValueError("UPLOAD_DB_PATH cannot be empty")
+
+        # Protect primary database from accidental upload overwrite
+        if self.DATABASE_URL.startswith("sqlite:///") and self.DATABASE_URL != "sqlite:///:memory:":
+            db_subpath = self.DATABASE_URL[len("sqlite:///"):]
+            primary_path = Path(db_subpath).resolve()
+            upload_path = Path(self.UPLOAD_DB_PATH).resolve()
+            if primary_path == upload_path:
+                raise ValueError(
+                    f"UPLOAD_DB_PATH cannot resolve to the primary DATABASE_URL ({self.DATABASE_URL})"
+                )
+
         return self
 
     @model_validator(mode="after")
