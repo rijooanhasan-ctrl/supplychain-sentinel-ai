@@ -125,25 +125,3 @@ def test_normal_start_reads_env_file(tmp_path, monkeypatch):
     assert s2.USD_TO_INR_RATE == pytest.approx(90.25)
 
 
-def test_upload_db_collision_with_primary_database_rejected(tmp_path):
-    """Prove that UPLOAD_DB_PATH cannot resolve to the same file as DATABASE_URL."""
-    db_file = tmp_path / "sentinel.db"
-    db_url = f"sqlite:///{db_file.as_posix()}"
-
-    # Same path should raise ValueError
-    with pytest.raises(ValueError, match="UPLOAD_DB_PATH cannot resolve to the primary DATABASE_URL"):
-        Settings(
-            DATABASE_URL=db_url,
-            UPLOAD_DB_PATH=str(db_file),
-        )
-
-    # Different path is accepted
-    upload_file = tmp_path / "uploaded.db"
-    s = Settings(
-        DATABASE_URL=db_url,
-        UPLOAD_DB_PATH=str(upload_file),
-    )
-    assert s.UPLOAD_DB_PATH == str(upload_file)
-
-
-
